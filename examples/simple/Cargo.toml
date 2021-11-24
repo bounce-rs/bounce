@@ -1,0 +1,18 @@
+[package]
+name = "simple"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bounce = { path = "../../packages/bounce" }
+yew = { git = "https://github.com/yewstack/yew" }
+log = "0.4.14"
+console_log = { version = "0.2.0", features = ["color"] }
+
+[dependencies.web-sys]
+version = "0.3.54"
+features = [
+    "HtmlInputElement",
+]

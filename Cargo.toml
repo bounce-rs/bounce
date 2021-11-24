@@ -2,5 +2,7 @@
 members = [
     "packages/bounce",
     "packages/bounce-macros",
+
+    "examples/simple",
 ]
 resolver = "2"
