@@ -5,11 +5,40 @@ The uncomplicated state management library for Yew.
 Bounce is inspired by [Redux](https://github.com/reduxjs/redux) and
 [Recoil](https://github.com/facebookexperimental/Recoil).
 
+
+## Rationale
+
+Currently, Yew Context API and Yewdux have the following limitations:
+
+- Too much boilerplate.
+
+   You either have to manually control whether to notify
+   subscribers (Yewdux), or you have to manually define contexts (Context API).
+
+   I wish changes can be detected automatically by `PartialEq` or
+something similar and not have to define contexts manually.
+
+- State change notifies all.
+
+   State changes will notify all subscribers.
+   `useSelector` hook for `Redux` will only trigger a re-render when the
+selected value changes. However, currently both the Context API and
+Yewdux will notify all subscribers when a change happens.
+
+- Does not utilise contexts (Yewdux).
+
+   This is somewhat my personal preference.
+   I prefer easily resettable / overridable contexts over global state (Agent).
+
+- Needless clones (Context).
+
+   Context API will produce a clone of the state to all subscribers.
+
 ## Example
 
 For bounce states to function, a `<BounceRoot />` must be registered.
 
-```
+```rust
 #[function_component(App)]
 fn app() -> Html {
     html! {
@@ -41,7 +70,7 @@ impl Default for Username {
 
 You can then use it with the `use_atom` hook.
 
-```
+```rust
 #[function_component(Setter)]
 fn setter() -> Html {
     let username = use_atom::<Username>();
@@ -79,3 +108,7 @@ fn reader() -> Html {
 That's it!
 
 You can find the full example [here](https://github.com/futursolo/bounce/tree/master/examples/simple).
+
+## License
+
+Bounce is dual licensed under the MIT license and the Apache License (Version 2.0).
