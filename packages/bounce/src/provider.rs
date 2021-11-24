@@ -9,10 +9,10 @@ use anymap2::Map;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
-use crate::state::{State, Stateful};
+use crate::slice::Slice;
 use crate::utils::Id;
 
-pub(crate) type StateMap = Map<dyn CloneAny>;
+pub(crate) type SliceMap = Map<dyn CloneAny>;
 type ListenerVec = Vec<Weak<Callback<BounceRootState>>>;
 type ListenerMap = Rc<RefCell<HashMap<TypeId, ListenerVec>>>;
 
@@ -29,27 +29,24 @@ pub struct SliceListener {
 #[derive(Clone)]
 pub(crate) struct BounceRootState {
     id: Id,
-    states: Rc<RefCell<StateMap>>,
+    slices: Rc<RefCell<SliceMap>>,
     listeners: ListenerMap,
 }
 
 impl BounceRootState {
-    pub(crate) fn set_state<T>(&self, val: T::Input)
+    pub(crate) fn dispatch_action<T>(&self, val: T::Action)
     where
-        T: Stateful + 'static,
+        T: Slice + 'static,
     {
         let should_notify = {
-            let mut state = {
-                let mut states = self.states.borrow_mut();
-                states
-                    .remove::<T::State>()
-                    .unwrap_or_else(|| T::State::new(self.clone().into()))
-            };
+            let mut atoms = self.slices.borrow_mut();
+            let prev_val = atoms.remove::<Rc<T>>().unwrap_or_default();
+            let next_val = prev_val.clone().reduce(val);
 
-            let should_notify = state.set(val);
+            let should_notify = prev_val != next_val;
 
-            let mut states = self.states.borrow_mut();
-            states.insert(state);
+            atoms.insert(next_val);
+
             should_notify
         };
 
@@ -79,21 +76,16 @@ impl BounceRootState {
         SliceListener { _listener: cb }
     }
 
-    pub(crate) fn get_state<T>(&self) -> Rc<T>
+    pub(crate) fn get<T>(&self) -> Rc<T>
     where
-        T: Stateful + 'static,
+        T: Slice + 'static,
     {
-        if let Some(mut m) = {
-            let states = self.states.borrow_mut();
-            states.get::<T::State>().cloned()
-        } {
-            m.get()
+        let mut atoms = self.slices.borrow_mut();
+        if let Some(m) = atoms.get::<Rc<T>>().cloned() {
+            m
         } else {
-            let mut state = T::State::new(self.clone().into());
-            let val = state.get();
-
-            let mut states = self.states.borrow_mut();
-            states.insert(state);
+            let val = Rc::new(T::default());
+            atoms.insert(val.clone());
             val
         }
     }
@@ -146,7 +138,7 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
 
     let root_state = use_state(|| BounceRootState {
         id: Id::new(),
-        states: Rc::default(),
+        slices: Rc::default(),
         listeners: Rc::default(),
     });
 

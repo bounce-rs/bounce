@@ -18,7 +18,3 @@ impl Id {
         Self::default()
     }
 }
-
-pub(crate) mod sealed {
-    pub trait Sealed {}
-}
