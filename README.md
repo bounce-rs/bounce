@@ -5,34 +5,33 @@ The uncomplicated state management library for Yew.
 Bounce is inspired by [Redux](https://github.com/reduxjs/redux) and
 [Recoil](https://github.com/facebookexperimental/Recoil).
 
-
 ## Rationale
 
-Currently, Yew Context API and Yewdux have the following limitations:
+Yew state management solutions that are currently available all have
+some (or all) of the following limitations:
 
 - Too much boilerplate.
 
-   You either have to manually control whether to notify
-   subscribers (Yewdux), or you have to manually define contexts (Context API).
+   Users either have to manually control whether to notify
+   subscribers or have to manually define contexts.
 
-   I wish changes can be detected automatically by `PartialEq` or
-something similar and not have to define contexts manually.
+   Changes should be detected automatically by `PartialEq`
+   and not have to define contexts manually.
 
 - State change notifies all.
 
    State changes will notify all subscribers.
-   `useSelector` hook for `Redux` will only trigger a re-render when the
-selected value changes. However, currently both the Context API and
-Yewdux will notify all subscribers when a change happens.
 
-- Does not utilise contexts (Yewdux).
+   The `useSelector` hook for `Redux` will only trigger a re-render when the
+selected value changes.
 
-   This is somewhat my personal preference.
-   I prefer easily resettable / overridable contexts over global state (Agent).
+   If we were to create a state management library, it should also only
+notify the relevant subscribers.
 
-- Needless clones (Context).
+- Needless clones.
 
-   Context API will produce a clone of the state to all subscribers.
+   A clone of the state will be produced for all subscribers whenever
+there's a change.
 
 ## Example
 
@@ -69,6 +68,9 @@ impl Default for Username {
 ```
 
 You can then use it with the `use_atom` hook.
+
+When an `Atom` is first used, it will be initialised with it's `Default`
+value.
 
 ```rust
 #[function_component(Setter)]
@@ -107,7 +109,7 @@ fn reader() -> Html {
 
 That's it!
 
-You can find the full example [here](https://github.com/futursolo/bounce/tree/master/examples/simple).
+You can find the full example [here](https://github.com/futursolo/bounce/blob/master/examples/simple/src/main.rs).
 
 ## License
 
