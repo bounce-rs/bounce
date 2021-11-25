@@ -122,6 +122,11 @@ you can use a `Slice`.
 
 It shares the same API as the `Reducible` trait for `yew`.
 
+You can use it with `use_slice`, `use_slice_value` and
+`use_dispatch_slice_action` hooks.
+
+You can find an example of slices [here](https://github.com/futursolo/bounce/blob/master/examples/partial-render/src/main.rs).
+
 ## License
 
 Bounce is dual licensed under the MIT license and the Apache License (Version 2.0).

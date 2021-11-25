@@ -4,5 +4,6 @@ members = [
     "packages/bounce-macros",
 
     "examples/simple",
+    "examples/partial-render",
 ]
 resolver = "2"
