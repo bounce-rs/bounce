@@ -61,7 +61,7 @@ fn setter() -> Html {
 
 #[function_component(Resetter)]
 fn resetter() -> Html {
-    let set_username = use_set_atom_value::<Username>();
+    let set_username = use_atom_setter::<Username>();
 
     let on_reset_clicked = Callback::from(move |_| set_username(Username::default()));
 

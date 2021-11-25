@@ -102,7 +102,7 @@ fn setter() -> Html {
 ```
 
 If you wish to create a read-only (or set-only) handle, you can use
-`use_atom_value` (or `use_set_atom_value`).
+`use_atom_value` (or `use_atom_setter`).
 
 ```rust
 #[function_component(Reader)]
@@ -124,7 +124,7 @@ It shares the same API as the `Reducible` trait for `yew`, but is
 initialised with `Default`.
 
 You can use it with `use_slice`, `use_slice_value` and
-`use_dispatch_slice_action` hooks.
+`use_slice_dispatch` hooks.
 
 You can find an example of slices [here](https://github.com/futursolo/bounce/blob/master/examples/partial-render/src/main.rs).
 
