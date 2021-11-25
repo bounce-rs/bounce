@@ -219,9 +219,9 @@ fn comp_abc() -> Html {
 
 #[styled_component(Setters)]
 fn setters() -> Html {
-    let dispatch_a = use_dispatch_slice_action::<SliceA>();
-    let dispatch_b = use_dispatch_slice_action::<SliceB>();
-    let dispatch_c = use_dispatch_slice_action::<SliceC>();
+    let dispatch_a = use_slice_dispatch::<SliceA>();
+    let dispatch_b = use_slice_dispatch::<SliceB>();
+    let dispatch_c = use_slice_dispatch::<SliceC>();
 
     let inc_a = Callback::from(move |_| dispatch_a(SliceAction::Increment));
     let inc_b = Callback::from(move |_| dispatch_b(SliceAction::Increment));

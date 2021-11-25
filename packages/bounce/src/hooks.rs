@@ -184,7 +184,7 @@ where
 /// #
 /// #[function_component(CounterComp)]
 /// fn counter_comp() -> Html {
-///     let dispatch_ctr = use_dispatch_slice_action::<Counter>();
+///     let dispatch_ctr = use_slice_dispatch::<Counter>();
 ///
 ///     let inc = {
 ///         let dispatch_ctr = dispatch_ctr.clone();
@@ -203,7 +203,7 @@ where
 ///     }
 /// }
 /// ```
-pub fn use_dispatch_slice_action<T>() -> Rc<dyn Fn(T::Action)>
+pub fn use_slice_dispatch<T>() -> Rc<dyn Fn(T::Action)>
 where
     T: Slice + 'static,
 {
@@ -422,16 +422,16 @@ where
 /// #
 /// # #[function_component(Setter)]
 /// # fn setter() -> Html {
-/// let set_username = use_set_atom_value::<Username>();
+/// let set_username = use_atom_setter::<Username>();
 /// set_username("John Smith".into());
 /// # Html::default()
 /// # }
 /// ```
-pub fn use_set_atom_value<T>() -> Rc<dyn Fn(T)>
+pub fn use_atom_setter<T>() -> Rc<dyn Fn(T)>
 where
     T: Atom + 'static,
 {
-    use_dispatch_slice_action::<T>()
+    use_slice_dispatch::<T>()
 }
 
 /// A read-only hook to connect to the value of an `Atom`.
