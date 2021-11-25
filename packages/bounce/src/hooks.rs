@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -125,25 +124,27 @@ where
 
     let val = {
         let root = root.clone();
-        use_state(move || -> RefCell<Rc<T>> { root.get::<T>().into() })
+        use_state_eq(move || root.get::<T>())
     };
 
     {
         let val = val.clone();
         let root = root.clone();
-        use_state(move || {
-            root.listen::<T, _>(move |root| {
-                let next_val = root.get::<T>();
-                let prev_val = val.borrow().clone();
+        use_effect_with_deps(
+            move |root| {
+                let listener = root.listen::<T, _>(move |root| {
+                    val.set(root.get::<T>());
+                });
 
-                if prev_val != next_val {
-                    val.set(RefCell::new(next_val));
+                move || {
+                    std::mem::drop(listener);
                 }
-            })
-        });
+            },
+            root,
+        );
     }
 
-    let val = (*(*val).borrow()).clone();
+    let val = (*val).clone();
 
     UseSliceHandle { inner: val, root }
 }
@@ -208,13 +209,10 @@ where
 {
     let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
-    let state = use_state(move || {
-        Rc::new(move |action: T::Action| {
-            root.dispatch_action::<T>(action);
-        })
-    });
-
-    (*state).clone()
+    // Recreate the dispatch function in case root has changed.
+    Rc::new(move |action: T::Action| {
+        root.dispatch_action::<T>(action);
+    })
 }
 
 /// A read-only hook to connect to the value of a [`Slice`].

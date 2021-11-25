@@ -59,12 +59,22 @@ fn setter() -> Html {
     }
 }
 
+#[function_component(Resetter)]
+fn resetter() -> Html {
+    let set_username = use_set_atom_value::<Username>();
+
+    let on_reset_clicked = Callback::from(move |_| set_username(Username::default()));
+
+    html! { <button onclick={on_reset_clicked}>{"Reset"}</button> }
+}
+
 #[function_component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>
             <Reader />
             <Setter />
+            <Resetter />
         </BounceRoot>
     }
 }
