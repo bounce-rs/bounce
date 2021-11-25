@@ -15,23 +15,29 @@ some (or all) of the following limitations:
    Users either have to manually control whether to notify
    subscribers or have to manually define contexts.
 
-   Changes should be detected automatically by `PartialEq`
-   and not have to define contexts manually.
-
 - State change notifies all.
 
    State changes will notify all subscribers.
-
-   The `useSelector` hook for `Redux` will only trigger a re-render when the
-selected value changes.
-
-   If we were to create a state management library, it should also only
-notify the relevant subscribers.
 
 - Needless clones.
 
    A clone of the state will be produced for all subscribers whenever
 there's a change.
+
+Bounce wants to be a state management library that:
+
+- Has minimal boilerplate.
+
+   Changes are automatically detected via `PartialEq`.
+
+- Only notifies relevant subscribers.
+
+   When a state changes, only hooks that subscribes to that state will
+be notified.
+
+- Reduces Cloning.
+
+   States are `Rc`'ed.
 
 ## Example
 
@@ -69,7 +75,7 @@ impl Default for Username {
 
 You can then use it with the `use_atom` hook.
 
-When an `Atom` is first used, it will be initialised with it's `Default`
+When an `Atom` is first used, it will be initialised with its `Default`
 value.
 
 ```rust
@@ -96,7 +102,7 @@ fn setter() -> Html {
 ```
 
 If you wish to create a read-only (or set-only) handle, you can use
-`use_atom_value` (or `use_atom_setter`).
+`use_atom_value` (or `use_set_atom_value`).
 
 ```rust
 #[function_component(Reader)]
@@ -107,9 +113,14 @@ fn reader() -> Html {
 }
 ```
 
-That's it!
-
 You can find the full example [here](https://github.com/futursolo/bounce/blob/master/examples/simple/src/main.rs).
+
+# Complex State
+
+If you wish to have a reducer-based state that changes based on actions,
+you can use a `Slice`.
+
+It shares the same API as the `Reducible` trait for `yew`.
 
 ## License
 

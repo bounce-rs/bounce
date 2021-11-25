@@ -4,6 +4,7 @@ use crate::slice::Slice;
 
 pub use bounce_macros::Atom;
 
+#[doc(hidden)]
 pub trait Atom: PartialEq + Default {}
 
 impl<T> Slice for T

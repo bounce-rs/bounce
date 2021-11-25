@@ -35,7 +35,7 @@ impl fmt::Display for Username {
 fn reader() -> Html {
     let username = use_atom_value::<Username>();
 
-    html! { <div>{"Hello, "}{&username.inner}</div> }
+    html! { <div>{"Hello, "}{username}</div> }
 }
 
 #[function_component(Setter)]

@@ -16,6 +16,7 @@ pub(crate) type SliceMap = Map<dyn CloneAny>;
 type ListenerVec = Vec<Weak<Callback<BounceRootState>>>;
 type ListenerMap = Rc<RefCell<HashMap<TypeId, ListenerVec>>>;
 
+/// Properties for [`BounceRoot`].
 #[derive(Properties, Debug, PartialEq)]
 pub struct BounceRootProps {
     #[prop_or_default]
@@ -132,6 +133,26 @@ impl PartialEq for BounceRootState {
     }
 }
 
+/// A `<BounceRoot />`.
+///
+/// For bounce states to function, A `<BounceRoot />` must present and registered as a context
+/// provider.
+///
+/// # Example
+///
+/// ```
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #[function_component(App)]
+/// fn app() -> Html {
+///     html! {
+///         <BounceRoot>
+///             // children...
+///         </BounceRoot>
+///     }
+/// }
+///
+/// ```
 #[function_component(BounceRoot)]
 pub fn bounce_root(props: &BounceRootProps) -> Html {
     let children = props.children.clone();
