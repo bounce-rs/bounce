@@ -115,12 +115,13 @@ fn reader() -> Html {
 
 You can find the full example [here](https://github.com/futursolo/bounce/blob/master/examples/simple/src/main.rs).
 
-# Complex State
+## Complex State
 
 If you wish to have a reducer-based state that changes based on actions,
 you can use a `Slice`.
 
-It shares the same API as the `Reducible` trait for `yew`.
+It shares the same API as the `Reducible` trait for `yew`, but is
+initialised with `Default`.
 
 You can use it with `use_slice`, `use_slice_value` and
 `use_dispatch_slice_action` hooks.

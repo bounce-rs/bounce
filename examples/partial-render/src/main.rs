@@ -217,43 +217,6 @@ fn comp_abc() -> Html {
     }
 }
 
-// #[function_component(Reader)]
-// fn reader() -> Html {
-//     let username = use_atom_value::<Username>();
-
-//     html! { <div>{"Hello, "}{username}</div> }
-// }
-
-// #[function_component(Setter)]
-// fn setter() -> Html {
-//     let username = use_atom::<Username>();
-
-//     let on_text_input = {
-//         let username = username.clone();
-
-//         Callback::from(move |e: InputEvent| {
-//             let input: HtmlInputElement = e.target_unchecked_into();
-
-//             username.set(input.value().into());
-//         })
-//     };
-
-//     html! {
-//         <div>
-//             <input type_="text" oninput={on_text_input} value={username.to_string()} />
-//         </div>
-//     }
-// }
-
-// #[function_component(Resetter)]
-// fn resetter() -> Html {
-//     let set_username = use_set_atom_value::<Username>();
-
-//     let on_reset_clicked = Callback::from(move |_| set_username(Username::default()));
-
-//     html! { <button onclick={on_reset_clicked}>{"Reset"}</button> }
-// }
-
 #[styled_component(Setters)]
 fn setters() -> Html {
     let dispatch_a = use_dispatch_slice_action::<SliceA>();
@@ -295,9 +258,6 @@ fn app() -> Html {
 
                     <CompABC />
                 </div>
-                // <Reader />
-                // <Setter />
-                // <Resetter />
                 <Setters />
             </div>
         </BounceRoot>
