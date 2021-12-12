@@ -64,7 +64,7 @@ jobs:
           command: build
           args: --all --target=wasm32-unknown-unknown
         env:
-          RUSTFLAGS: "--cfg releasing
+          RUSTFLAGS: "--cfg releasing"
 
       # - name: Install wasm-pack
       #   run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
