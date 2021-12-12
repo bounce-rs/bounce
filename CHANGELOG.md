@@ -1,3 +1,9 @@
+## Release 0.1.3
+
+### Other Changes
+
+- Update Dependencies in Cargo.toml
+
 ## Release 0.1.2
 
 ### Other Changes

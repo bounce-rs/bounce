@@ -1,6 +1,6 @@
 [package]
 name = "bounce"
-version = "0.1.0"
+version = "0.1.3"
 edition = "2021"
 repository = "https://github.com/futursolo/bounce"
 authors = [
@@ -19,7 +19,7 @@ once_cell = "1.8.0"
 wasm-bindgen = "0.2.78"
 wasm-bindgen-futures = "0.4.28"
 yew = "0.19.3"
-bounce-macros = { path = "../bounce-macros" }
+bounce-macros = { path = "../bounce-macros", version = "0.1.3" }
 
 [dev-dependencies.web-sys]
 version = "0.3.54"
