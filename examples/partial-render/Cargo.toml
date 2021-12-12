@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 bounce = { path = "../../packages/bounce" }
-yew = { git = "https://github.com/yewstack/yew" }
-stylist = { git = "https://github.com/futursolo/stylist-rs", features = ["yew_integration"] }
+yew = "0.19.3"
+stylist = { version = "0.10.0", features = ["yew_integration"] }
 log = "0.4.14"
 console_log = { version = "0.2.0", features = ["color"] }

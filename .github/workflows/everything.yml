@@ -1,0 +1,136 @@
+---
+name: Run Tests & Publishing
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+          profile: minimal
+
+      - name: Restore Rust Cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Run cargo fmt -- --check
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Run cargo clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          options: --all --all-features
+        env:
+          RUSTFLAGS: "--cfg releasing"
+
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --all
+        env:
+          RUSTFLAGS: "--cfg releasing"
+
+      - name: Setup trunk
+        uses: jetli/trunk-action@v0.1.0
+        with:
+          version: "latest"
+
+      - name: Setup Rust wasm
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          profile: minimal
+
+      - name: Run cargo build --all --target=wasm32-unknown-unknown
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all --target=wasm32-unknown-unknown
+        env:
+          RUSTFLAGS: "--cfg releasing
+
+      # - name: Install wasm-pack
+      #   run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      # - name: Run Browser Tests
+      #   run: wasm-pack test --headless --chrome --firefox examples/yew-integration
+
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+          profile: minimal
+
+      - name: Restore Rust Cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Run cargo publish --dry-run for bounce-macros
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --dry-run --manifest-path packages/bounce-macros/Cargo.toml
+        env:
+          RUSTFLAGS: "--cfg releasing"
+
+      - name: Run cargo publish for bounce-macros
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path packages/bounce-macros/Cargo.toml
+        env:
+          RUSTFLAGS: "--cfg releasing"
+
+      - name: Wait crates.io to Refresh
+        run: sleep 30s
+        shell: bash
+
+      # Not possible if bounce-macros does not have a compatible version on crates.io
+      # - name: Run cargo publish --dry-run for bounce
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: publish
+      #     args: --dry-run --manifest-path packages/bounce/Cargo.toml
+      #   env:
+      #     RUSTFLAGS: "--cfg releasing"
+
+      - name: Run cargo publish for bounce
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path packages/bounce/Cargo.toml
+        env:
+          RUSTFLAGS: "--cfg releasing"
