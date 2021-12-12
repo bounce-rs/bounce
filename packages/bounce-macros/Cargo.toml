@@ -2,6 +2,15 @@
 name = "bounce-macros"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/futursolo/bounce"
+authors = [
+    "Kaede Hoshiakwa <futursolo@icloud.com>",
+]
+description = "The uncomplicated state management library for Yew."
+keywords = ["web", "wasm", "yew", "state-management"]
+categories = ["wasm", "web-programming"]
+readme = "README.md"
+homepage = "https://github.com/futursolo/bounce"
 
 [lib]
 proc-macro = true
