@@ -143,6 +143,7 @@ impl PartialEq for BounceRootState {
 /// ```
 /// # use yew::prelude::*;
 /// # use bounce::prelude::*;
+/// # use bounce::BounceRoot;
 /// #[function_component(App)]
 /// fn app() -> Html {
 ///     html! {
