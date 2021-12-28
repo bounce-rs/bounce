@@ -12,6 +12,7 @@ pub enum SliceAction {
 }
 
 #[derive(Default, PartialEq, Slice)]
+#[with_notion(SliceAction)]
 pub struct SliceA(i64);
 
 impl Reducible for SliceA {
@@ -24,7 +25,16 @@ impl Reducible for SliceA {
     }
 }
 
+impl WithNotion<SliceAction> for SliceA {
+    fn apply(self: Rc<Self>, notion: Rc<SliceAction>) -> Rc<Self> {
+        match *notion {
+            SliceAction::Increment => Self(self.0 + 1).into(),
+        }
+    }
+}
+
 #[derive(Default, PartialEq, Slice)]
+#[with_notion(SliceAction)]
 pub struct SliceB(i64);
 
 impl Reducible for SliceB {
@@ -37,7 +47,16 @@ impl Reducible for SliceB {
     }
 }
 
+impl WithNotion<SliceAction> for SliceB {
+    fn apply(self: Rc<Self>, notion: Rc<SliceAction>) -> Rc<Self> {
+        match *notion {
+            SliceAction::Increment => Self(self.0 + 1).into(),
+        }
+    }
+}
+
 #[derive(Default, PartialEq, Slice)]
+#[with_notion(SliceAction)]
 pub struct SliceC(i64);
 
 impl Reducible for SliceC {
@@ -46,6 +65,14 @@ impl Reducible for SliceC {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
             Self::Action::Increment => Self(self.0 + 1).into(),
+        }
+    }
+}
+
+impl WithNotion<SliceAction> for SliceC {
+    fn apply(self: Rc<Self>, notion: Rc<SliceAction>) -> Rc<Self> {
+        match *notion {
+            SliceAction::Increment => Self(self.0 + 1).into(),
         }
     }
 }

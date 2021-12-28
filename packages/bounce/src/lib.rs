@@ -11,6 +11,7 @@ mod hooks;
 mod provider;
 mod slice;
 mod utils;
+mod with_notion;
 
 /// A Simple State.
 ///
@@ -40,9 +41,16 @@ pub use atom::Atom;
 pub use hooks::*;
 pub use provider::{BounceRoot, BounceRootProps};
 pub use slice::{CloneSlice, Slice};
+pub use with_notion::WithNotion;
 
 pub mod prelude {
     pub use crate::atom::Atom;
     pub use crate::hooks::*;
     pub use crate::slice::{CloneSlice, Slice};
+    pub use crate::with_notion::WithNotion;
+}
+
+#[doc(hidden)]
+pub mod __vendored {
+    pub use yew;
 }

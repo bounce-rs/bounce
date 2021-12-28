@@ -3,6 +3,7 @@ members = [
     "packages/bounce",
     "packages/bounce-macros",
 
+    "examples/notion",
     "examples/simple",
     "examples/partial-render",
 ]

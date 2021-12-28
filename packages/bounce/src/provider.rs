@@ -35,18 +35,18 @@ pub(crate) struct BounceRootState {
 }
 
 impl BounceRootState {
-    pub(crate) fn dispatch_action<T>(&self, val: T::Action)
+    pub fn dispatch_action<T>(&self, val: T::Action)
     where
         T: Slice + 'static,
     {
         let should_notify = {
-            let mut atoms = self.slices.borrow_mut();
-            let prev_val = atoms.remove::<Rc<T>>().unwrap_or_default();
+            let mut slices = self.slices.borrow_mut();
+            let prev_val = slices.remove::<Rc<T>>().unwrap_or_default();
             let next_val = prev_val.clone().reduce(val);
 
             let should_notify = prev_val != next_val;
 
-            atoms.insert(next_val);
+            slices.insert(next_val);
 
             should_notify
         };
@@ -56,7 +56,7 @@ impl BounceRootState {
         }
     }
 
-    pub(crate) fn listen<T, CB>(&self, callback: CB) -> SliceListener
+    pub fn listen<T, CB>(&self, callback: CB) -> SliceListener
     where
         T: 'static,
         CB: Fn(BounceRootState) + 'static,
@@ -77,7 +77,7 @@ impl BounceRootState {
         SliceListener { _listener: cb }
     }
 
-    pub(crate) fn get<T>(&self) -> Rc<T>
+    pub fn get<T>(&self) -> Rc<T>
     where
         T: Slice + 'static,
     {
@@ -91,7 +91,7 @@ impl BounceRootState {
         }
     }
 
-    pub(crate) fn notify_listeners<T>(&self)
+    fn notify_listeners<T>(&self)
     where
         T: 'static,
     {
