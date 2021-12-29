@@ -1,20 +1,16 @@
-use std::any::TypeId;
+use std::any::Any;
 use std::cell::RefCell;
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 use anymap2::any::CloneAny;
 use anymap2::Map;
-use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
-use crate::slice::Slice;
+use crate::any_state::AnyState;
+use crate::slice::{Slice, SliceListener, SliceState};
 use crate::utils::Id;
 
-pub(crate) type SliceMap = Map<dyn CloneAny>;
-type ListenerVec = Vec<Weak<Callback<BounceRootState>>>;
-type ListenerMap = Rc<RefCell<HashMap<TypeId, ListenerVec>>>;
+pub(crate) type StateMap = Map<dyn CloneAny>;
 
 /// Properties for [`BounceRoot`].
 #[derive(Properties, Debug, PartialEq)]
@@ -23,106 +19,70 @@ pub struct BounceRootProps {
     pub children: Children,
 }
 
-pub struct SliceListener {
-    _listener: Rc<Callback<BounceRootState>>,
-}
-
 #[derive(Clone)]
 pub(crate) struct BounceRootState {
     id: Id,
-    slices: Rc<RefCell<SliceMap>>,
-    listeners: ListenerMap,
+    states: Rc<RefCell<StateMap>>,
+    any_states: Rc<RefCell<Vec<Box<dyn AnyState>>>>,
 }
 
 impl BounceRootState {
-    pub(crate) fn dispatch_action<T>(&self, val: T::Action)
+    pub fn dispatch_action<T>(&self, val: T::Action)
     where
         T: Slice + 'static,
     {
-        let should_notify = {
-            let mut atoms = self.slices.borrow_mut();
-            let prev_val = atoms.remove::<Rc<T>>().unwrap_or_default();
-            let next_val = prev_val.clone().reduce(val);
+        let mut states = self.states.borrow_mut();
+        if let Some(m) = states.get::<SliceState<T>>().cloned() {
+            m.dispatch(val)
+        } else {
+            let state = SliceState::<T>::default();
+            states.insert(state.clone());
+            state.dispatch(val);
 
-            let should_notify = prev_val != next_val;
-
-            atoms.insert(next_val);
-
-            should_notify
-        };
-
-        if should_notify {
-            self.notify_listeners::<T>();
+            let mut any_states = self.any_states.borrow_mut();
+            any_states.push(Box::new(state) as Box<dyn AnyState>);
         }
     }
 
-    pub(crate) fn listen<T, CB>(&self, callback: CB) -> SliceListener
+    pub fn listen<T, CB>(&self, callback: CB) -> SliceListener<T>
     where
-        T: 'static,
-        CB: Fn(BounceRootState) + 'static,
+        T: Slice + 'static,
+        CB: Fn(Rc<T>) + 'static,
     {
         let cb = Rc::new(Callback::from(callback));
 
-        let type_id = TypeId::of::<T>();
+        let mut states = self.states.borrow_mut();
+        let state = states.remove::<SliceState<T>>().unwrap_or_default();
+        let listener = state.listen(cb);
 
-        let mut listeners = self.listeners.borrow_mut();
+        states.insert(state);
 
-        if let Entry::Vacant(e) = listeners.entry(type_id) {
-            e.insert(vec![Rc::downgrade(&cb)]);
-        } else {
-            let listeners = listeners.get_mut(&type_id).unwrap_throw();
-            listeners.push(Rc::downgrade(&cb));
-        };
-
-        SliceListener { _listener: cb }
+        listener
     }
 
-    pub(crate) fn get<T>(&self) -> Rc<T>
+    pub fn get<T>(&self) -> Rc<T>
     where
         T: Slice + 'static,
     {
-        let mut atoms = self.slices.borrow_mut();
-        if let Some(m) = atoms.get::<Rc<T>>().cloned() {
-            m
+        let mut states = self.states.borrow_mut();
+        if let Some(m) = states.get::<SliceState<T>>().cloned() {
+            m.get()
         } else {
-            let val = Rc::new(T::default());
-            atoms.insert(val.clone());
-            val
+            let state = SliceState::<T>::default();
+            states.insert(state.clone());
+
+            let mut any_states = self.any_states.borrow_mut();
+            any_states.push(Box::new(state.clone()) as Box<dyn AnyState>);
+
+            state.get()
         }
     }
 
-    pub(crate) fn notify_listeners<T>(&self)
-    where
-        T: 'static,
-    {
-        let callables = {
-            let mut callbacks_ref = self.listeners.borrow_mut();
+    pub fn apply_notion(&self, notion: Rc<dyn Any>) {
+        let any_states = self.any_states.borrow();
 
-            let callbacks_ref = match callbacks_ref.get_mut(&TypeId::of::<T>()) {
-                Some(m) => m,
-                None => return,
-            };
-
-            // Any gone weak references are removed when called.
-            let (callbacks, callbacks_weak) = callbacks_ref.iter().cloned().fold(
-                (Vec::new(), Vec::new()),
-                |(mut callbacks, mut callbacks_weak), m| {
-                    if let Some(m_strong) = m.clone().upgrade() {
-                        callbacks.push(m_strong);
-                        callbacks_weak.push(m);
-                    }
-
-                    (callbacks, callbacks_weak)
-                },
-            );
-
-            *callbacks_ref = callbacks_weak;
-
-            callbacks
-        };
-
-        for callback in callables {
-            callback.emit(self.to_owned())
+        for any_state in any_states.iter() {
+            any_state.apply(notion.clone());
         }
     }
 }
@@ -160,8 +120,8 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
 
     let root_state = use_state(|| BounceRootState {
         id: Id::new(),
-        slices: Rc::default(),
-        listeners: Rc::default(),
+        states: Rc::default(),
+        any_states: Rc::default(),
     });
 
     html! {
