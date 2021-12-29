@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -132,8 +133,8 @@ where
         let root = root.clone();
         use_effect_with_deps(
             move |root| {
-                let listener = root.listen::<T, _>(move |root| {
-                    val.set(root.get::<T>());
+                let listener = root.listen::<T, _>(move |m| {
+                    val.set(m);
                 });
 
                 move || {
@@ -475,4 +476,71 @@ where
     T: Slice + 'static,
 {
     use_slice_value::<T>()
+}
+
+/// A hook to create a function that applies a `Notion`.
+///
+/// Returns `Rc<dyn Fn(T)>`.
+///
+/// # Example
+///
+/// ```
+/// # use bounce::prelude::*;
+/// # use std::fmt;
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// pub struct Reset;
+///
+/// #[derive(PartialEq, Atom)]
+/// #[with_notion(Reset)] // A #[with_notion(Notion)] needs to be denoted for the notion.
+/// struct Username {
+///     inner: String,
+/// }
+///
+/// // A WithNotion<T> is required for each notion denoted in the #[with_notion] attribute.
+/// impl WithNotion<Reset> for Username {
+///     fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
+///         Self::default().into()
+///     }
+/// }
+///
+/// // second state
+/// #[derive(PartialEq, Atom, Default)]
+/// #[with_notion(Reset)]
+/// struct Session {
+///     token: Option<String>,
+/// }
+///
+/// impl WithNotion<Reset> for Session {
+///     fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
+///         Self::default().into()
+///     }
+/// }
+/// #
+/// # impl Default for Username {
+/// #     fn default() -> Self {
+/// #         Self {
+/// #             inner: "Jane Doe".into(),
+/// #         }
+/// #     }
+/// # }
+/// #
+/// # #[function_component(Setter)]
+/// # fn setter() -> Html {
+/// let reset_everything = use_notion_applier::<Reset>();
+/// reset_everything(Reset);
+/// # Html::default()
+/// # }
+/// ```
+pub fn use_notion_applier<T>() -> Rc<dyn Fn(T)>
+where
+    T: 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    // Recreate the dispatch function in case root has changed.
+    Rc::new(move |notion: T| {
+        root.apply_notion(Rc::new(notion) as Rc<dyn Any>);
+    })
 }

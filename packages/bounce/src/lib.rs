@@ -6,6 +6,7 @@
 #![cfg_attr(documenting, feature(doc_cfg))]
 #![cfg_attr(any(releasing, not(debug_assertions)), deny(dead_code, unused_imports))]
 
+mod any_state;
 mod atom;
 mod hooks;
 mod provider;
