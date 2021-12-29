@@ -3,30 +3,6 @@ use std::rc::Rc;
 
 use crate::slice::Slice;
 
-/// A simple controlled state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
-///
-/// It can be derived for any state that implements [`PartialEq`] + [`Default`].
-///
-/// # Example
-///
-/// ```
-/// use std::rc::Rc;
-/// use bounce::prelude::*;
-/// use yew::prelude::*;
-///
-/// #[derive(PartialEq, Atom)]
-/// struct Username {
-///     inner: String,
-/// }
-///
-/// impl Default for Username {
-///     fn default() -> Self {
-///         Self {
-///             inner: "Jane Doe".into(),
-///         }
-///     }
-/// }
-/// ```
 pub use bounce_macros::Atom;
 
 #[doc(hidden)]

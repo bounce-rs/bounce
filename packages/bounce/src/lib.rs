@@ -14,15 +14,17 @@ mod slice;
 mod utils;
 mod with_notion;
 
-/// A Simple State.
+/// A simple state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
 ///
-/// It can be derived on any type that is `PartialEq` + `Default`.
+/// It can be derived for any state that implements [`PartialEq`] + [`Default`].
 ///
 /// # Example
 ///
 /// ```
-/// # use bounce::prelude::*;
-/// #
+/// use std::rc::Rc;
+/// use bounce::prelude::*;
+/// use yew::prelude::*;
+///
 /// #[derive(PartialEq, Atom)]
 /// struct Username {
 ///     inner: String,
@@ -36,12 +38,45 @@ mod with_notion;
 ///     }
 /// }
 /// ```
-///
 /// See: [`use_atom`](crate::use_atom)
 pub use atom::Atom;
+
+/// A reducer-based state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
+///
+/// It can be derived for any state that implements [`Reducible`](yew::functional::Reducible) + [`PartialEq`] + [`Default`].
+///
+/// # Example
+///
+/// ```
+/// use std::rc::Rc;
+/// use bounce::prelude::*;
+/// use yew::prelude::*;
+///
+/// enum CounterAction {
+///     Increment,
+///     Decrement,
+/// }
+///
+/// #[derive(PartialEq, Default, Slice)]
+/// struct Counter(u64);
+///
+/// impl Reducible for Counter {
+///     type Action = CounterAction;
+///
+///     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+///         match action {
+///             CounterAction::Increment => Self(self.0 + 1).into(),
+///             CounterAction::Decrement => Self(self.0 - 1).into(),
+///         }
+///     }
+/// }
+/// ```
+/// See: [`use_slice`](crate::use_slice)
+pub use slice::Slice;
+
 pub use hooks::*;
 pub use provider::{BounceRoot, BounceRootProps};
-pub use slice::{CloneSlice, Slice};
+pub use slice::CloneSlice;
 pub use with_notion::WithNotion;
 
 pub mod prelude {
@@ -51,6 +86,7 @@ pub mod prelude {
     pub use crate::with_notion::WithNotion;
 }
 
+// vendored dependencies used by macros.
 #[doc(hidden)]
 pub mod __vendored {
     pub use yew;

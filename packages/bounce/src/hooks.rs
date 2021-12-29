@@ -194,7 +194,7 @@ where
 ///     let dec = {
 ///         let dispatch_ctr = dispatch_ctr.clone();
 ///         Callback::from(move |_| {dispatch_ctr(CounterAction::Decrement);})
-///     };;
+///     };
 ///
 ///     html! {
 ///         <div>
@@ -480,7 +480,15 @@ where
 
 /// A hook to create a function that applies a `Notion`.
 ///
+/// A `Notion` is an action that can be dispatched to any state that accepts the dispatched notion.
+///
+/// Any type that is `'static` can be dispatched as a notion.
+///
 /// Returns `Rc<dyn Fn(T)>`.
+///
+/// # Note
+///
+/// When states receives a notion, it will be wrapped in an `Rc<T>`.
 ///
 /// # Example
 ///

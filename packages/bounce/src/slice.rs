@@ -8,36 +8,6 @@ use crate::any_state::AnyState;
 
 pub(crate) type ListenerVec<T> = Vec<Weak<Callback<Rc<T>>>>;
 
-/// A controlled state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
-///
-/// It can be derived for any state that implements [`Reducible`](yew::functional::Reducible) + [`PartialEq`] + [`Default`].
-///
-/// # Example
-///
-/// ```
-/// use std::rc::Rc;
-/// use bounce::prelude::*;
-/// use yew::prelude::*;
-///
-/// enum CounterAction {
-///     Increment,
-///     Decrement,
-/// }
-///
-/// #[derive(PartialEq, Default, Slice)]
-/// struct Counter(u64);
-///
-/// impl Reducible for Counter {
-///     type Action = CounterAction;
-///
-///     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-///         match action {
-///             CounterAction::Increment => Self(self.0 + 1).into(),
-///             CounterAction::Decrement => Self(self.0 - 1).into(),
-///         }
-///     }
-/// }
-/// ```
 pub use bounce_macros::Slice;
 
 #[doc(hidden)]

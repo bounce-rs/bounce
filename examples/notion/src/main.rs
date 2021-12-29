@@ -7,12 +7,16 @@ use stylist::yew::styled_component;
 use yew::prelude::*;
 
 #[derive(Debug)]
+pub struct Reset;
+
+#[derive(Debug)]
 pub enum SliceAction {
     Increment,
 }
 
 #[derive(Default, PartialEq, Slice)]
 #[with_notion(SliceAction)]
+#[with_notion(Reset)]
 pub struct SliceA(i64);
 
 impl Reducible for SliceA {
@@ -33,8 +37,15 @@ impl WithNotion<SliceAction> for SliceA {
     }
 }
 
+impl WithNotion<Reset> for SliceA {
+    fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
+        Self(0).into()
+    }
+}
+
 #[derive(Default, PartialEq, Slice)]
 #[with_notion(SliceAction)]
+#[with_notion(Reset)]
 pub struct SliceB(i64);
 
 impl Reducible for SliceB {
@@ -55,8 +66,15 @@ impl WithNotion<SliceAction> for SliceB {
     }
 }
 
+impl WithNotion<Reset> for SliceB {
+    fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
+        Self(0).into()
+    }
+}
+
 #[derive(Default, PartialEq, Slice)]
 #[with_notion(SliceAction)]
+#[with_notion(Reset)]
 pub struct SliceC(i64);
 
 impl Reducible for SliceC {
@@ -74,6 +92,12 @@ impl WithNotion<SliceAction> for SliceC {
         match *notion {
             SliceAction::Increment => Self(self.0 + 1).into(),
         }
+    }
+}
+
+impl WithNotion<Reset> for SliceC {
+    fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
+        Self(0).into()
     }
 }
 
@@ -250,9 +274,15 @@ fn setters() -> Html {
     let dispatch_b = use_slice_dispatch::<SliceB>();
     let dispatch_c = use_slice_dispatch::<SliceC>();
 
+    let increase_all = use_notion_applier::<SliceAction>();
+    let reset = use_notion_applier::<Reset>();
+
     let inc_a = Callback::from(move |_| dispatch_a(SliceAction::Increment));
     let inc_b = Callback::from(move |_| dispatch_b(SliceAction::Increment));
     let inc_c = Callback::from(move |_| dispatch_c(SliceAction::Increment));
+
+    let inc_all = Callback::from(move |_| increase_all(SliceAction::Increment));
+    let reset_all = Callback::from(move |_| reset(Reset));
 
     html! {
         <div class={css!(r#"
@@ -260,6 +290,8 @@ fn setters() -> Html {
             <button onclick={inc_a}>{"Increase A"}</button>
             <button onclick={inc_b}>{"Increase B"}</button>
             <button onclick={inc_c}>{"Increase C"}</button>
+            <button onclick={inc_all}>{"Increase All"}</button>
+            <button onclick={reset_all}>{"Reset All"}</button>
         </div>
     }
 }
