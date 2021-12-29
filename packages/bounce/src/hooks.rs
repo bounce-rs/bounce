@@ -65,7 +65,7 @@ where
     }
 }
 
-/// A hook to connect to a [`Slice`].
+/// A hook to connect to a `Slice`.
 ///
 /// Returns a [`UseSliceHandle<T>`].
 ///
@@ -150,7 +150,7 @@ where
     UseSliceHandle { inner: val, root }
 }
 
-/// A hook to produce a dispatch function for a [`Slice`].
+/// A hook to produce a dispatch function for a `Slice`.
 ///
 /// Returns a `Rc<dyn Fn(T::Action)>`.
 ///
@@ -216,7 +216,7 @@ where
     })
 }
 
-/// A read-only hook to connect to the value of a [`Slice`].
+/// A read-only hook to connect to the value of a `Slice`.
 ///
 /// Returns `Rc<T>`.
 ///
