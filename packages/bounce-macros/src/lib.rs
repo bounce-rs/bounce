@@ -5,7 +5,7 @@ use syn::{parse_macro_input, DeriveInput};
 mod atom;
 mod slice;
 
-#[proc_macro_derive(Atom)]
+#[proc_macro_derive(Atom, attributes(with_notion))]
 #[proc_macro_error]
 pub fn atom(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

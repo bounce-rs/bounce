@@ -1,5 +1,3 @@
-pub use bounce_macros::Slice;
-
 use std::any::Any;
 use std::rc::Rc;
 
@@ -33,6 +31,9 @@ use std::rc::Rc;
 ///     }
 /// }
 /// ```
+pub use bounce_macros::Slice;
+
+#[doc(hidden)]
 pub trait Slice: PartialEq + Default {
     type Action;
 

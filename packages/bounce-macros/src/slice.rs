@@ -18,16 +18,13 @@ pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Ide
     Ok(notion_idents)
 }
 
-pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
-    let notion_idents = match parse_with_notion_attrs(input.clone()) {
-        Ok(m) => m,
-        Err(e) => return e.into_compile_error(),
-    };
-
+pub(crate) fn create_notion_apply_impls(
+    notion_ident: &Ident,
+    idents: Vec<Ident>,
+) -> Vec<TokenStream> {
     let mut notion_apply_impls = Vec::new();
-    let notion_ident = Ident::new("notion", Span::mixed_site());
 
-    for ident in notion_idents {
+    for ident in idents {
         let notion_apply_impl = quote! {
             if let Ok(m) = <::std::rc::Rc::<dyn std::any::Any>>::downcast::<#ident>(::std::clone::Clone::clone(&#notion_ident)) {
                 return ::bounce::WithNotion::<#ident>::apply(::std::clone::Clone::clone(&self), m);
@@ -36,6 +33,18 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
 
         notion_apply_impls.push(notion_apply_impl);
     }
+
+    notion_apply_impls
+}
+
+pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
+    let notion_idents = match parse_with_notion_attrs(input.clone()) {
+        Ok(m) => m,
+        Err(e) => return e.into_compile_error(),
+    };
+
+    let notion_ident = Ident::new("notion", Span::mixed_site());
+    let notion_apply_impls = create_notion_apply_impls(&notion_ident, notion_idents);
 
     let type_ident = input.ident;
 

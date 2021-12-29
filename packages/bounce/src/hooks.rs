@@ -80,10 +80,10 @@ where
 ///     Decrement,
 /// }
 ///
-/// #[derive(PartialEq, Default)]
+/// #[derive(PartialEq, Default, Slice)]
 /// struct Counter(u64);
 ///
-/// impl Slice for Counter {
+/// impl Reducible for Counter {
 ///     type Action = CounterAction;
 ///
 ///     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
@@ -168,10 +168,10 @@ where
 /// #     Decrement,
 /// # }
 /// #
-/// # #[derive(PartialEq, Default)]
+/// # #[derive(PartialEq, Default, Slice)]
 /// # struct Counter(u64);
 /// #
-/// # impl Slice for Counter {
+/// # impl Reducible for Counter {
 /// #     type Action = CounterAction;
 /// #
 /// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
@@ -231,10 +231,10 @@ where
 /// #     Decrement,
 /// # }
 /// #
-/// # #[derive(PartialEq, Default)]
+/// # #[derive(PartialEq, Default, Slice)]
 /// # struct Counter(u64);
 /// #
-/// # impl Slice for Counter {
+/// # impl Reducible for Counter {
 /// #     type Action = CounterAction;
 /// #
 /// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
