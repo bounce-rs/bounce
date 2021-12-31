@@ -10,6 +10,7 @@ mod any_state;
 mod atom;
 mod hooks;
 mod provider;
+mod root_state;
 mod slice;
 mod utils;
 mod with_notion;
