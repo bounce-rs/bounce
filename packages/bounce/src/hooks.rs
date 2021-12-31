@@ -9,6 +9,7 @@ use yew::prelude::*;
 use crate::atom::Atom;
 use crate::root_state::BounceRootState;
 use crate::slice::Slice;
+use crate::slice::SliceState;
 
 /// A handle returned by [`use_slice`].
 ///
@@ -27,7 +28,7 @@ where
 {
     /// Dispatches `Action`.
     pub fn dispatch(&self, action: T::Action) {
-        self.root.dispatch_action::<T>(action);
+        self.root.get_state::<SliceState<T>>().dispatch(action);
     }
 }
 
@@ -125,7 +126,7 @@ where
 
     let val = {
         let root = root.clone();
-        use_state_eq(move || root.get::<T>())
+        use_state_eq(move || root.get_state::<SliceState<T>>().get())
     };
 
     {
@@ -133,9 +134,11 @@ where
         let root = root.clone();
         use_effect_with_deps(
             move |root| {
-                let listener = root.listen::<T, _>(move |m| {
-                    val.set(m);
-                });
+                let listener = root
+                    .get_state::<SliceState<T>>()
+                    .listen(Rc::new(Callback::from(move |m| {
+                        val.set(m);
+                    })));
 
                 move || {
                     std::mem::drop(listener);
@@ -212,7 +215,7 @@ where
 
     // Recreate the dispatch function in case root has changed.
     Rc::new(move |action: T::Action| {
-        root.dispatch_action::<T>(action);
+        root.get_state::<SliceState<T>>().dispatch(action);
     })
 }
 

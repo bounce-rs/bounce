@@ -8,6 +8,7 @@
 
 mod any_state;
 mod atom;
+mod future_notion;
 mod hooks;
 mod provider;
 mod root_state;
@@ -75,13 +76,16 @@ pub use atom::Atom;
 /// See: [`use_slice`](crate::use_slice)
 pub use slice::Slice;
 
+pub use future_notion::{Deferred, FutureNotion};
 pub use hooks::*;
 pub use provider::{BounceRoot, BounceRootProps};
+pub use root_state::BounceStates;
 pub use slice::CloneSlice;
 pub use with_notion::WithNotion;
 
 pub mod prelude {
     pub use crate::atom::Atom;
+    pub use crate::future_notion::{Deferred, FutureNotion};
     pub use crate::hooks::*;
     pub use crate::slice::{CloneSlice, Slice};
     pub use crate::with_notion::WithNotion;
@@ -90,5 +94,6 @@ pub mod prelude {
 // vendored dependencies used by macros.
 #[doc(hidden)]
 pub mod __vendored {
+    pub use futures;
     pub use yew;
 }

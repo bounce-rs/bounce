@@ -101,6 +101,23 @@ impl WithNotion<Reset> for SliceC {
     }
 }
 
+async fn something(_input: Rc<()>) -> Rc<SliceAction> {
+    todo!()
+}
+
+struct SomeNotion;
+
+impl FutureNotion for SomeNotion {
+    type Input = ();
+    type Output = SliceAction;
+
+    fn run(
+        input: Rc<Self::Input>,
+    ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'static, Rc<Self::Output>> {
+        Box::pin(something(input))
+    }
+}
+
 #[styled_component(CompA)]
 fn comp_a() -> Html {
     let a = use_slice_value::<SliceA>();
