@@ -4,9 +4,11 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::atom::Atom;
+use crate::future_notion::{Deferred, FutureNotion};
 use crate::root_state::BounceRootState;
 use crate::slice::Slice;
 use crate::slice::SliceState;
@@ -553,5 +555,27 @@ where
     // Recreate the dispatch function in case root has changed.
     Rc::new(move |notion: T| {
         root.apply_notion(Rc::new(notion) as Rc<dyn Any>);
+    })
+}
+
+pub fn use_future_notion_runner<T>() -> Rc<dyn Fn(T::Input)>
+where
+    T: FutureNotion + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    Rc::new(move |input: T::Input| {
+        let root = root.clone();
+        let input = Rc::new(input);
+
+        spawn_local(async move {
+            root.apply_notion(Rc::new(Deferred::<T>::Pending {
+                input: input.clone(),
+            }) as Rc<dyn Any>);
+
+            let output = T::run(root.states(), input.clone()).await;
+
+            root.apply_notion(Rc::new(Deferred::<T>::Complete { input, output }) as Rc<dyn Any>);
+        });
     })
 }

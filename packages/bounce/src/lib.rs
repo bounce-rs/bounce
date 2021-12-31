@@ -87,6 +87,7 @@ pub mod prelude {
     pub use crate::atom::Atom;
     pub use crate::future_notion::{Deferred, FutureNotion};
     pub use crate::hooks::*;
+    pub use crate::root_state::BounceStates;
     pub use crate::slice::{CloneSlice, Slice};
     pub use crate::with_notion::WithNotion;
 }

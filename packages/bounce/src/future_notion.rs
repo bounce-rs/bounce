@@ -1,11 +1,16 @@
 use futures::future::LocalBoxFuture;
 use std::rc::Rc;
 
+use crate::root_state::BounceStates;
+
 pub trait FutureNotion {
     type Input: 'static;
     type Output: 'static;
 
-    fn run(input: Rc<Self::Input>) -> LocalBoxFuture<'static, Rc<Self::Output>>;
+    fn run(
+        states: BounceStates,
+        input: Rc<Self::Input>,
+    ) -> LocalBoxFuture<'static, Rc<Self::Output>>;
 }
 
 #[derive(Debug, Clone)]

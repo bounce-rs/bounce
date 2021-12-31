@@ -66,11 +66,11 @@ impl BounceRootState {
         }
     }
 
-    // pub fn states(&self) -> BounceStates {
-    //     BounceStates {
-    //         inner: self.clone(),
-    //     }
-    // }
+    pub fn states(&self) -> BounceStates {
+        BounceStates {
+            inner: self.clone(),
+        }
+    }
 }
 
 impl PartialEq for BounceRootState {

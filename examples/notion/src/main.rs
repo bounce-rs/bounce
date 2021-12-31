@@ -101,7 +101,7 @@ impl WithNotion<Reset> for SliceC {
     }
 }
 
-async fn something(_input: Rc<()>) -> Rc<SliceAction> {
+async fn something(_states: BounceStates, _input: Rc<()>) -> Rc<SliceAction> {
     todo!()
 }
 
@@ -112,9 +112,10 @@ impl FutureNotion for SomeNotion {
     type Output = SliceAction;
 
     fn run(
+        states: BounceStates,
         input: Rc<Self::Input>,
     ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'static, Rc<Self::Output>> {
-        Box::pin(something(input))
+        Box::pin(something(states, input))
     }
 }
 
