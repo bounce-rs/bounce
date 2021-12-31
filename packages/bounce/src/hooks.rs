@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
 use crate::atom::Atom;
-use crate::provider::BounceRootState;
+use crate::root_state::BounceRootState;
 use crate::slice::Slice;
 
 /// A handle returned by [`use_slice`].
