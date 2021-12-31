@@ -74,14 +74,18 @@ where
     T: Slice,
 {
     pub fn dispatch(&self, action: T::Action) {
-        let mut value = self.value.borrow_mut();
-        let prev_val: Rc<T> = value.clone();
-        let next_val = prev_val.clone().reduce(action);
+        let maybe_next_val = {
+            let mut value = self.value.borrow_mut();
+            let prev_val: Rc<T> = value.clone();
+            let next_val = prev_val.clone().reduce(action);
 
-        let should_notify = prev_val != next_val;
-        *value = next_val.clone();
+            let should_notify = prev_val != next_val;
+            *value = next_val.clone();
 
-        if should_notify {
+            should_notify.then(|| next_val)
+        };
+
+        if let Some(next_val) = maybe_next_val {
             self.notify_listeners(next_val);
         }
     }
@@ -133,14 +137,18 @@ where
     T: Slice,
 {
     fn apply(&self, notion: Rc<dyn Any>) {
-        let mut value = self.value.borrow_mut();
-        let prev_val: Rc<T> = value.clone();
-        let next_val = prev_val.clone().apply(notion);
+        let maybe_next_val = {
+            let mut value = self.value.borrow_mut();
+            let prev_val: Rc<T> = value.clone();
+            let next_val = prev_val.clone().apply(notion);
 
-        let should_notify = prev_val != next_val;
-        *value = next_val.clone();
+            let should_notify = prev_val != next_val;
+            *value = next_val.clone();
 
-        if should_notify {
+            should_notify.then(|| next_val)
+        };
+
+        if let Some(next_val) = maybe_next_val {
             self.notify_listeners(next_val);
         }
     }
