@@ -10,11 +10,11 @@ bounce = { path = "../../packages/bounce" }
 yew = "0.19.3"
 log = "0.4.14"
 console_log = { version = "0.2.0", features = ["color"] }
-reqwest = { version = "0.11", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11.8", features = ["json"] }
+serde = { version = "1.0.132", features = ["derive"] }
 
 [dependencies.web-sys]
-version = "0.3.54"
+version = "0.3.55"
 features = [
     "HtmlInputElement",
 ]

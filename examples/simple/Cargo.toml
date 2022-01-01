@@ -12,7 +12,7 @@ log = "0.4.14"
 console_log = { version = "0.2.0", features = ["color"] }
 
 [dependencies.web-sys]
-version = "0.3.54"
+version = "0.3.55"
 features = [
     "HtmlInputElement",
 ]
