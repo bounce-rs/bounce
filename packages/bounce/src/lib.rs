@@ -12,6 +12,7 @@ mod future_notion;
 mod hooks;
 mod provider;
 mod root_state;
+mod selector;
 mod slice;
 mod utils;
 mod with_notion;
@@ -107,11 +108,11 @@ pub use slice::Slice;
 /// }
 /// ```
 /// See: [`use_future_notion_runner`](crate::use_future_notion_runner)
-#[doc(inline)]
 pub use bounce_macros::future_notion;
 
 pub use atom::CloneAtom;
 pub use future_notion::{Deferred, FutureNotion};
+#[doc(inline)]
 pub use hooks::*;
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
@@ -119,13 +120,15 @@ pub use slice::CloneSlice;
 pub use with_notion::WithNotion;
 
 pub mod prelude {
-    pub use crate::atom::{Atom, CloneAtom};
+    //! Default Bounce exports.
+
     pub use crate::future_notion;
-    pub use crate::future_notion::{Deferred, FutureNotion};
     pub use crate::hooks::*;
-    pub use crate::root_state::BounceStates;
-    pub use crate::slice::{CloneSlice, Slice};
-    pub use crate::with_notion::WithNotion;
+    pub use crate::BounceStates;
+    pub use crate::WithNotion;
+    pub use crate::{Atom, CloneAtom};
+    pub use crate::{CloneSlice, Slice};
+    pub use crate::{Deferred, FutureNotion};
 }
 
 // vendored dependencies used by macros.

@@ -1,8 +1,10 @@
 use std::any::Any;
-use std::rc::Rc;
+use std::fmt;
+use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use once_cell::sync::Lazy;
+use yew::callback::Callback;
 
 #[derive(PartialEq, Debug, Clone, Eq, Hash)]
 pub struct Id(u64);
@@ -31,6 +33,12 @@ impl Listener {
     }
 }
 
+impl fmt::Debug for Listener {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Listener").finish()
+    }
+}
+
 /// A trait to limit certain types to be Rc.
 pub trait RcTrait {
     type Inner: 'static;
@@ -49,3 +57,5 @@ where
         self.clone()
     }
 }
+
+pub(crate) type ListenerVec<T> = Vec<Weak<Callback<Rc<T>>>>;

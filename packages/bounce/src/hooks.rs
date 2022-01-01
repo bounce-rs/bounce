@@ -10,6 +10,7 @@ use yew::prelude::*;
 use crate::atom::Atom;
 use crate::future_notion::{Deferred, FutureNotion};
 use crate::root_state::BounceRootState;
+use crate::selector::{Selector, SelectorState};
 use crate::slice::Slice;
 use crate::slice::SliceState;
 use crate::utils::RcTrait;
@@ -632,4 +633,40 @@ where
             root.apply_notion(Rc::new(Deferred::<T>::Complete { input, output }) as Rc<dyn Any>);
         });
     })
+}
+
+pub fn use_selector_value<T>() -> Rc<T>
+where
+    T: Selector + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    let val = {
+        let root = root.clone();
+        use_state_eq(move || {
+            let states = root.states();
+
+            root.get_state::<SelectorState<T>>().get(states)
+        })
+    };
+
+    {
+        let val = val.clone();
+        let root = root;
+        use_effect_with_deps(
+            move |root| {
+                let listener =
+                    root.get_state::<SelectorState<T>>()
+                        .listen(Rc::new(Callback::from(move |m| {
+                            val.set(m);
+                        })));
+
+                move || {
+                    std::mem::drop(listener);
+                }
+            },
+            root,
+        );
+    }
+    (*val).clone()
 }
