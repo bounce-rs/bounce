@@ -10,6 +10,7 @@ use yew::prelude::*;
 use crate::atom::Atom;
 use crate::future_notion::{Deferred, FutureNotion};
 use crate::root_state::BounceRootState;
+use crate::selector::{Selector, SelectorState};
 use crate::slice::Slice;
 use crate::slice::SliceState;
 use crate::utils::RcTrait;
@@ -632,4 +633,94 @@ where
             root.apply_notion(Rc::new(Deferred::<T>::Complete { input, output }) as Rc<dyn Any>);
         });
     })
+}
+
+/// A hook to connect to a `Selector`.
+///
+/// A selector is a derived state which its value is derived from other states.
+///
+/// Its value will be automatically re-calculated when any state used in the selector has changed.
+///
+/// Returns a [`Rc<T>`].
+///
+/// # Example
+///
+/// ```
+/// # use bounce::prelude::*;
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #
+/// # enum SliceAction {
+/// #     Increment,
+/// # }
+/// #
+/// #[derive(Default, PartialEq, Slice)]
+/// struct Value(i64);
+/// #
+/// # impl Reducible for Value {
+/// #     type Action = SliceAction;
+/// #
+/// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+/// #         match action {
+/// #             Self::Action::Increment => Self(self.0 + 1).into(),
+/// #         }
+/// #     }
+/// # }
+///
+/// #[derive(PartialEq)]
+/// pub struct IsEven {
+///     inner: bool,
+/// }
+///
+/// impl Selector for IsEven {
+///     fn select(states: &BounceStates) -> Rc<Self> {
+///         let val = states.get_slice_value::<Value>();
+///
+///         Self {
+///             inner: val.0 % 2 == 0,
+///         }
+///         .into()
+///     }
+/// }
+/// # #[function_component(ShowIsEven)]
+/// # fn show_is_even() -> Html {
+/// let is_even = use_selector_value::<IsEven>();
+/// # Html::default()
+/// # }
+/// ```
+pub fn use_selector_value<T>() -> Rc<T>
+where
+    T: Selector + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    let val = {
+        let root = root.clone();
+        use_state_eq(move || {
+            let states = root.states();
+
+            root.get_state::<SelectorState<T>>().get(states)
+        })
+    };
+
+    {
+        let val = val.clone();
+        let root = root;
+        use_effect_with_deps(
+            move |root| {
+                let listener =
+                    root.get_state::<SelectorState<T>>()
+                        .listen(Rc::new(Callback::from(move |m| {
+                            val.set(m);
+                        })));
+
+                move || {
+                    std::mem::drop(listener);
+                }
+            },
+            root,
+        );
+    }
+    (*val).clone()
 }

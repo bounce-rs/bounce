@@ -1,13 +1,11 @@
 use std::any::Any;
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
-use crate::utils::Listener;
-
-pub(crate) type ListenerVec<T> = Vec<Weak<Callback<Rc<T>>>>;
+use crate::utils::{Listener, ListenerVec};
 
 pub use bounce_macros::Slice;
 

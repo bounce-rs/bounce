@@ -1,3 +1,11 @@
+## Release 0.2.0
+
+### Other Changes
+
+- Added Notion API
+- Added FutureNotion API
+- Added Selector API
+
 ## Release 0.1.3
 
 ### Other Changes

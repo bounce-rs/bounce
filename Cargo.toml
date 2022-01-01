@@ -7,5 +7,6 @@ members = [
     "examples/simple",
     "examples/partial-render",
     "examples/random-uuid",
+    "examples/divisibility",
 ]
 resolver = "2"
