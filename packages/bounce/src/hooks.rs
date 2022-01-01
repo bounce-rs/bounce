@@ -4,11 +4,15 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::atom::Atom;
+use crate::future_notion::{Deferred, FutureNotion};
 use crate::root_state::BounceRootState;
 use crate::slice::Slice;
+use crate::slice::SliceState;
+use crate::utils::RcTrait;
 
 /// A handle returned by [`use_slice`].
 ///
@@ -27,7 +31,7 @@ where
 {
     /// Dispatches `Action`.
     pub fn dispatch(&self, action: T::Action) {
-        self.root.dispatch_action::<T>(action);
+        self.root.get_state::<SliceState<T>>().dispatch(action);
     }
 }
 
@@ -125,7 +129,7 @@ where
 
     let val = {
         let root = root.clone();
-        use_state_eq(move || root.get::<T>())
+        use_state_eq(move || root.get_state::<SliceState<T>>().get())
     };
 
     {
@@ -133,9 +137,11 @@ where
         let root = root.clone();
         use_effect_with_deps(
             move |root| {
-                let listener = root.listen::<T, _>(move |m| {
-                    val.set(m);
-                });
+                let listener = root
+                    .get_state::<SliceState<T>>()
+                    .listen(Rc::new(Callback::from(move |m| {
+                        val.set(m);
+                    })));
 
                 move || {
                     std::mem::drop(listener);
@@ -212,7 +218,7 @@ where
 
     // Recreate the dispatch function in case root has changed.
     Rc::new(move |action: T::Action| {
-        root.dispatch_action::<T>(action);
+        root.get_state::<SliceState<T>>().dispatch(action);
     })
 }
 
@@ -550,5 +556,80 @@ where
     // Recreate the dispatch function in case root has changed.
     Rc::new(move |notion: T| {
         root.apply_notion(Rc::new(notion) as Rc<dyn Any>);
+    })
+}
+
+/// A hook to create a function that when called, runs a `FutureNotion` with provided input.
+///
+/// A `FutureNotion` is created by applying a `#[future_notion(NotionName)]` attribute to an async function.
+///
+/// When a future notion is run, it will be applied twice with a notion type [`Deferred<T>`]. The
+/// first time is before it starts with a variant `Pending` and the second time is when it
+/// completes with variant `Complete`.
+///
+/// # Example
+///
+/// ```
+/// # use bounce::prelude::*;
+/// # use std::fmt;
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+///
+/// #[derive(PartialEq)]
+/// struct User {
+///     id: u64,
+///     username: String,
+/// }
+///
+/// #[future_notion(FetchUser)]
+/// async fn fetch_user(id: Rc<u64>) -> Rc<User> {
+///     // fetch user here...
+///
+///     User { id: *id, username: "username".into() }.into()
+/// }
+///
+/// #[derive(PartialEq, Default, Atom)]
+/// #[with_notion(Deferred<FetchUser>)]  // A future notion with type `T` will be applied as `Deferred<T>`.
+/// struct UserState {
+///     inner: Option<Rc<User>>,
+/// }
+///
+/// // Each time a future notion is run, it will be applied twice.
+/// impl WithNotion<Deferred<FetchUser>> for UserState {
+///     fn apply(self: Rc<Self>, notion: Rc<Deferred<FetchUser>>) -> Rc<Self> {
+///         match notion.output() {
+///             Some(m) => Self { inner: Some(m) }.into(),
+///             None => self,
+///         }
+///     }
+/// }
+///
+/// # #[function_component(FetchUserComp)]
+/// # fn fetch_user_comp() -> Html {
+/// let load_user = use_future_notion_runner::<FetchUser>();
+/// load_user(1.into());
+/// # Html::default()
+/// # }
+/// ```
+pub fn use_future_notion_runner<T>() -> Rc<dyn Fn(T::Input)>
+where
+    T: FutureNotion + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    Rc::new(move |input: T::Input| {
+        let root = root.clone();
+        let input = input.clone_rc();
+
+        spawn_local(async move {
+            root.apply_notion(Rc::new(Deferred::<T>::Pending {
+                input: input.clone_rc(),
+            }) as Rc<dyn Any>);
+
+            let output = T::run(root.states(), input.clone_rc()).await;
+
+            root.apply_notion(Rc::new(Deferred::<T>::Complete { input, output }) as Rc<dyn Any>);
+        });
     })
 }

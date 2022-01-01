@@ -8,6 +8,7 @@
 
 mod any_state;
 mod atom;
+mod future_notion;
 mod hooks;
 mod provider;
 mod root_state;
@@ -75,14 +76,54 @@ pub use atom::Atom;
 /// See: [`use_slice`](crate::use_slice)
 pub use slice::Slice;
 
+/// A future-based notion that notifies states when it begins and finishes.
+///
+/// A future notion accepts a signle argument as input and returns an output.
+///
+/// It can optionally accept a `states` parameter which has a type of [`BounceStates`] that can be
+/// used to access bounce states when being run.
+///
+/// `Fn(Rc<I>) -> impl Future<Output = Rc<O>>` or `Fn(BounceState, Rc<I>) -> impl Future<Output = Rc<O>>`.
+///
+/// Both `Input` and `Output` must be Rc'ed.
+///
+/// # Example
+///
+/// ```
+/// use std::rc::Rc;
+/// use bounce::prelude::*;
+/// use yew::prelude::*;
+///
+/// struct User {
+///     id: u64,
+///     name: String,
+/// }
+///
+/// #[future_notion(FetchData)]
+/// async fn fetch_user(id: Rc<u64>) -> Rc<User> {
+///     // fetch user
+///
+///     User { id: *id, name: "John Smith".into() }.into()
+/// }
+/// ```
+/// See: [`use_future_notion_runner`](crate::use_future_notion_runner)
+#[doc(inline)]
+pub use bounce_macros::future_notion;
+
+pub use atom::CloneAtom;
+pub use future_notion::{Deferred, FutureNotion};
 pub use hooks::*;
 pub use provider::{BounceRoot, BounceRootProps};
+pub use root_state::BounceStates;
 pub use slice::CloneSlice;
 pub use with_notion::WithNotion;
 
 pub mod prelude {
-    pub use crate::atom::Atom;
+    pub use crate::atom::{Atom, CloneAtom};
+    pub use crate::future_notion;
+    pub use crate::future_notion::{Deferred, FutureNotion};
     pub use crate::hooks::*;
+    pub use crate::root_state::BounceStates;
     pub use crate::slice::{CloneSlice, Slice};
     pub use crate::with_notion::WithNotion;
 }
@@ -90,5 +131,6 @@ pub mod prelude {
 // vendored dependencies used by macros.
 #[doc(hidden)]
 pub mod __vendored {
+    pub use futures;
     pub use yew;
 }

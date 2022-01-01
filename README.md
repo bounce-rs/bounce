@@ -32,7 +32,7 @@ Bounce wants to be a state management library that:
 
 - Only notifies relevant subscribers.
 
-   When a state changes, only hooks that subscribes to that state will
+   When a state changes, only hooks that subscribe to that state will
 be notified.
 
 - Reduces Cloning.
@@ -127,6 +127,19 @@ You can use it with `use_slice`, `use_slice_value` and
 `use_slice_dispatch` hooks.
 
 You can find an example of slices [here](https://github.com/futursolo/bounce/blob/master/examples/partial-render/src/main.rs).
+
+### Notion and Future Notion
+
+A notion is an action that can be applied on multiple states using
+`use_notion_applier`.
+
+You can find an example of notion [here](https://github.com/futursolo/bounce/blob/master/examples/notion/src/main.rs).
+
+A future notion is a notion that is applied twice when it starts running
+and finishes running. This can be handy when fetching data or handling other
+asynchronous tasks.
+
+You can find an example of future notion [here](https://github.com/futursolo/bounce/blob/master/examples/random-uuid/src/main.rs).
 
 ## License
 

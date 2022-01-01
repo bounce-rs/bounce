@@ -1,3 +1,5 @@
+use std::any::Any;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use once_cell::sync::Lazy;
@@ -16,5 +18,34 @@ impl Default for Id {
 impl Id {
     pub fn new() -> Self {
         Self::default()
+    }
+}
+
+pub(crate) struct Listener {
+    _listener: Rc<dyn Any>,
+}
+
+impl Listener {
+    pub fn new(inner: Rc<dyn Any>) -> Self {
+        Self { _listener: inner }
+    }
+}
+
+/// A trait to limit certain types to be Rc.
+pub trait RcTrait {
+    type Inner: 'static;
+
+    /// Clones a `Rc<T>`.
+    fn clone_rc(&self) -> Self;
+}
+
+impl<T> RcTrait for Rc<T>
+where
+    T: 'static,
+{
+    type Inner = T;
+
+    fn clone_rc(&self) -> Rc<Self::Inner> {
+        self.clone()
     }
 }

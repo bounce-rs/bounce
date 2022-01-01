@@ -1,8 +1,8 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{DeriveInput, Ident};
+use syn::{DeriveInput, Ident, Type};
 
-pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Ident>> {
+pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Type>> {
     let mut notion_idents = Vec::new();
 
     for attr in input.attrs.iter() {
@@ -10,7 +10,7 @@ pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Ide
             continue;
         }
 
-        let ident = attr.parse_args::<Ident>()?;
+        let ident = attr.parse_args::<Type>()?;
 
         notion_idents.push(ident);
     }
@@ -20,7 +20,7 @@ pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Ide
 
 pub(crate) fn create_notion_apply_impls(
     notion_ident: &Ident,
-    idents: Vec<Ident>,
+    idents: Vec<Type>,
 ) -> Vec<TokenStream> {
     let mut notion_apply_impls = Vec::new();
 

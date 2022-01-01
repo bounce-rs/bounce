@@ -1,13 +1,14 @@
 use std::any::Any;
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 
 use anymap2::any::CloneAny;
 use anymap2::Map;
-use yew::prelude::*;
 
 use crate::any_state::AnyState;
-use crate::slice::{Slice, SliceListener, SliceState};
+use crate::atom::Atom;
+use crate::slice::{Slice, SliceState};
 use crate::utils::Id;
 
 pub(crate) type StateMap = Map<dyn CloneAny>;
@@ -31,11 +32,11 @@ impl Default for BounceRootState {
 
 impl BounceRootState {
     #[inline]
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
-    fn get_state<T>(&self) -> T
+    pub fn get_state<T>(&self) -> T
     where
         T: AnyState + Clone + Default + 'static,
     {
@@ -53,36 +54,8 @@ impl BounceRootState {
         }
     }
 
-    fn get_any_states(&self) -> Vec<Rc<dyn AnyState>> {
+    pub fn get_any_states(&self) -> Vec<Rc<dyn AnyState>> {
         self.any_states.borrow().clone()
-    }
-
-    pub fn dispatch_action<T>(&self, val: T::Action)
-    where
-        T: Slice + 'static,
-    {
-        let state = self.get_state::<SliceState<T>>();
-        state.dispatch(val);
-    }
-
-    pub fn listen<T, CB>(&self, callback: CB) -> SliceListener<T>
-    where
-        T: Slice + 'static,
-        CB: Fn(Rc<T>) + 'static,
-    {
-        let cb = Rc::new(Callback::from(callback));
-
-        let state = self.get_state::<SliceState<T>>();
-
-        state.listen(cb)
-    }
-
-    pub fn get<T>(&self) -> Rc<T>
-    where
-        T: Slice + 'static,
-    {
-        let state = self.get_state::<SliceState<T>>();
-        state.get()
     }
 
     pub fn apply_notion(&self, notion: Rc<dyn Any>) {
@@ -92,10 +65,48 @@ impl BounceRootState {
             any_state.apply(notion.clone());
         }
     }
+
+    pub fn states(&self) -> BounceStates {
+        BounceStates {
+            inner: self.clone(),
+        }
+    }
 }
 
 impl PartialEq for BounceRootState {
     fn eq(&self, rhs: &Self) -> bool {
         self.id == rhs.id
+    }
+}
+
+/// A type to access states under a bounce root.
+#[derive(Clone, PartialEq)]
+pub struct BounceStates {
+    inner: BounceRootState,
+}
+
+impl BounceStates {
+    /// Returns the value of a [`Slice`].
+    pub fn get_slice<T>(&self) -> Rc<T>
+    where
+        T: Slice + 'static,
+    {
+        self.inner.get_state::<SliceState<T>>().get()
+    }
+
+    /// Returns the value of an [`Atom`].
+    pub fn get_atom<T>(&self) -> Rc<T>
+    where
+        T: Atom + 'static,
+    {
+        self.get_slice::<T>()
+    }
+}
+
+impl fmt::Debug for BounceStates {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BounceStates")
+            .field("inner", &"BounceRootState")
+            .finish()
     }
 }
