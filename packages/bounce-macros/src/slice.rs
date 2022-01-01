@@ -26,9 +26,10 @@ pub(crate) fn create_notion_apply_impls(
 
     for ident in idents {
         let notion_apply_impl = quote! {
-            if let Ok(m) = <::std::rc::Rc::<dyn std::any::Any>>::downcast::<#ident>(::std::clone::Clone::clone(&#notion_ident)) {
-                return ::bounce::WithNotion::<#ident>::apply(::std::clone::Clone::clone(&self), m);
-            }
+            let #notion_ident = match <::std::rc::Rc::<dyn std::any::Any>>::downcast::<#ident>(#notion_ident) {
+                ::std::result::Result::Ok(m) => return ::bounce::WithNotion::<#ident>::apply(::std::clone::Clone::clone(&self), m),
+                ::std::result::Result::Err(e) => e,
+            };
         };
 
         notion_apply_impls.push(notion_apply_impl);
