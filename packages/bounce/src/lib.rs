@@ -116,6 +116,7 @@ pub use future_notion::{Deferred, FutureNotion};
 pub use hooks::*;
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
+pub use selector::Selector;
 pub use slice::CloneSlice;
 pub use with_notion::WithNotion;
 
@@ -125,6 +126,7 @@ pub mod prelude {
     pub use crate::future_notion;
     pub use crate::hooks::*;
     pub use crate::BounceStates;
+    pub use crate::Selector;
     pub use crate::WithNotion;
     pub use crate::{Atom, CloneAtom};
     pub use crate::{CloneSlice, Slice};

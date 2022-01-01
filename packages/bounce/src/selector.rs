@@ -17,7 +17,8 @@ pub trait Selector: PartialEq {
     ///
     /// # Panics
     ///
-    /// `states.get_selector::<T>()` will panic if you are trying to create a loop by selecting yourself.
+    /// `states.get_selector_value::<T>()` will panic if you are trying to create a loop by selecting current selector
+    /// again.
     fn select(states: &BounceStates) -> Rc<Self>;
 }
 
@@ -72,9 +73,8 @@ where
 
         let next_value = T::select(states);
 
-        self.state_listener_handles
-            .borrow_mut()
-            .extend(states.take_listeners());
+        let mut handles = self.state_listener_handles.borrow_mut();
+        *handles = states.take_listeners();
 
         next_value
     }

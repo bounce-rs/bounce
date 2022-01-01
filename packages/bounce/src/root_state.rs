@@ -155,6 +155,10 @@ impl BounceStates {
 
         std::mem::swap(&mut next_listeners, &mut last_listeners);
 
+        // Also clears callbacks.
+        let mut listener_callbacks = self.listener_callbacks.borrow_mut();
+        listener_callbacks.clear();
+
         next_listeners
     }
 
