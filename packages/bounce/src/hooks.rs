@@ -565,7 +565,7 @@ where
 ///
 /// When a future notion is run, it will be applied twice with a notion type [`Deferred<T>`]. The
 /// first time is before it starts with a variant `Pending` and the second time is when it
-/// completes with variant `Completed`.
+/// completes with variant `Complete`.
 ///
 /// # Example
 ///

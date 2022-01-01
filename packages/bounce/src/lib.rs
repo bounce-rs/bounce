@@ -78,6 +78,15 @@ pub use slice::Slice;
 
 /// A future-based notion that notifies states when it begins and finishes.
 ///
+/// A future notion accepts a signle argument as input and returns an output.
+///
+/// It can optionally accept a `states` parameter which has a type of [`BounceStates`] that can be
+/// used to access bounce states when being run.
+///
+/// `Fn(Rc<I>) -> impl Future<Output = Rc<O>>` or `Fn(BounceState, Rc<I>) -> impl Future<Output = Rc<O>>`.
+///
+/// Both `Input` and `Output` must be Rc'ed.
+///
 /// # Example
 ///
 /// ```

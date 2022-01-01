@@ -31,9 +31,11 @@ impl Listener {
     }
 }
 
+/// A trait to limit certain types to be Rc.
 pub trait RcTrait {
     type Inner: 'static;
 
+    /// Clones a `Rc<T>`.
     fn clone_rc(&self) -> Self;
 }
 

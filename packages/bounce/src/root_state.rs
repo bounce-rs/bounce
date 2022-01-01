@@ -79,12 +79,14 @@ impl PartialEq for BounceRootState {
     }
 }
 
+/// A type to access states under a bounce root.
 #[derive(Clone, PartialEq)]
 pub struct BounceStates {
     inner: BounceRootState,
 }
 
 impl BounceStates {
+    /// Returns the value of a [`Slice`].
     pub fn get_slice<T>(&self) -> Rc<T>
     where
         T: Slice + 'static,
@@ -92,6 +94,7 @@ impl BounceStates {
         self.inner.get_state::<SliceState<T>>().get()
     }
 
+    /// Returns the value of an [`Atom`].
     pub fn get_atom<T>(&self) -> Rc<T>
     where
         T: Atom + 'static,

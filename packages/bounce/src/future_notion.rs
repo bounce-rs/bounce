@@ -20,7 +20,7 @@ pub trait FutureNotion {
 ///
 /// A `Deferred::<T>::Pending` Notion will be applied before a future notion starts running and
 /// a `Deferred::<T>::Complete` notion will be applied after a future notion completes.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Deferred<T>
 where
     T: FutureNotion,
@@ -64,6 +64,26 @@ where
         match self {
             Self::Pending { .. } => None,
             Self::Complete { output, .. } => Some((*output).clone_rc()),
+        }
+    }
+}
+
+impl<T> Clone for Deferred<T>
+where
+    T: FutureNotion,
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Pending { ref input } => Self::Pending {
+                input: input.clone_rc(),
+            },
+            Self::Complete {
+                ref input,
+                ref output,
+            } => Self::Complete {
+                input: input.clone_rc(),
+                output: output.clone_rc(),
+            },
         }
     }
 }
