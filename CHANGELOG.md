@@ -5,6 +5,7 @@
 - Added Notion API
 - Added FutureNotion API
 - Added Selector API
+- Update Dependencies in Cargo.toml
 
 ## Release 0.1.3
 

@@ -128,7 +128,7 @@ You can use it with `use_slice`, `use_slice_value` and
 
 You can find an example of slices [here](https://github.com/futursolo/bounce/blob/master/examples/partial-render/src/main.rs).
 
-### Notion and Future Notion
+## Notion and Future Notion
 
 A notion is an action that can be applied on multiple states using
 `use_notion_applier`.
@@ -140,6 +140,13 @@ and finishes running. This can be handy when fetching data or handling other
 asynchronous tasks.
 
 You can find an example of future notion [here](https://github.com/futursolo/bounce/blob/master/examples/random-uuid/src/main.rs).
+
+## Selector
+
+A selector is a state derived from other states and auto updated when
+any underlying states changes.
+
+You can find an example of selector [here](https://github.com/futursolo/bounce/blob/master/examples/divisibility/src/main.rs).
 
 ## License
 
