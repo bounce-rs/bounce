@@ -133,11 +133,13 @@ You can find an example of slices [here](https://github.com/futursolo/bounce/blo
 A notion is an action that can be applied on multiple states using
 `use_notion_applier`.
 
+You can find an example of notion [here](https://github.com/futursolo/bounce/blob/master/examples/notion/src/main.rs).
+
 A future notion is a notion that is applied twice when it starts running
 and finishes running. This can be handy when fetching data or handling other
 asynchronous tasks.
 
-You can find an example of notion [here](https://github.com/futursolo/bounce/blob/master/examples/notion/src/main.rs).
+You can find an example of future notion [here](https://github.com/futursolo/bounce/blob/master/examples/random-uuid/src/main.rs).
 
 ## License
 
