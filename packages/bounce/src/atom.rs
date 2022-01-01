@@ -27,3 +27,17 @@ where
         Atom::apply(self, notion)
     }
 }
+
+/// A trait to provide cloning on atoms.
+///
+/// This trait provides a `self.clone_atom()` method that can be used as an alias of `(*self).clone()`
+/// in apply functions to produce a owned clone of the atom.
+pub trait CloneAtom: Atom + Clone {
+    /// Clones current atom.
+    #[inline]
+    fn clone_atom(&self) -> Self {
+        self.clone()
+    }
+}
+
+impl<T> CloneAtom for T where T: Atom + Clone {}

@@ -5,6 +5,7 @@ use std::rc::{Rc, Weak};
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
+use crate::utils::Listener;
 
 pub(crate) type ListenerVec<T> = Vec<Weak<Callback<Rc<T>>>>;
 
@@ -33,7 +34,7 @@ pub trait Slice: PartialEq + Default {
 /// A trait to provide cloning on slices.
 ///
 /// This trait provides a `self.clone_slice()` method that can be used as an alias of `(*self).clone()`
-/// in reduce functions to produce a owned clone of the slice.
+/// in reduce and apply functions to produce a owned clone of the slice.
 pub trait CloneSlice: Slice + Clone {
     /// Clones current slice.
     #[inline]
@@ -43,10 +44,6 @@ pub trait CloneSlice: Slice + Clone {
 }
 
 impl<T> CloneSlice for T where T: Slice + Clone {}
-
-pub(crate) struct SliceListener<T> {
-    _listener: Rc<Callback<Rc<T>>>,
-}
 
 #[derive(Debug, Default)]
 pub(crate) struct SliceState<T>
@@ -71,7 +68,7 @@ where
 
 impl<T> SliceState<T>
 where
-    T: Slice,
+    T: Slice + 'static,
 {
     pub fn dispatch(&self, action: T::Action) {
         let maybe_next_val = {
@@ -117,13 +114,11 @@ where
         }
     }
 
-    pub fn listen(&self, callback: Rc<Callback<Rc<T>>>) -> SliceListener<T> {
+    pub fn listen(&self, callback: Rc<Callback<Rc<T>>>) -> Listener {
         let mut callbacks_ref = self.listeners.borrow_mut();
         callbacks_ref.push(Rc::downgrade(&callback));
 
-        SliceListener {
-            _listener: callback,
-        }
+        Listener::new(callback)
     }
 
     pub fn get(&self) -> Rc<T> {
@@ -134,7 +129,7 @@ where
 
 impl<T> AnyState for SliceState<T>
 where
-    T: Slice,
+    T: Slice + 'static,
 {
     fn apply(&self, notion: Rc<dyn Any>) {
         let maybe_next_val = {
