@@ -13,21 +13,6 @@ pub trait Atom: PartialEq + Default {
     }
 }
 
-impl<T> Slice for T
-where
-    T: Atom,
-{
-    type Action = T;
-
-    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        action.into()
-    }
-
-    fn apply(self: Rc<Self>, notion: Rc<dyn Any>) -> Rc<Self> {
-        Atom::apply(self, notion)
-    }
-}
-
 /// A trait to provide cloning on atoms.
 ///
 /// This trait provides a `self.clone_atom()` method that can be used as an alias of `(*self).clone()`
@@ -41,3 +26,32 @@ pub trait CloneAtom: Atom + Clone {
 }
 
 impl<T> CloneAtom for T where T: Atom + Clone {}
+
+#[derive(PartialEq, Default)]
+pub(crate) struct AtomSlice<T>
+where
+    T: Atom,
+{
+    pub inner: Rc<T>,
+}
+
+impl<T> Slice for AtomSlice<T>
+where
+    T: Atom,
+{
+    type Action = T;
+
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        Self {
+            inner: action.into(),
+        }
+        .into()
+    }
+
+    fn apply(self: Rc<Self>, notion: Rc<dyn Any>) -> Rc<Self> {
+        Self {
+            inner: self.inner.clone().apply(notion),
+        }
+        .into()
+    }
+}

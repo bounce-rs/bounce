@@ -7,10 +7,11 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::atom::Atom;
+use crate::atom::{Atom, AtomSlice};
 use crate::future_notion::{Deferred, FutureNotion};
+use crate::input_selector::{InputSelector, InputSelectorsState};
 use crate::root_state::BounceRootState;
-use crate::selector::{Selector, SelectorState};
+use crate::selector::{Selector, UnitSelector};
 use crate::slice::Slice;
 use crate::slice::SliceState;
 use crate::utils::RcTrait;
@@ -278,7 +279,7 @@ pub struct UseAtomHandle<T>
 where
     T: Atom,
 {
-    inner: UseSliceHandle<T>,
+    inner: UseSliceHandle<AtomSlice<T>>,
 }
 
 impl<T> UseAtomHandle<T>
@@ -298,7 +299,7 @@ where
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        &(*self.inner).inner
     }
 }
 
@@ -319,7 +320,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("UseAtomHandle")
-            .field("inner", &self.inner)
+            .field("inner", &*self)
             .finish()
     }
 }
@@ -386,7 +387,7 @@ pub fn use_atom<T>() -> UseAtomHandle<T>
 where
     T: Atom + 'static,
 {
-    let inner = use_slice::<T>();
+    let inner = use_slice::<AtomSlice<T>>();
 
     UseAtomHandle { inner }
 }
@@ -439,7 +440,7 @@ pub fn use_atom_setter<T>() -> Rc<dyn Fn(T)>
 where
     T: Atom + 'static,
 {
-    use_slice_dispatch::<T>()
+    use_slice_dispatch::<AtomSlice<T>>()
 }
 
 /// A read-only hook to connect to the value of an `Atom`.
@@ -480,9 +481,9 @@ where
 /// ```
 pub fn use_atom_value<T>() -> Rc<T>
 where
-    T: Slice + 'static,
+    T: Atom + 'static,
 {
-    use_slice_value::<T>()
+    use_slice_value::<AtomSlice<T>>().inner.clone()
 }
 
 /// A hook to create a function that applies a `Notion`.
@@ -663,6 +664,102 @@ where
     })
 }
 
+/// A hook to connect to an `InputSelector`.
+///
+/// An input selector is similar to a selector, but also with an input.
+///
+/// Its value will be automatically re-calculated when any state used in the selector has changed.
+///
+/// Returns a [`Rc<T>`].
+///
+/// # Example
+///
+/// ```
+/// # use bounce::prelude::*;
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #
+/// # enum SliceAction {
+/// #     Increment,
+/// # }
+/// #
+/// #[derive(Default, PartialEq, Slice)]
+/// struct Value(i64);
+/// #
+/// # impl Reducible for Value {
+/// #     type Action = SliceAction;
+/// #
+/// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+/// #         match action {
+/// #             Self::Action::Increment => Self(self.0 + 1).into(),
+/// #         }
+/// #     }
+/// # }
+///
+/// #[derive(PartialEq)]
+/// pub struct DivBy {
+///     inner: bool,
+/// }
+///
+/// impl InputSelector for DivBy {
+///     type Input = i64;
+///
+///     fn select(states: &BounceStates, input: Rc<Self::Input>) -> Rc<Self> {
+///         let val = states.get_slice_value::<Value>();
+///
+///         Self {
+///             inner: val.0 % *input == 0,
+///         }
+///         .into()
+///     }
+/// }
+/// # #[function_component(ShowIsEven)]
+/// # fn show_is_even() -> Html {
+/// let is_even = use_input_selector_value::<DivBy>(2.into());
+/// # Html::default()
+/// # }
+/// ```
+pub fn use_input_selector_value<T>(input: Rc<T::Input>) -> Rc<T>
+where
+    T: InputSelector + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    let val = {
+        let input = input.clone();
+        let root = root.clone();
+        use_state_eq(move || {
+            let states = root.states();
+
+            root.get_state::<InputSelectorsState<T>>()
+                .get_state(input)
+                .get(states)
+        })
+    };
+
+    {
+        let val = val.clone();
+        let root = root;
+        use_effect_with_deps(
+            move |(root, input)| {
+                let listener = root
+                    .get_state::<InputSelectorsState<T>>()
+                    .get_state(input.clone())
+                    .listen(Rc::new(Callback::from(move |m| {
+                        val.set(m);
+                    })));
+
+                move || {
+                    std::mem::drop(listener);
+                }
+            },
+            (root, input),
+        );
+    }
+    (*val).clone()
+}
+
 /// A hook to connect to a `Selector`.
 ///
 /// A selector is a derived state which its value is derived from other states.
@@ -721,34 +818,7 @@ pub fn use_selector_value<T>() -> Rc<T>
 where
     T: Selector + 'static,
 {
-    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
-
-    let val = {
-        let root = root.clone();
-        use_state_eq(move || {
-            let states = root.states();
-
-            root.get_state::<SelectorState<T>>().get(states)
-        })
-    };
-
-    {
-        let val = val.clone();
-        let root = root;
-        use_effect_with_deps(
-            move |root| {
-                let listener =
-                    root.get_state::<SelectorState<T>>()
-                        .listen(Rc::new(Callback::from(move |m| {
-                            val.set(m);
-                        })));
-
-                move || {
-                    std::mem::drop(listener);
-                }
-            },
-            root,
-        );
-    }
-    (*val).clone()
+    use_input_selector_value::<UnitSelector<T>>(().into())
+        .inner
+        .clone()
 }

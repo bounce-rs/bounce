@@ -5,7 +5,7 @@ use std::rc::Rc;
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
-use crate::utils::{Listener, ListenerVec};
+use crate::utils::{notify_listeners, Listener, ListenerVec};
 
 pub use bounce_macros::Slice;
 
@@ -86,30 +86,7 @@ where
     }
 
     pub fn notify_listeners(&self, val: Rc<T>) {
-        let callables = {
-            let mut callbacks_ref = self.listeners.borrow_mut();
-
-            // Any gone weak references are removed when called.
-            let (callbacks, callbacks_weak) = callbacks_ref.iter().cloned().fold(
-                (Vec::new(), Vec::new()),
-                |(mut callbacks, mut callbacks_weak), m| {
-                    if let Some(m_strong) = m.clone().upgrade() {
-                        callbacks.push(m_strong);
-                        callbacks_weak.push(m);
-                    }
-
-                    (callbacks, callbacks_weak)
-                },
-            );
-
-            *callbacks_ref = callbacks_weak;
-
-            callbacks
-        };
-
-        for callback in callables {
-            callback.emit(val.clone())
-        }
+        notify_listeners(self.listeners.clone(), val);
     }
 
     pub fn listen(&self, callback: Rc<Callback<Rc<T>>>) -> Listener {

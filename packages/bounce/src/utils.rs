@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::cell::RefCell;
 use std::fmt;
 use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -59,3 +60,30 @@ where
 }
 
 pub(crate) type ListenerVec<T> = Vec<Weak<Callback<Rc<T>>>>;
+
+pub(crate) fn notify_listeners<T>(listeners: Rc<RefCell<ListenerVec<T>>>, val: Rc<T>) {
+    let callables = {
+        let mut callbacks_ref = listeners.borrow_mut();
+
+        // Any gone weak references are removed when called.
+        let (callbacks, callbacks_weak) = callbacks_ref.iter().cloned().fold(
+            (Vec::new(), Vec::new()),
+            |(mut callbacks, mut callbacks_weak), m| {
+                if let Some(m_strong) = m.clone().upgrade() {
+                    callbacks.push(m_strong);
+                    callbacks_weak.push(m);
+                }
+
+                (callbacks, callbacks_weak)
+            },
+        );
+
+        *callbacks_ref = callbacks_weak;
+
+        callbacks
+    };
+
+    for callback in callables {
+        callback.emit(val.clone())
+    }
+}
