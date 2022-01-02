@@ -15,9 +15,11 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
 
     let ident = input.ident;
 
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
     quote! {
         #[automatically_derived]
-        impl ::bounce::Atom for #ident {
+        impl #impl_generics ::bounce::Atom for #ident #ty_generics #where_clause {
             fn apply(self: ::std::rc::Rc<Self>, #notion_ident: ::std::rc::Rc<dyn ::std::any::Any>) -> ::std::rc::Rc<Self> {
                 #(#notion_apply_impls)*
 

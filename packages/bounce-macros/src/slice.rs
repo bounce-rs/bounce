@@ -49,9 +49,11 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
 
     let type_ident = input.ident;
 
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
     quote! {
         #[automatically_derived]
-        impl ::bounce::Slice for #type_ident {
+        impl #impl_generics ::bounce::Slice for #type_ident #ty_generics #where_clause {
             type Action = <Self as ::bounce::__vendored::yew::functional::Reducible>::Action;
 
             fn reduce(self: ::std::rc::Rc<Self>, action: Self::Action) -> ::std::rc::Rc<Self> {
