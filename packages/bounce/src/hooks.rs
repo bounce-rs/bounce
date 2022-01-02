@@ -628,7 +628,7 @@ where
                 input: input.clone_rc(),
             }) as Rc<dyn Any>);
 
-            let output = T::run(root.states(), input.clone_rc()).await;
+            let output = T::run(&root.states(), input.clone_rc()).await;
 
             root.apply_notion(Rc::new(Deferred::<T>::Complete { input, output }) as Rc<dyn Any>);
         });

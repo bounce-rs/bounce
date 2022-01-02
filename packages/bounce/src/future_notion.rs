@@ -11,7 +11,7 @@ pub trait FutureNotion {
     type Output: RcTrait + 'static;
 
     /// Runs a future notion.
-    fn run(states: BounceStates, input: Self::Input) -> LocalBoxFuture<'static, Self::Output>;
+    fn run(states: &BounceStates, input: Self::Input) -> LocalBoxFuture<'_, Self::Output>;
 }
 
 /// A deferred result type for future notions.

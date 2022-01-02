@@ -141,9 +141,9 @@ pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
             type Output = #output;
 
             fn run(
-                states: ::bounce::BounceStates,
+                states: &::bounce::BounceStates,
                 input: #input,
-            ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'static, #output> {
+            ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'_, #output> {
                 ::std::boxed::Box::pin(#fn_call)
             }
         }
