@@ -93,7 +93,7 @@ pub struct BounceStates {
 }
 
 impl BounceStates {
-    /// Returns the value of a [`Slice`].
+    /// Returns the value of a `Slice`.
     pub fn get_slice_value<T>(&self) -> Rc<T>
     where
         T: Slice + 'static,
@@ -115,7 +115,7 @@ impl BounceStates {
         state.get()
     }
 
-    /// Returns the value of an [`Atom`].
+    /// Returns the value of an `Atom`.
     pub fn get_atom_value<T>(&self) -> Rc<T>
     where
         T: Atom + 'static,

@@ -11,7 +11,7 @@ use crate::any_state::AnyState;
 use crate::root_state::BounceStates;
 use crate::utils::{notify_listeners, Listener, ListenerVec};
 
-/// An auto-updating derived state, similar to [`Selector`], but with an input.
+/// An auto-updating derived state, similar to [`Selector`](crate::Selector), but with an input.
 ///
 /// Each selector with a different input are treated as a different selector.
 ///
