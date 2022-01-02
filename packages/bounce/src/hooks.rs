@@ -628,9 +628,37 @@ where
                 input: input.clone_rc(),
             }) as Rc<dyn Any>);
 
-            let output = T::run(&root.states(), input.clone_rc()).await;
+            let states = root.states();
 
-            root.apply_notion(Rc::new(Deferred::<T>::Complete { input, output }) as Rc<dyn Any>);
+            // send the listeners in to be destroyed.
+            let (tx_listeners, rx_listeners) = std::sync::mpsc::sync_channel(1);
+            // listen to messages if a listener has been called during states run.
+            let (tx_listener_run, rx_listener_run) = std::sync::mpsc::sync_channel(1);
+
+            {
+                let root = root.clone();
+                let input = input.clone_rc();
+                states.add_listener_callback(Rc::new(Callback::from(move |_| {
+                    // There's a chance that the listeners might be called during the time while the future
+                    // notion is running and there will be nothing to drop.
+                    let listeners = rx_listeners.try_recv();
+                    let send_listener_run = tx_listener_run.try_send(());
+
+                    if send_listener_run.is_ok() || listeners.is_ok() {
+                        root.apply_notion(Rc::new(Deferred::<T>::Outdated {
+                            input: input.clone_rc(),
+                        }) as Rc<dyn Any>);
+                    }
+                })))
+            }
+
+            let output = T::run(&states, input.clone_rc()).await;
+
+            if rx_listener_run.try_recv().is_err() {
+                let _result = tx_listeners.try_send(states.take_listeners());
+            }
+
+            root.apply_notion(Rc::new(Deferred::<T>::Completed { input, output }) as Rc<dyn Any>);
         });
     })
 }

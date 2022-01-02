@@ -16,10 +16,12 @@ pub trait FutureNotion {
 
 /// A deferred result type for future notions.
 ///
-/// For each future notion `T`, a `Deferred<T>` will be applied to states twice.
+/// For each future notion `T`, a `Deferred<T>` the following notions will be applied to states:
 ///
-/// A `Deferred::<T>::Pending` Notion will be applied before a future notion starts running and
-/// a `Deferred::<T>::Complete` notion will be applied after a future notion completes.
+/// - A `Deferred::<T>::Pending` Notion will be applied before a future notion starts running.
+/// - A `Deferred::<T>::Complete` Notion will be applied after a future notion completes.
+/// - If any states are used during the run of a future notion,
+///   a `Deferred::<T>::Outdated` Notion will be applied **once** after the value of any used states changes.
 #[derive(Debug)]
 pub enum Deferred<T>
 where
@@ -28,7 +30,9 @@ where
     /// A future notion is running.
     Pending { input: T::Input },
     /// A future notion has completed.
-    Complete { input: T::Input, output: T::Output },
+    Completed { input: T::Input, output: T::Output },
+    /// The states used in the future notion run has been changed.
+    Outdated { input: T::Input },
 }
 
 impl<T> Deferred<T>
@@ -39,7 +43,8 @@ where
     pub fn is_pending(&self) -> bool {
         match self {
             Self::Pending { .. } => true,
-            Self::Complete { .. } => false,
+            Self::Completed { .. } => false,
+            Self::Outdated { .. } => false,
         }
     }
 
@@ -47,7 +52,17 @@ where
     pub fn is_completed(&self) -> bool {
         match self {
             Self::Pending { .. } => false,
-            Self::Complete { .. } => true,
+            Self::Completed { .. } => true,
+            Self::Outdated { .. } => false,
+        }
+    }
+
+    /// Returns `true` if current future notion is outdated.
+    pub fn is_outdated(&self) -> bool {
+        match self {
+            Self::Pending { .. } => false,
+            Self::Completed { .. } => false,
+            Self::Outdated { .. } => true,
         }
     }
 
@@ -55,7 +70,8 @@ where
     pub fn input(&self) -> T::Input {
         match self {
             Self::Pending { input } => (*input).clone_rc(),
-            Self::Complete { input, .. } => (*input).clone_rc(),
+            Self::Completed { input, .. } => (*input).clone_rc(),
+            Self::Outdated { input } => (*input).clone_rc(),
         }
     }
 
@@ -63,7 +79,8 @@ where
     pub fn output(&self) -> Option<T::Output> {
         match self {
             Self::Pending { .. } => None,
-            Self::Complete { output, .. } => Some((*output).clone_rc()),
+            Self::Completed { output, .. } => Some((*output).clone_rc()),
+            Self::Outdated { .. } => None,
         }
     }
 }
@@ -77,12 +94,15 @@ where
             Self::Pending { ref input } => Self::Pending {
                 input: input.clone_rc(),
             },
-            Self::Complete {
+            Self::Completed {
                 ref input,
                 ref output,
-            } => Self::Complete {
+            } => Self::Completed {
                 input: input.clone_rc(),
                 output: output.clone_rc(),
+            },
+            Self::Outdated { ref input } => Self::Outdated {
+                input: input.clone_rc(),
             },
         }
     }
