@@ -8,5 +8,6 @@ members = [
     "examples/partial-render",
     "examples/random-uuid",
     "examples/divisibility",
+    "examples/divisibility-input",
 ]
 resolver = "2"

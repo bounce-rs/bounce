@@ -8,8 +8,9 @@ use anymap2::Map;
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
-use crate::atom::Atom;
-use crate::selector::{Selector, SelectorState};
+use crate::atom::{Atom, AtomSlice};
+use crate::input_selector::{InputSelector, InputSelectorsState};
+use crate::selector::{Selector, UnitSelector};
 use crate::slice::{Slice, SliceState};
 use crate::utils::Id;
 use crate::utils::Listener;
@@ -119,15 +120,18 @@ impl BounceStates {
     where
         T: Atom + 'static,
     {
-        self.get_slice_value::<T>()
+        self.get_slice_value::<AtomSlice<T>>().inner.clone()
     }
 
-    /// Returns the value of a [`Selector`].
-    pub fn get_selector_value<T>(&self) -> Rc<T>
+    /// Returns the value of an [`InputSelector`].
+    pub fn get_input_selector_value<T>(&self, input: Rc<T::Input>) -> Rc<T>
     where
-        T: Selector + 'static,
+        T: InputSelector + 'static,
     {
-        let state = self.inner.get_state::<SelectorState<T>>();
+        let state = self
+            .inner
+            .get_state::<InputSelectorsState<T>>()
+            .get_state(input);
         let listener_callbacks = self.listener_callbacks.borrow().clone();
         let mut listeners = Vec::new();
 
@@ -142,6 +146,16 @@ impl BounceStates {
         self.listeners.borrow_mut().extend(listeners);
 
         state.get(self.derived_clone())
+    }
+
+    /// Returns the value of a [`Selector`].
+    pub fn get_selector_value<T>(&self) -> Rc<T>
+    where
+        T: Selector + 'static,
+    {
+        self.get_input_selector_value::<UnitSelector<T>>(Rc::new(()))
+            .inner
+            .clone()
     }
 
     pub(crate) fn add_listener_callback(&self, callback: Rc<Callback<()>>) {

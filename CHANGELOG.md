@@ -1,10 +1,15 @@
 ## Release 0.2.0
 
+### Breaking Changes
+- Slice is now a derive macro and slices now are required to implement Reducible trait
+- Atom no longer directly implements Slice
+
 ### Other Changes
 
 - Added Notion API
 - Added FutureNotion API
 - Added Selector API
+- Added InputSelector API
 - Update Dependencies in Cargo.toml
 
 ## Release 0.1.3

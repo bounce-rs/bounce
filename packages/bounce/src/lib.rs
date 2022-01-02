@@ -10,6 +10,7 @@ mod any_state;
 mod atom;
 mod future_notion;
 mod hooks;
+mod input_selector;
 mod provider;
 mod root_state;
 mod selector;
@@ -114,6 +115,7 @@ pub use atom::CloneAtom;
 pub use future_notion::{Deferred, FutureNotion};
 #[doc(inline)]
 pub use hooks::*;
+pub use input_selector::InputSelector;
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
 pub use selector::Selector;
@@ -126,6 +128,7 @@ pub mod prelude {
     pub use crate::future_notion;
     pub use crate::hooks::*;
     pub use crate::BounceStates;
+    pub use crate::InputSelector;
     pub use crate::Selector;
     pub use crate::WithNotion;
     pub use crate::{Atom, CloneAtom};
