@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
 use syn::{FnArg, Generics, Ident, ItemFn, ReturnType, Type, TypePath, Visibility};
 
 #[derive(Debug)]
@@ -121,10 +123,17 @@ pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
         }
     };
 
+    let phantom_generics = generics
+        .type_params()
+        .map(|ty_param| ty_param.ident.clone())
+        .collect::<Punctuated<_, Comma>>();
+
     quote! {
         #item
 
-        #vis struct #notion_name #generics;
+        #vis struct #notion_name #generics {
+            _marker: ::std::marker::PhantomData<(#phantom_generics)>
+        }
 
         #[automatically_derived]
         impl #impl_generics ::bounce::FutureNotion for #notion_name #ty_generics #where_clause {
