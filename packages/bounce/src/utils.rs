@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use once_cell::sync::Lazy;
 use yew::callback::Callback;
 
-#[derive(PartialEq, Debug, Clone, Eq, Hash)]
+#[derive(PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy)]
 pub struct Id(u64);
 
 impl Default for Id {

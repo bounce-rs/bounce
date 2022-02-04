@@ -571,6 +571,10 @@ where
 /// first time is before it starts with a variant `Pending` and the second time is when it
 /// completes with variant `Complete`.
 ///
+/// # Note
+///
+/// If you are trying to interact with a backend API, it is recommended to use the [Query](crate::query) API instead.
+///
 /// # Example
 ///
 /// ```

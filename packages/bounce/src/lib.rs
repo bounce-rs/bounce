@@ -6,12 +6,15 @@
 #![cfg_attr(documenting, feature(doc_cfg))]
 #![cfg_attr(any(releasing, not(debug_assertions)), deny(dead_code, unused_imports))]
 
+extern crate self as bounce;
+
 mod any_state;
 mod atom;
 mod future_notion;
 mod hooks;
 mod input_selector;
 mod provider;
+pub mod query;
 mod root_state;
 mod selector;
 mod slice;
@@ -85,6 +88,7 @@ pub use slice::Slice;
 /// It can optionally accept a `states` parameter which has a type of [`BounceStates`] that can be
 /// used to access bounce states when being run.
 ///
+/// The async function must have a signature of either
 /// `Fn(Rc<I>) -> impl Future<Output = Rc<O>>` or `Fn(BounceState, Rc<I>) -> impl Future<Output = Rc<O>>`.
 ///
 /// Both `Input` and `Output` must be Rc'ed.
