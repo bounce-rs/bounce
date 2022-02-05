@@ -152,3 +152,17 @@ fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
     yew::start_app::<App>();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gloo::utils::document;
+    use wasm_bindgen_test::*;
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    #[wasm_bindgen_test]
+    fn test_divisibility() {
+        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+    }
+}
