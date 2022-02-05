@@ -27,6 +27,41 @@ pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
 ///
 /// This trait is implemented with [async_trait](macro@async_trait), you should apply an `#[async_trait(?Send)]`
 /// attribute to your implementation of this trait.
+///
+/// # Example
+///
+/// ```
+/// use std::rc::Rc;
+/// use std::convert::Infallible;
+/// use bounce::prelude::*;
+/// use bounce::query::{Mutation, MutationResult};
+/// use yew::prelude::*;
+/// use async_trait::async_trait;
+///
+/// #[derive(Debug, PartialEq)]
+/// struct User {
+///     id: u64,
+///     name: String,
+/// }
+///
+/// #[derive(Debug, PartialEq)]
+/// struct UpdateUserMutation {
+/// }
+///
+/// #[async_trait(?Send)]
+/// impl Mutation for UpdateUserMutation {
+///     type Input = User;
+///     type Error = Infallible;
+///
+///     async fn run(_states: &BounceStates, _input: Rc<User>) -> MutationResult<Self> {
+///         // updates the user information.
+///
+///         Ok(UpdateUserMutation {}.into())
+///     }
+/// }
+/// ```
+///
+/// See: [`use_mutation_value`]
 #[async_trait(?Send)]
 pub trait Mutation: PartialEq {
     /// The Input type.
@@ -221,6 +256,10 @@ where
     }
 
     /// Returns the result of last finished mutation (if any).
+    ///
+    /// - `None` indicates that a mutation is currently loading or has yet to start(idling).
+    /// - `Some(Ok(m))` indicates that the last mutation is successful and the content is stored in `m`.
+    /// - `Some(Err(e))` indicates that the last mutation has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<MutationResult<T>> {
         self.state.value.clone().flatten()
     }
@@ -302,6 +341,72 @@ where
 ///
 /// A mutation is a state that is not started until the run method is invoked. Mutations are
 /// usually used to modify data on the server.
+///
+/// # Example
+///
+/// ```
+/// use std::rc::Rc;
+/// use std::convert::Infallible;
+/// use bounce::prelude::*;
+/// use bounce::query::{Mutation, MutationResult, use_mutation_value, QueryStatus};
+/// use yew::prelude::*;
+/// use async_trait::async_trait;
+/// use wasm_bindgen_futures::spawn_local;
+///
+/// #[derive(Debug, PartialEq)]
+/// struct User {
+///     id: u64,
+///     name: String,
+/// }
+///
+/// #[derive(Debug, PartialEq)]
+/// struct UpdateUserMutation {
+/// }
+///
+/// #[async_trait(?Send)]
+/// impl Mutation for UpdateUserMutation {
+///     type Input = User;
+///     type Error = Infallible;
+///
+///     async fn run(_states: &BounceStates, _input: Rc<User>) -> MutationResult<Self> {
+///         // updates the user information.
+///
+///         Ok(UpdateUserMutation {}.into())
+///     }
+/// }
+///
+/// #[function_component(Comp)]
+/// fn comp() -> Html {
+///     let update_user = use_mutation_value::<UpdateUserMutation>();
+///
+///     let on_click_update_user = {
+///         let update_user = update_user.clone();
+///         Callback::from(move |_| {
+///             let update_user = update_user.clone();
+///             spawn_local(
+///                 async move {
+///                     // The result is also returned to the run method, but since we will
+///                     // process the result in the render function, we ignore it here.
+///                     let _result = update_user.run(User {id: 0, name: "Jane Done".into() }).await;
+///                 }
+///             );
+///         })
+///     };
+///
+///     match update_user.result() {
+///         // The result is None if the mutation is currently loading or has yet to start.
+///         None => if update_user.status() == QueryStatus::Idle {
+///             html! {<div>{"Updating User..."}</div>}
+///         } else {
+///             html! {<button onclick={on_click_update_user}>{"Updating User"}</button>}
+///         },
+///         // The result is Some(Ok(_)) if the mutation has succeed.
+///         Some(Ok(_m)) => html! {<div>{"User has been successfully updated."}</div>},
+///         // The result is Some(Err(_)) if an error is returned during fetching.
+///         Some(Err(_e)) => html! {<div>{"Oops, something went wrong."}</div>},
+///     }
+/// }
+/// ```
 pub fn use_mutation_value<T>() -> UseMutationValueHandle<T>
 where
     T: Mutation + 'static,
