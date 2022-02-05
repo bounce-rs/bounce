@@ -2,7 +2,7 @@
 
 ### Breaking Changes
 
-- Slice is now a derive macro and slices now are required to implement Reducible trait
+- Slice is now a derive macro and slices now are required to implement the Reducible trait
 - Atom no longer directly implements Slice
 
 ### Other Changes
