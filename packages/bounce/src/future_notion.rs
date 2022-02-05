@@ -11,6 +11,9 @@ use yew::prelude::*;
 use crate::root_state::{BounceRootState, BounceStates};
 
 /// A trait to implement a [`Future`](std::future::Future)-backed notion.
+///
+/// This trait is usually automatically implemented by the
+/// [`#[future_notion]`](macro@crate::future_notion) attribute macro.
 pub trait FutureNotion {
     /// The input type.
     type Input: 'static;
@@ -121,7 +124,7 @@ where
     }
 }
 
-/// A hook to create a function that when called, runs a `FutureNotion` with provided input.
+/// A hook to create a function that when called, runs a [`FutureNotion`] with provided input.
 ///
 /// A `FutureNotion` is created by applying a `#[future_notion(NotionName)]` attribute to an async function.
 ///

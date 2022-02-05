@@ -111,7 +111,7 @@ where
     }
 }
 
-/// A hook to connect to an `Atom`.
+/// A hook to connect to an [`Atom`](macro@crate::Atom).
 ///
 /// Returns a [`UseAtomHandle<T>`].
 ///
@@ -178,7 +178,7 @@ where
     UseAtomHandle { inner }
 }
 
-/// A hook to produce a setter function for a `Atom`.
+/// A hook to produce a setter function for an [`Atom`](macro@crate::Atom).
 ///
 /// Returns a `Rc<dyn Fn(T)>`.
 ///
@@ -229,7 +229,7 @@ where
     use_slice_dispatch::<AtomSlice<T>>()
 }
 
-/// A read-only hook to connect to the value of an `Atom`.
+/// A read-only hook to connect to the value of an [`Atom`](macro@crate::Atom).
 ///
 /// Returns `Rc<T>`.
 ///

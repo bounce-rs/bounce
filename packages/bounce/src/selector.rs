@@ -39,7 +39,7 @@ where
     }
 }
 
-/// A hook to connect to a `Selector`.
+/// A hook to connect to a [`Selector`].
 ///
 /// A selector is a derived state which its value is derived from other states.
 ///

@@ -196,7 +196,7 @@ where
     fn apply(&self, _notion: Rc<dyn Any>) {}
 }
 
-/// A hook to connect to an `InputSelector`.
+/// A hook to connect to an [`InputSelector`].
 ///
 /// An input selector is similar to a selector, but also with an input.
 ///
