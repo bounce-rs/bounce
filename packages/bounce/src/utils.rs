@@ -40,25 +40,6 @@ impl fmt::Debug for Listener {
     }
 }
 
-/// A trait to limit certain types to be Rc.
-pub trait RcTrait {
-    type Inner: 'static;
-
-    /// Clones a `Rc<T>`.
-    fn clone_rc(&self) -> Self;
-}
-
-impl<T> RcTrait for Rc<T>
-where
-    T: 'static,
-{
-    type Inner = T;
-
-    fn clone_rc(&self) -> Rc<Self::Inner> {
-        self.clone()
-    }
-}
-
 pub(crate) type ListenerVec<T> = Vec<Weak<Callback<Rc<T>>>>;
 
 pub(crate) fn notify_listeners<T>(listeners: Rc<RefCell<ListenerVec<T>>>, val: Rc<T>) {

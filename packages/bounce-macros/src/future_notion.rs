@@ -78,7 +78,7 @@ impl AsyncFnProps {
 
         let input = match *input_type {
             Type::Reference(m) => *m.elem,
-            arg => return Err(syn::Error::new_spanned(arg, "input must be a reference.")),
+            arg => return Err(syn::Error::new_spanned(arg, "input must be a reference")),
         };
         Ok(Self {
             input,
