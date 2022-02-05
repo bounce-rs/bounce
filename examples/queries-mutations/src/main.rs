@@ -1,8 +1,3 @@
-//! This is a demo of the low-level future notion API.
-//!
-//! If you are interacting with APIs, it is recommended to use the Query API which is implemented
-//! based on the future notion API with automatic caching and request deduplication.
-
 use std::rc::Rc;
 
 use async_trait::async_trait;
