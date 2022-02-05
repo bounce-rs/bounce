@@ -88,9 +88,9 @@ pub use slice::Slice;
 /// used to access bounce states when being run.
 ///
 /// The async function must have a signature of either
-/// `Fn(Rc<I>) -> impl Future<Output = Rc<O>>` or `Fn(&BounceState, Rc<I>) -> impl Future<Output = Rc<O>>`.
+/// `Fn(&I) -> impl Future<Output = O>` or `Fn(&BounceState, &I) -> impl Future<Output = O>`.
 ///
-/// Both `Input` and `Output` must be Rc'ed.
+/// Both `Input` and `Output` must live `'static`.
 ///
 /// # Example
 ///
@@ -105,10 +105,10 @@ pub use slice::Slice;
 /// }
 ///
 /// #[future_notion(FetchData)]
-/// async fn fetch_user(id: Rc<u64>) -> Rc<User> {
+/// async fn fetch_user(id: &u64) -> User {
 ///     // fetch user
 ///
-///     User { id: *id, name: "John Smith".into() }.into()
+///     User { id: *id, name: "John Smith".into() }
 /// }
 /// ```
 /// See: [`use_future_notion_runner`](crate::use_future_notion_runner)

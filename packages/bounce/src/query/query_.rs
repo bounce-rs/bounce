@@ -119,10 +119,7 @@ where
 }
 
 #[future_notion(RunQuery)]
-async fn run_query<T>(
-    states: &BounceStates,
-    input: Rc<RunQueryInput<T>>,
-) -> Rc<Option<QueryResult<T>>>
+async fn run_query<T>(states: &BounceStates, input: &RunQueryInput<T>) -> Option<QueryResult<T>>
 where
     T: Query + 'static,
 {
@@ -130,7 +127,7 @@ where
         .get_input_selector_value::<IsCurrentQuery<T>>((input.id, input.input.clone()).into());
 
     if !is_current_query.inner {
-        return None.into();
+        return None;
     }
 
     let result = T::query(states, input.input.clone()).await;
@@ -139,7 +136,7 @@ where
         let _result = m.send(result.clone());
     }
 
-    Some(result).into()
+    Some(result)
 }
 
 #[derive(PartialEq, Debug)]
@@ -334,7 +331,7 @@ where
     T: Query + 'static,
 {
     value: Option<QueryStateValue<T>>,
-    run_query: Rc<dyn Fn(Rc<RunQueryInput<T>>)>,
+    run_query: Rc<dyn Fn(RunQueryInput<T>)>,
     dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
 }
 
@@ -372,11 +369,11 @@ where
 
         let (sender, receiver) = oneshot::channel();
 
-        (self.run_query)(Rc::new(RunQueryInput {
+        (self.run_query)(RunQueryInput {
             id,
             input,
             sender: Rc::new(RefCell::new(Some(sender))),
-        }));
+        });
 
         receiver.await.unwrap()
     }
@@ -415,11 +412,11 @@ where
         let run_query = run_query.clone();
         use_effect_with_deps(
             move |(id, input)| {
-                run_query(Rc::new(RunQueryInput {
+                run_query(RunQueryInput {
                     id: *id,
                     input: input.clone(),
                     sender: Rc::default(),
-                }));
+                });
 
                 || {}
             },

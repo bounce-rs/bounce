@@ -3,7 +3,7 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::{FnArg, Generics, Ident, ItemFn, ReturnType, Type, TypePath, Visibility};
+use syn::{parse_quote, FnArg, Generics, Ident, ItemFn, ReturnType, Type, Visibility};
 
 #[derive(Debug)]
 pub struct FutureNotionAttr {
@@ -23,7 +23,7 @@ impl Parse for FutureNotionAttr {
 }
 
 pub struct AsyncFnProps {
-    input: TypePath,
+    input: Type,
     output: Type,
     with_state: bool,
     vis: Visibility,
@@ -46,10 +46,8 @@ impl AsyncFnProps {
 
         let output = match item.sig.output {
             ReturnType::Default => {
-                return Err(syn::Error::new_spanned(
-                    item.sig.output.clone(),
-                    "future notions must return an Rc'ed type",
-                ))
+                // Unit Type is Output.
+                parse_quote! { () }
             }
             ReturnType::Type(_, ref ty) => *ty.clone(),
         };
@@ -79,8 +77,8 @@ impl AsyncFnProps {
         .ty;
 
         let input = match *input_type {
-            Type::Path(m) => m,
-            arg => return Err(syn::Error::new_spanned(arg, "input must be an Rc'ed type.")),
+            Type::Reference(m) => *m.elem,
+            arg => return Err(syn::Error::new_spanned(arg, "input must be a reference.")),
         };
         Ok(Self {
             input,
@@ -140,10 +138,10 @@ pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
             type Input = #input;
             type Output = #output;
 
-            fn run(
-                states: &::bounce::BounceStates,
-                input: #input,
-            ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'_, #output> {
+            fn run<'a>(
+                states: &'a ::bounce::BounceStates,
+                input: &'a #input,
+            ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'a, #output> {
                 ::std::boxed::Box::pin(#fn_call)
             }
         }

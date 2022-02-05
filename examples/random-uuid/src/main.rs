@@ -11,12 +11,12 @@ struct UuidResponse {
 }
 
 #[future_notion(FetchUuid)]
-async fn fetch_uuid(_input: Rc<()>) -> Rc<String> {
+async fn fetch_uuid(_input: &()) -> String {
     // errors should be handled properly in actual application.
     let resp = reqwest::get("https://httpbin.org/uuid").await.unwrap();
     let uuid_resp = resp.json::<UuidResponse>().await.unwrap();
 
-    uuid_resp.uuid.into()
+    uuid_resp.uuid
 }
 
 #[derive(PartialEq, Atom)]
@@ -62,7 +62,7 @@ fn loader() -> Html {
     let uuid_state = use_atom::<UuidState>();
     let run_fetch_uuid = use_future_notion_runner::<FetchUuid>();
 
-    let on_fetch_clicked = Callback::from(move |_| run_fetch_uuid(().into()));
+    let on_fetch_clicked = Callback::from(move |_| run_fetch_uuid(()));
 
     let disabled = *uuid_state == UuidState::Pending;
 

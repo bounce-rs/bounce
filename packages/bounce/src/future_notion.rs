@@ -9,17 +9,19 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::root_state::{BounceRootState, BounceStates};
-use crate::utils::RcTrait;
 
 /// A trait to implement a [`Future`](std::future::Future)-backed notion.
 pub trait FutureNotion {
     /// The input type.
-    type Input: RcTrait + 'static;
+    type Input: 'static;
     /// The output type.
-    type Output: RcTrait + 'static;
+    type Output: 'static;
 
     /// Runs a future notion.
-    fn run(states: &BounceStates, input: Self::Input) -> LocalBoxFuture<'_, Self::Output>;
+    fn run<'a>(
+        states: &'a BounceStates,
+        input: &'a Self::Input,
+    ) -> LocalBoxFuture<'a, Self::Output>;
 }
 
 /// A deferred result type for future notions.
@@ -36,11 +38,14 @@ where
     T: FutureNotion,
 {
     /// A future notion is running.
-    Pending { input: T::Input },
+    Pending { input: Rc<T::Input> },
     /// A future notion has completed.
-    Completed { input: T::Input, output: T::Output },
+    Completed {
+        input: Rc<T::Input>,
+        output: Rc<T::Output>,
+    },
     /// The states used in the future notion run has been changed.
-    Outdated { input: T::Input },
+    Outdated { input: Rc<T::Input> },
 }
 
 impl<T> Deferred<T>
@@ -75,19 +80,19 @@ where
     }
 
     /// Returns the input of current future notion.
-    pub fn input(&self) -> T::Input {
+    pub fn input(&self) -> Rc<T::Input> {
         match self {
-            Self::Pending { input } => (*input).clone_rc(),
-            Self::Completed { input, .. } => (*input).clone_rc(),
-            Self::Outdated { input } => (*input).clone_rc(),
+            Self::Pending { input } => input.clone(),
+            Self::Completed { input, .. } => input.clone(),
+            Self::Outdated { input } => input.clone(),
         }
     }
 
     /// Returns the output of current future notion if it has completed.
-    pub fn output(&self) -> Option<T::Output> {
+    pub fn output(&self) -> Option<Rc<T::Output>> {
         match self {
             Self::Pending { .. } => None,
-            Self::Completed { output, .. } => Some((*output).clone_rc()),
+            Self::Completed { output, .. } => Some(output.clone()),
             Self::Outdated { .. } => None,
         }
     }
@@ -100,17 +105,17 @@ where
     fn clone(&self) -> Self {
         match self {
             Self::Pending { ref input } => Self::Pending {
-                input: input.clone_rc(),
+                input: input.clone(),
             },
             Self::Completed {
                 ref input,
                 ref output,
             } => Self::Completed {
-                input: input.clone_rc(),
-                output: output.clone_rc(),
+                input: input.clone(),
+                output: output.clone(),
             },
             Self::Outdated { ref input } => Self::Outdated {
-                input: input.clone_rc(),
+                input: input.clone(),
             },
         }
     }
@@ -147,10 +152,10 @@ where
 /// }
 ///
 /// #[future_notion(FetchUser)]
-/// async fn fetch_user(id: Rc<u64>) -> Rc<User> {
+/// async fn fetch_user(id: &u64) -> User {
 ///     // fetch user here...
 ///
-///     User { id: *id, username: "username".into() }.into()
+///     User { id: *id, username: "username".into() }
 /// }
 ///
 /// #[derive(PartialEq, Default, Atom)]
@@ -172,7 +177,7 @@ where
 /// # #[function_component(FetchUserComp)]
 /// # fn fetch_user_comp() -> Html {
 /// let load_user = use_future_notion_runner::<FetchUser>();
-/// load_user(1.into());
+/// load_user(1);
 /// # Html::default()
 /// # }
 /// ```
@@ -184,11 +189,11 @@ where
 
     Rc::new(move |input: T::Input| {
         let root = root.clone();
-        let input = input.clone_rc();
+        let input = Rc::new(input);
 
         spawn_local(async move {
             root.apply_notion(Rc::new(Deferred::<T>::Pending {
-                input: input.clone_rc(),
+                input: input.clone(),
             }) as Rc<dyn Any>);
 
             let states = root.states();
@@ -201,7 +206,7 @@ where
                 let listener_run = listener_run.clone();
                 let listeners = listeners.clone();
                 let root = root.clone();
-                let input = input.clone_rc();
+                let input = input.clone();
                 states.add_listener_callback(Rc::new(Callback::from(move |_| {
                     // There's a chance that the listeners might be called during the time while the future
                     // notion is running and there will be nothing to drop.
@@ -210,19 +215,22 @@ where
 
                     if !last_listener_run || listeners.is_some() {
                         root.apply_notion(Rc::new(Deferred::<T>::Outdated {
-                            input: input.clone_rc(),
+                            input: input.clone(),
                         }) as Rc<dyn Any>);
                     }
                 })))
             }
 
-            let output = T::run(&states, input.clone_rc()).await;
+            let output = T::run(&states, &input).await;
 
             if !listener_run.load(Ordering::Relaxed) {
                 let _result = listeners.borrow_mut().replace(states.take_listeners());
             }
 
-            root.apply_notion(Rc::new(Deferred::<T>::Completed { input, output }) as Rc<dyn Any>);
+            root.apply_notion(Rc::new(Deferred::<T>::Completed {
+                input,
+                output: output.into(),
+            }) as Rc<dyn Any>);
         });
     })
 }

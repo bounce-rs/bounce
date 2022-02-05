@@ -58,10 +58,7 @@ where
 }
 
 #[future_notion(RunMutation)]
-async fn run_mutation<T>(
-    states: &BounceStates,
-    input: Rc<RunMutationInput<T>>,
-) -> Rc<MutationResult<T>>
+async fn run_mutation<T>(states: &BounceStates, input: &RunMutationInput<T>) -> MutationResult<T>
 where
     T: Mutation + 'static,
 {
@@ -71,7 +68,7 @@ where
         let _result = m.send(result.clone());
     }
 
-    result.into()
+    result
 }
 
 enum MutationStateAction {
@@ -223,11 +220,11 @@ where
         let input = input.into();
         let (sender, receiver) = oneshot::channel();
 
-        (self.run_mutation)(Rc::new(RunMutationInput {
+        (self.run_mutation)(RunMutationInput {
             id,
             input,
             sender: Some(sender).into(),
-        }));
+        });
 
         receiver.await.unwrap()
     }
