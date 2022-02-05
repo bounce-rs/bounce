@@ -136,8 +136,11 @@ A notion is an action that can be applied on multiple states using
 You can find an example of notion [here](https://github.com/futursolo/bounce/blob/master/examples/notion/src/main.rs).
 
 A future notion is a notion that is applied twice when it starts running
-and finishes running. This can be handy when fetching data or handling other
+and finishes running. This can be handy when handling
 asynchronous tasks.
+
+If you are trying to interact with a backend, it is recommended to use
+the Query API instead.
 
 You can find an example of future notion [here](https://github.com/futursolo/bounce/blob/master/examples/random-uuid/src/main.rs).
 
@@ -147,6 +150,12 @@ A selector is a state derived from other states and auto updated when
 any underlying states changes.
 
 You can find an example of selector [here](https://github.com/futursolo/bounce/blob/master/examples/divisibility/src/main.rs).
+
+## Query & Mutation
+
+Queries and Mutations are states that can be connected to a backend API.
+
+You can find an example of the Query API [here](https://github.com/futursolo/bounce/blob/master/examples/queries-mutations/src/main.rs).
 
 ## License
 

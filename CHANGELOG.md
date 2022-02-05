@@ -10,6 +10,7 @@
 - Added FutureNotion API
 - Added Selector API
 - Added InputSelector API
+- Added Query API
 - Update Dependencies in Cargo.toml
 
 ## Release 0.1.3
