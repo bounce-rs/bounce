@@ -9,5 +9,6 @@ members = [
     "examples/random-uuid",
     "examples/divisibility",
     "examples/divisibility-input",
+    "examples/queries-mutations",
 ]
 resolver = "2"

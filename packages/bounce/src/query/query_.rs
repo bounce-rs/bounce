@@ -325,11 +325,11 @@ where
 }
 
 /// A handle returned by [`use_query_value`].
-#[derive(Clone)]
 pub struct UseQueryValueHandle<T>
 where
     T: Query + 'static,
 {
+    input: Rc<T::Input>,
     value: Option<QueryStateValue<T>>,
     run_query: Rc<dyn Fn(RunQueryInput<T>)>,
     dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
@@ -357,12 +357,12 @@ where
         }
     }
 
-    /// Runs a mutation with input.
-    pub async fn refresh(&self, input: impl Into<Rc<T::Input>>) -> QueryResult<T> {
-        let input = input.into();
-
+    /// Refreshes the query.
+    pub async fn refresh(&self) -> QueryResult<T> {
         if let Some(ref m) = self.value {
-            (self.dispatch_state)(QueryStateAction::Refresh((m.id(), input.clone()).into()));
+            (self.dispatch_state)(QueryStateAction::Refresh(
+                (m.id(), self.input.clone()).into(),
+            ));
         }
 
         let id = Id::new();
@@ -371,11 +371,25 @@ where
 
         (self.run_query)(RunQueryInput {
             id,
-            input,
+            input: self.input.clone(),
             sender: Rc::new(RefCell::new(Some(sender))),
         });
 
         receiver.await.unwrap()
+    }
+}
+
+impl<T> Clone for UseQueryValueHandle<T>
+where
+    T: Query + 'static,
+{
+    fn clone(&self) -> Self {
+        Self {
+            input: self.input.clone(),
+            value: self.value.clone(),
+            run_query: self.run_query.clone(),
+            dispatch_state: self.dispatch_state.clone(),
+        }
     }
 }
 
@@ -409,6 +423,7 @@ where
     let run_query = use_future_notion_runner::<RunQuery<T>>();
 
     {
+        let input = input.clone();
         let run_query = run_query.clone();
         use_effect_with_deps(
             move |(id, input)| {
@@ -425,6 +440,7 @@ where
     }
 
     UseQueryValueHandle {
+        input,
         dispatch_state,
         run_query,
         value: value.value.clone(),

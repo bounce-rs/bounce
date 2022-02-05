@@ -13,12 +13,15 @@ mod atom;
 mod future_notion;
 mod input_selector;
 mod provider;
-pub mod query;
 mod root_state;
 mod selector;
 mod slice;
 mod utils;
 mod with_notion;
+
+#[cfg_attr(documenting, doc(cfg(feature = "query")))]
+#[cfg(feature = "query")]
+pub mod query;
 
 /// A simple state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
 ///

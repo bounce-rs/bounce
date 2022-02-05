@@ -1,0 +1,23 @@
+[package]
+name = "queries-mutations"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bounce = { path = "../../packages/bounce", features = ["query"] }
+yew = "0.19.3"
+log = "0.4.14"
+console_log = { version = "0.2.0", features = ["color"] }
+reqwest = { version = "0.11.8", features = ["json"] }
+serde = { version = "1.0.132", features = ["derive"] }
+uuid = { version = "0.8.2", features = ["wasm-bindgen", "serde"] }
+async-trait = "0.1.52"
+wasm-bindgen-futures = "0.4.28"
+
+[dependencies.web-sys]
+version = "0.3.55"
+features = [
+    "HtmlInputElement",
+]

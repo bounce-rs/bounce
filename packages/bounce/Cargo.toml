@@ -21,10 +21,17 @@ wasm-bindgen-futures = "0.4.28"
 yew = "0.19.3"
 bounce-macros = { path = "../bounce-macros", version = "0.2.0" }
 futures = "0.3.19"
-async-trait = "0.1.52"
+async-trait = { version = "0.1.52", optional = true }
+
+[features]
+query = ["async-trait"]
 
 [dev-dependencies.web-sys]
 version = "0.3.55"
 features = [
     "HtmlInputElement",
 ]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "documenting"]

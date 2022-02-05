@@ -48,11 +48,19 @@ pub trait Mutation: PartialEq {
     async fn run(states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self>;
 }
 
+// We create 2 ID types to better distinguish them in code.
+#[derive(Default, PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy)]
+struct HandleId(Id);
+
+#[derive(Default, PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy)]
+struct MutationId(Id);
+
 struct RunMutationInput<T>
 where
     T: Mutation + 'static,
 {
-    id: Id,
+    handle_id: HandleId,
+    mutation_id: MutationId,
     input: Rc<T::Input>,
     sender: RefCell<Option<oneshot::Sender<MutationResult<T>>>>,
 }
@@ -72,17 +80,20 @@ where
 }
 
 enum MutationStateAction {
-    /// Destroy all states of a hook.
-    Destroy(Id),
+    /// Start tracking a handle.
+    Create(HandleId),
+    /// Stop tracking a handle.
+    Destroy(HandleId),
 }
 
-#[derive(Slice)]
+#[derive(Slice, Debug)]
+#[with_notion(Deferred<RunMutation<T>>)]
 struct MutationState<T>
 where
     T: Mutation + 'static,
 {
     ctr: u64,
-    mutations: HashMap<Id, Option<(Id, MutationResult<T>)>>,
+    mutations: HashMap<HandleId, Option<(MutationId, MutationResult<T>)>>,
 }
 
 impl<T> PartialEq for MutationState<T>
@@ -114,6 +125,18 @@ where
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
+            Self::Action::Create(id) => {
+                let mut mutations = self.mutations.clone();
+                mutations.insert(id, None);
+
+                Self {
+                    // we don't increase the counter here as there's nothing to update.
+                    ctr: self.ctr,
+                    mutations,
+                }
+                .into()
+            }
+
             Self::Action::Destroy(id) => {
                 let mut mutations = self.mutations.clone();
                 mutations.remove(&id);
@@ -135,40 +158,26 @@ where
 {
     fn apply(self: Rc<Self>, notion: Rc<Deferred<RunMutation<T>>>) -> Rc<Self> {
         match *notion {
-            Deferred::Pending { ref input } => {
-                if self.mutations.contains_key(&input.id) {
-                    return self;
-                }
-
-                let mut mutations = self.mutations.clone();
-                mutations.insert(input.id, None);
-
-                Self {
-                    ctr: self.ctr + 1,
-                    mutations,
-                }
-                .into()
-            }
             Deferred::Completed {
                 ref input,
                 ref output,
             } => {
                 let mut mutations = self.mutations.clone();
-                match mutations.entry(input.id) {
-                    Entry::Vacant(m) => {
-                        m.insert(Some((input.id, (**output).clone())));
+                match mutations.entry(input.handle_id) {
+                    Entry::Vacant(_m) => {
+                        return self; // The handle has been destroyed so there's no need to track it any more.
                     }
                     Entry::Occupied(mut m) => {
                         let m = m.get_mut();
                         match m {
                             Some(ref n) => {
                                 // only replace if new id is higher.
-                                if n.0 <= input.id {
-                                    *m = Some((input.id, (**output).clone()));
+                                if n.0 <= input.mutation_id {
+                                    *m = Some((input.mutation_id, (**output).clone()));
                                 }
                             }
                             None => {
-                                *m = Some((input.id, (**output).clone()));
+                                *m = Some((input.mutation_id, (**output).clone()));
                             }
                         }
                     }
@@ -180,6 +189,7 @@ where
                 }
                 .into()
             }
+            Deferred::Pending { .. } => self,
             Deferred::Outdated { .. } => self,
         }
     }
@@ -190,6 +200,7 @@ pub struct UseMutationValueHandle<T>
 where
     T: Mutation + 'static,
 {
+    id: HandleId,
     state: Rc<MutationSelector<T>>,
     run_mutation: Rc<dyn Fn(<RunMutation<T> as FutureNotion>::Input)>,
     _marker: PhantomData<T>,
@@ -216,12 +227,13 @@ where
 
     /// Runs a mutation with input.
     pub async fn run(&self, input: impl Into<Rc<T::Input>>) -> MutationResult<T> {
-        let id = Id::new();
+        let id = MutationId::default();
         let input = input.into();
         let (sender, receiver) = oneshot::channel();
 
         (self.run_mutation)(RunMutationInput {
-            id,
+            handle_id: self.id,
+            mutation_id: id,
             input,
             sender: Some(sender).into(),
         });
@@ -241,12 +253,26 @@ where
     }
 }
 
-#[derive(PartialEq)]
-pub(crate) struct MutationSelector<T>
+impl<T> Clone for UseMutationValueHandle<T>
 where
     T: Mutation + 'static,
 {
-    id: Option<Id>,
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            state: self.state.clone(),
+            run_mutation: self.run_mutation.clone(),
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[derive(PartialEq)]
+struct MutationSelector<T>
+where
+    T: Mutation + 'static,
+{
+    id: Option<MutationId>,
     value: Option<Option<MutationResult<T>>>,
 }
 
@@ -254,8 +280,8 @@ impl<T> InputSelector for MutationSelector<T>
 where
     T: Mutation + 'static,
 {
-    type Input = Id;
-    fn select(states: &BounceStates, input: Rc<Id>) -> Rc<Self> {
+    type Input = HandleId;
+    fn select(states: &BounceStates, input: Rc<HandleId>) -> Rc<Self> {
         let values = states
             .get_slice_value::<MutationState<T>>()
             .mutations
@@ -280,15 +306,17 @@ pub fn use_mutation_value<T>() -> UseMutationValueHandle<T>
 where
     T: Mutation + 'static,
 {
-    let id = *use_ref(Id::new);
+    let id = *use_ref(HandleId::default);
     let dispatch_state = use_slice_dispatch::<MutationState<T>>();
-    let state = use_input_selector_value::<MutationSelector<T>>(id.into());
     let run_mutation = use_future_notion_runner::<RunMutation<T>>();
+    let state = use_input_selector_value::<MutationSelector<T>>(id.into());
 
     {
         use_effect_with_deps(
             |id| {
                 let id = *id;
+                dispatch_state(MutationStateAction::Create(id));
+
                 move || {
                     dispatch_state(MutationStateAction::Destroy(id));
                 }
@@ -298,6 +326,7 @@ where
     }
 
     UseMutationValueHandle {
+        id,
         state,
         run_mutation,
         _marker: PhantomData,
