@@ -1,10 +1,14 @@
 use std::any::Any;
 use std::cell::RefCell;
+use std::fmt;
+use std::ops::Deref;
 use std::rc::Rc;
 
-use yew::callback::Callback;
+use wasm_bindgen::prelude::*;
+use yew::prelude::*;
 
 use crate::any_state::AnyState;
+use crate::root_state::BounceRootState;
 use crate::utils::{notify_listeners, Listener, ListenerVec};
 
 pub use bounce_macros::Slice;
@@ -122,4 +126,260 @@ where
             self.notify_listeners(next_val);
         }
     }
+}
+
+/// A handle returned by [`use_slice`].
+///
+/// This type dereferences to `T` and has a `dispatch` method to dispatch actions.
+pub struct UseSliceHandle<T>
+where
+    T: Slice,
+{
+    inner: Rc<T>,
+    root: BounceRootState,
+}
+
+impl<T> UseSliceHandle<T>
+where
+    T: Slice + 'static,
+{
+    /// Dispatches `Action`.
+    pub fn dispatch(&self, action: T::Action) {
+        self.root.get_state::<SliceState<T>>().dispatch(action);
+    }
+}
+
+impl<T> Deref for UseSliceHandle<T>
+where
+    T: Slice,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> Clone for UseSliceHandle<T>
+where
+    T: Slice,
+{
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+            root: self.root.clone(),
+        }
+    }
+}
+
+impl<T> fmt::Debug for UseSliceHandle<T>
+where
+    T: Slice + fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("UseSliceHandle")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+/// A hook to connect to a `Slice`.
+///
+/// Returns a [`UseSliceHandle<T>`].
+///
+/// # Example
+///
+/// ```
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #
+/// enum CounterAction {
+///     Increment,
+///     Decrement,
+/// }
+///
+/// #[derive(PartialEq, Default, Slice)]
+/// struct Counter(u64);
+///
+/// impl Reducible for Counter {
+///     type Action = CounterAction;
+///
+///     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+///         match action {
+///             CounterAction::Increment => Self(self.0 + 1).into(),
+///             CounterAction::Decrement => Self(self.0 - 1).into(),
+///         }
+///     }
+/// }
+///
+/// #[function_component(CounterComp)]
+/// fn counter_comp() -> Html {
+///     let ctr = use_slice::<Counter>();
+///
+///     let inc = {
+///         let ctr = ctr.clone();
+///         Callback::from(move |_| {ctr.dispatch(CounterAction::Increment);})
+///     };
+///     let dec = {
+///         let ctr = ctr.clone();
+///         Callback::from(move |_| {ctr.dispatch(CounterAction::Decrement);})
+///     };;
+///
+///     html! {
+///         <div>
+///             <div>{"Current Counter: "}{ctr.0}</div>
+///             <button onclick={inc}>{"Increase"}</button>
+///             <button onclick={dec}>{"Decrease"}</button>
+///         </div>
+///     }
+/// }
+/// ```
+pub fn use_slice<T>() -> UseSliceHandle<T>
+where
+    T: Slice + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    let val = {
+        let root = root.clone();
+        use_state_eq(move || root.get_state::<SliceState<T>>().get())
+    };
+
+    {
+        let val = val.clone();
+        let root = root.clone();
+        use_effect_with_deps(
+            move |root| {
+                let listener = root
+                    .get_state::<SliceState<T>>()
+                    .listen(Rc::new(Callback::from(move |m| {
+                        val.set(m);
+                    })));
+
+                move || {
+                    std::mem::drop(listener);
+                }
+            },
+            root,
+        );
+    }
+
+    let val = (*val).clone();
+
+    UseSliceHandle { inner: val, root }
+}
+
+/// A hook to produce a dispatch function for a `Slice`.
+///
+/// Returns a `Rc<dyn Fn(T::Action)>`.
+///
+/// This hook will return a dispatch function that will not change across the entire lifetime of the
+/// component.
+///
+/// # Example
+///
+/// ```
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #
+/// # enum CounterAction {
+/// #     Increment,
+/// #     Decrement,
+/// # }
+/// #
+/// # #[derive(PartialEq, Default, Slice)]
+/// # struct Counter(u64);
+/// #
+/// # impl Reducible for Counter {
+/// #     type Action = CounterAction;
+/// #
+/// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+/// #         match action {
+/// #             CounterAction::Increment => Self(self.0 + 1).into(),
+/// #             CounterAction::Decrement => Self(self.0 - 1).into(),
+/// #         }
+/// #     }
+/// # }
+/// #
+/// #[function_component(CounterComp)]
+/// fn counter_comp() -> Html {
+///     let dispatch_ctr = use_slice_dispatch::<Counter>();
+///
+///     let inc = {
+///         let dispatch_ctr = dispatch_ctr.clone();
+///         Callback::from(move |_| {dispatch_ctr(CounterAction::Increment);})
+///     };
+///     let dec = {
+///         let dispatch_ctr = dispatch_ctr.clone();
+///         Callback::from(move |_| {dispatch_ctr(CounterAction::Decrement);})
+///     };
+///
+///     html! {
+///         <div>
+///             <button onclick={inc}>{"Increase"}</button>
+///             <button onclick={dec}>{"Decrease"}</button>
+///         </div>
+///     }
+/// }
+/// ```
+pub fn use_slice_dispatch<T>() -> Rc<dyn Fn(T::Action)>
+where
+    T: Slice + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    // Recreate the dispatch function in case root has changed.
+    Rc::new(move |action: T::Action| {
+        root.get_state::<SliceState<T>>().dispatch(action);
+    })
+}
+
+/// A read-only hook to connect to the value of a `Slice`.
+///
+/// Returns `Rc<T>`.
+///
+/// # Example
+///
+/// ```
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #
+/// # enum CounterAction {
+/// #     Increment,
+/// #     Decrement,
+/// # }
+/// #
+/// # #[derive(PartialEq, Default, Slice)]
+/// # struct Counter(u64);
+/// #
+/// # impl Reducible for Counter {
+/// #     type Action = CounterAction;
+/// #
+/// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+/// #         match action {
+/// #             CounterAction::Increment => Self(self.0 + 1).into(),
+/// #             CounterAction::Decrement => Self(self.0 - 1).into(),
+/// #         }
+/// #     }
+/// # }
+/// #
+/// #[function_component(CounterComp)]
+/// fn counter_comp() -> Html {
+///     let ctr = use_slice_value::<Counter>();
+///
+///     html! {
+///         <div>
+///             <div>{"Current Counter: "}{ctr.0}</div>
+///         </div>
+///     }
+/// }
+/// ```
+pub fn use_slice_value<T>() -> Rc<T>
+where
+    T: Slice + 'static,
+{
+    use_slice::<T>().inner
 }

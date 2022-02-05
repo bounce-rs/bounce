@@ -1,6 +1,14 @@
-use futures::future::LocalBoxFuture;
+use std::any::Any;
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::root_state::BounceStates;
+use futures::future::LocalBoxFuture;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
+use yew::prelude::*;
+
+use crate::root_state::{BounceRootState, BounceStates};
 use crate::utils::RcTrait;
 
 /// A trait to implement a [`Future`](std::future::Future)-backed notion.
@@ -106,4 +114,115 @@ where
             },
         }
     }
+}
+
+/// A hook to create a function that when called, runs a `FutureNotion` with provided input.
+///
+/// A `FutureNotion` is created by applying a `#[future_notion(NotionName)]` attribute to an async function.
+///
+/// When a future notion is run, it will be applied twice with a notion type [`Deferred<T>`]. The
+/// first time is before it starts with a variant `Pending` and the second time is when it
+/// completes with variant `Complete`.
+///
+/// If the notion read any other states using the `BounceStates` argument, it will subscribe to the
+/// states, when any state changes, an `Outdated` variant will be dispatched.
+///
+/// # Note
+///
+/// If you are trying to interact with a backend API, it is recommended to use the [Query](crate::query) API instead.
+///
+/// # Example
+///
+/// ```
+/// # use bounce::prelude::*;
+/// # use std::fmt;
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+///
+/// #[derive(PartialEq)]
+/// struct User {
+///     id: u64,
+///     username: String,
+/// }
+///
+/// #[future_notion(FetchUser)]
+/// async fn fetch_user(id: Rc<u64>) -> Rc<User> {
+///     // fetch user here...
+///
+///     User { id: *id, username: "username".into() }.into()
+/// }
+///
+/// #[derive(PartialEq, Default, Atom)]
+/// #[with_notion(Deferred<FetchUser>)]  // A future notion with type `T` will be applied as `Deferred<T>`.
+/// struct UserState {
+///     inner: Option<Rc<User>>,
+/// }
+///
+/// // Each time a future notion is run, it will be applied twice.
+/// impl WithNotion<Deferred<FetchUser>> for UserState {
+///     fn apply(self: Rc<Self>, notion: Rc<Deferred<FetchUser>>) -> Rc<Self> {
+///         match notion.output() {
+///             Some(m) => Self { inner: Some(m) }.into(),
+///             None => self,
+///         }
+///     }
+/// }
+///
+/// # #[function_component(FetchUserComp)]
+/// # fn fetch_user_comp() -> Html {
+/// let load_user = use_future_notion_runner::<FetchUser>();
+/// load_user(1.into());
+/// # Html::default()
+/// # }
+/// ```
+pub fn use_future_notion_runner<T>() -> Rc<dyn Fn(T::Input)>
+where
+    T: FutureNotion + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    Rc::new(move |input: T::Input| {
+        let root = root.clone();
+        let input = input.clone_rc();
+
+        spawn_local(async move {
+            root.apply_notion(Rc::new(Deferred::<T>::Pending {
+                input: input.clone_rc(),
+            }) as Rc<dyn Any>);
+
+            let states = root.states();
+
+            // send the listeners in to be destroyed.
+            let listeners = Rc::new(RefCell::new(None));
+            let listener_run = Rc::new(AtomicBool::new(false));
+
+            {
+                let listener_run = listener_run.clone();
+                let listeners = listeners.clone();
+                let root = root.clone();
+                let input = input.clone_rc();
+                states.add_listener_callback(Rc::new(Callback::from(move |_| {
+                    // There's a chance that the listeners might be called during the time while the future
+                    // notion is running and there will be nothing to drop.
+                    let listeners = listeners.borrow_mut().take();
+                    let last_listener_run = listener_run.swap(true, Ordering::Relaxed);
+
+                    if !last_listener_run || listeners.is_some() {
+                        root.apply_notion(Rc::new(Deferred::<T>::Outdated {
+                            input: input.clone_rc(),
+                        }) as Rc<dyn Any>);
+                    }
+                })))
+            }
+
+            let output = T::run(&states, input.clone_rc()).await;
+
+            if !listener_run.load(Ordering::Relaxed) {
+                let _result = listeners.borrow_mut().replace(states.take_listeners());
+            }
+
+            root.apply_notion(Rc::new(Deferred::<T>::Completed { input, output }) as Rc<dyn Any>);
+        });
+    })
 }

@@ -11,11 +11,10 @@ use yew::prelude::*;
 
 use super::status::QueryStatus;
 use crate::future_notion;
-use crate::future_notion::Deferred;
-use crate::hooks::{use_future_notion_runner, use_input_selector_value, use_slice_dispatch};
-use crate::input_selector::InputSelector;
+use crate::future_notion::{use_future_notion_runner, Deferred};
+use crate::input_selector::{use_input_selector_value, InputSelector};
 use crate::root_state::BounceStates;
-use crate::slice::Slice;
+use crate::slice::{use_slice_dispatch, Slice};
 use crate::utils::Id;
 use crate::with_notion::WithNotion;
 

@@ -5,10 +5,11 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::rc::Rc;
 
-use yew::callback::Callback;
+use wasm_bindgen::prelude::*;
+use yew::prelude::*;
 
 use crate::any_state::AnyState;
-use crate::root_state::BounceStates;
+use crate::root_state::{BounceRootState, BounceStates};
 use crate::utils::{notify_listeners, Listener, ListenerVec};
 
 /// An auto-updating derived state, similar to [`Selector`](crate::Selector), but with an input.
@@ -193,4 +194,100 @@ where
     T: InputSelector + 'static,
 {
     fn apply(&self, _notion: Rc<dyn Any>) {}
+}
+
+/// A hook to connect to an `InputSelector`.
+///
+/// An input selector is similar to a selector, but also with an input.
+///
+/// Its value will be automatically re-calculated when any state used in the selector has changed.
+///
+/// Returns a [`Rc<T>`].
+///
+/// # Example
+///
+/// ```
+/// # use bounce::prelude::*;
+/// # use std::rc::Rc;
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// #
+/// # enum SliceAction {
+/// #     Increment,
+/// # }
+/// #
+/// #[derive(Default, PartialEq, Slice)]
+/// struct Value(i64);
+/// #
+/// # impl Reducible for Value {
+/// #     type Action = SliceAction;
+/// #
+/// #     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+/// #         match action {
+/// #             Self::Action::Increment => Self(self.0 + 1).into(),
+/// #         }
+/// #     }
+/// # }
+///
+/// #[derive(PartialEq)]
+/// pub struct DivBy {
+///     inner: bool,
+/// }
+///
+/// impl InputSelector for DivBy {
+///     type Input = i64;
+///
+///     fn select(states: &BounceStates, input: Rc<Self::Input>) -> Rc<Self> {
+///         let val = states.get_slice_value::<Value>();
+///
+///         Self {
+///             inner: val.0 % *input == 0,
+///         }
+///         .into()
+///     }
+/// }
+/// # #[function_component(ShowIsEven)]
+/// # fn show_is_even() -> Html {
+/// let is_even = use_input_selector_value::<DivBy>(2.into());
+/// # Html::default()
+/// # }
+/// ```
+pub fn use_input_selector_value<T>(input: Rc<T::Input>) -> Rc<T>
+where
+    T: InputSelector + 'static,
+{
+    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+    let val = {
+        let input = input.clone();
+        let root = root.clone();
+        use_state_eq(move || {
+            let states = root.states();
+
+            root.get_state::<InputSelectorsState<T>>()
+                .get_state(input)
+                .get(states)
+        })
+    };
+
+    {
+        let val = val.clone();
+        let root = root;
+        use_effect_with_deps(
+            move |(root, input)| {
+                let listener = root
+                    .get_state::<InputSelectorsState<T>>()
+                    .get_state(input.clone())
+                    .listen(Rc::new(Callback::from(move |m| {
+                        val.set(m);
+                    })));
+
+                move || {
+                    std::mem::drop(listener);
+                }
+            },
+            (root, input),
+        );
+    }
+    (*val).clone()
 }

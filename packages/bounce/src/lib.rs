@@ -11,7 +11,6 @@ extern crate self as bounce;
 mod any_state;
 mod atom;
 mod future_notion;
-mod hooks;
 mod input_selector;
 mod provider;
 pub mod query;
@@ -89,7 +88,7 @@ pub use slice::Slice;
 /// used to access bounce states when being run.
 ///
 /// The async function must have a signature of either
-/// `Fn(Rc<I>) -> impl Future<Output = Rc<O>>` or `Fn(BounceState, Rc<I>) -> impl Future<Output = Rc<O>>`.
+/// `Fn(Rc<I>) -> impl Future<Output = Rc<O>>` or `Fn(&BounceState, Rc<I>) -> impl Future<Output = Rc<O>>`.
 ///
 /// Both `Input` and `Output` must be Rc'ed.
 ///
@@ -115,29 +114,28 @@ pub use slice::Slice;
 /// See: [`use_future_notion_runner`](crate::use_future_notion_runner)
 pub use bounce_macros::future_notion;
 
-pub use atom::CloneAtom;
-pub use future_notion::{Deferred, FutureNotion};
-#[doc(inline)]
-pub use hooks::*;
-pub use input_selector::InputSelector;
+pub use atom::{use_atom, use_atom_setter, use_atom_value, CloneAtom, UseAtomHandle};
+pub use future_notion::{use_future_notion_runner, Deferred, FutureNotion};
+pub use input_selector::{use_input_selector_value, InputSelector};
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
-pub use selector::Selector;
-pub use slice::CloneSlice;
-pub use with_notion::WithNotion;
+pub use selector::{use_selector_value, Selector};
+pub use slice::{use_slice, use_slice_dispatch, use_slice_value, CloneSlice, UseSliceHandle};
+pub use with_notion::{use_notion_applier, WithNotion};
 
 pub mod prelude {
     //! Default Bounce exports.
 
     pub use crate::future_notion;
-    pub use crate::hooks::*;
     pub use crate::BounceStates;
-    pub use crate::InputSelector;
-    pub use crate::Selector;
-    pub use crate::WithNotion;
-    pub use crate::{Atom, CloneAtom};
-    pub use crate::{CloneSlice, Slice};
-    pub use crate::{Deferred, FutureNotion};
+    pub use crate::{use_atom, use_atom_setter, use_atom_value, Atom, CloneAtom, UseAtomHandle};
+    pub use crate::{use_future_notion_runner, Deferred, FutureNotion};
+    pub use crate::{use_input_selector_value, InputSelector};
+    pub use crate::{use_notion_applier, WithNotion};
+    pub use crate::{use_selector_value, Selector};
+    pub use crate::{
+        use_slice, use_slice_dispatch, use_slice_value, CloneSlice, Slice, UseSliceHandle,
+    };
 }
 
 // vendored dependencies used by macros.
