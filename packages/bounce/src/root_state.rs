@@ -4,7 +4,7 @@ use std::fmt;
 use std::rc::Rc;
 
 use anymap2::any::CloneAny;
-use anymap2::Map;
+use anymap2::{Entry, Map};
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
@@ -45,16 +45,18 @@ impl BounceRootState {
         T: AnyState + Clone + Default + 'static,
     {
         let mut states = self.states.borrow_mut();
-        if let Some(m) = states.get::<T>().cloned() {
-            m
-        } else {
-            let state = T::default();
-            states.insert(state.clone());
 
-            let mut any_states = self.any_states.borrow_mut();
-            any_states.push(Rc::new(state.clone()) as Rc<dyn AnyState>);
+        match states.entry::<T>() {
+            Entry::Occupied(m) => m.get().clone(),
+            Entry::Vacant(m) => {
+                let state = T::default();
+                m.insert(state.clone());
 
-            state
+                let mut any_states = self.any_states.borrow_mut();
+                any_states.push(Rc::new(state.clone()) as Rc<dyn AnyState>);
+
+                state
+            }
         }
     }
 
