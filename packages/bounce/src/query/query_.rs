@@ -27,6 +27,42 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 ///
 /// This trait is implemented with [async_trait](macro@async_trait), you should apply an `#[async_trait(?Send)]`
 /// attribute to your implementation of this trait.
+///
+/// # Example
+///
+/// ```
+/// use std::rc::Rc;
+/// use std::convert::Infallible;
+/// use bounce::prelude::*;
+/// use bounce::query::{Query, QueryResult};
+/// use yew::prelude::*;
+/// use async_trait::async_trait;
+///
+/// #[derive(Debug, PartialEq)]
+/// struct User {
+///     id: u64,
+///     name: String,
+/// }
+///
+/// #[derive(Debug, PartialEq)]
+/// struct UserQuery {
+///     value: User
+/// }
+///
+/// #[async_trait(?Send)]
+/// impl Query for UserQuery {
+///     type Input = u64;
+///     type Error = Infallible;
+///
+///     async fn query(_states: &BounceStates, input: Rc<u64>) -> QueryResult<Self> {
+///         // fetch user
+///
+///         Ok(UserQuery{ value: User { id: *input, name: "John Smith".into() } }.into())
+///     }
+/// }
+/// ```
+///
+/// See: [`use_query_value`]
 #[async_trait(?Send)]
 pub trait Query: PartialEq {
     /// The Input type of a query.
@@ -39,6 +75,8 @@ pub trait Query: PartialEq {
     type Error: 'static + std::error::Error + PartialEq + Clone;
 
     /// Runs a query.
+    ///
+    /// This method will only be called when the result is not already cached.
     ///
     /// # Note
     ///
@@ -350,6 +388,10 @@ where
     }
 
     /// Returns the result of current query (if any).
+    ///
+    /// - `None` indicates that the query is currently loading.
+    /// - `Some(Ok(m))` indicates that the query is successful and the content is stored in `m`.
+    /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<QueryResult<T>> {
         match self.value {
             Some(QueryStateValue::Completed((_, ref m))) => Some(m.clone()),
@@ -358,6 +400,8 @@ where
     }
 
     /// Refreshes the query.
+    ///
+    /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
         if let Some(ref m) = self.value {
             (self.dispatch_state)(QueryStateAction::Refresh(
@@ -413,6 +457,54 @@ where
 /// free and can be cached.
 ///
 /// If your endpoint modifies data, then you need to use a [mutation](super::use_mutation_value).
+///
+/// # Example
+///
+/// ```
+/// use std::rc::Rc;
+/// use std::convert::Infallible;
+/// use bounce::prelude::*;
+/// use bounce::query::{Query, QueryResult, use_query_value};
+/// use yew::prelude::*;
+/// use async_trait::async_trait;
+///
+/// #[derive(Debug, PartialEq)]
+/// struct User {
+///     id: u64,
+///     name: String,
+/// }
+///
+/// #[derive(Debug, PartialEq)]
+/// struct UserQuery {
+///     value: User
+/// }
+///
+/// #[async_trait(?Send)]
+/// impl Query for UserQuery {
+///     type Input = u64;
+///     type Error = Infallible;
+///
+///     async fn query(_states: &BounceStates, input: Rc<u64>) -> QueryResult<Self> {
+///         // fetch user
+///
+///         Ok(UserQuery{ value: User { id: *input, name: "John Smith".into() } }.into())
+///     }
+/// }
+///
+/// #[function_component(Comp)]
+/// fn comp() -> Html {
+///     let user = use_query_value::<UserQuery>(0.into());
+///
+///     match user.result() {
+///         // The result is None if the query is currently loading.
+///         None => html! {<div>{"loading..."}</div>},
+///         // The result is Some(Ok(_)) if the query has loaded successfully.
+///         Some(Ok(m)) => html! {<div>{"User's name is "}{m.value.name.to_string()}</div>},
+///         // The result is Some(Err(_)) if an error is returned during fetching.
+///         Some(Err(e)) => html! {<div>{"Oops, something went wrong."}</div>},
+///     }
+/// }
+/// ```
 pub fn use_query_value<T>(input: Rc<T::Input>) -> UseQueryValueHandle<T>
 where
     T: Query + 'static,
