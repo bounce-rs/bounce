@@ -304,7 +304,7 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    async fn test_notion() {
+    async fn test_partial_render() {
         yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
 
         assert_eq!(get_text_content_by_id("val-a-a").await, "Slice A: 0");
