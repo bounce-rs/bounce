@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "packages/bounce",
-    "packages/bounce-macros",
+    "crates/bounce",
+    "crates/bounce-macros",
 
     "examples/notion",
     "examples/simple",

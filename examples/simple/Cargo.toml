@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bounce = { path = "../../packages/bounce" }
+bounce = { path = "../../crates/bounce" }
 yew = "0.19.3"
 log = "0.4.14"
 console_log = { version = "0.2.0", features = ["color"] }

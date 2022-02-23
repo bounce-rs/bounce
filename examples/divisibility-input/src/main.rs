@@ -92,7 +92,7 @@ fn setters() -> Html {
 
     html! {
         <div>
-            <button onclick={inc}>{"Increase Value"}</button>
+            <button onclick={inc} id="inc-btn">{"Increase Value"}</button>
         </div>
     }
 }
@@ -121,4 +121,110 @@ fn app() -> Html {
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
     yew::start_app::<App>();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gloo::timers::future::sleep;
+    use gloo::utils::document;
+    use std::time::Duration;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_test::*;
+    use web_sys::HtmlElement;
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    #[wasm_bindgen_test]
+    async fn test_divisibility_input() {
+        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+
+        sleep(Duration::ZERO).await;
+
+        let output = document()
+            .query_selector("#output")
+            .unwrap()
+            .unwrap()
+            .inner_html();
+
+        assert!(output.contains("0 is even"));
+        assert!(output.contains("0 is divisible by 3"));
+        assert!(output.contains("0 is divisible by 4"));
+
+        document()
+            .query_selector("#inc-btn")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+
+        sleep(Duration::ZERO).await;
+
+        let output = document()
+            .query_selector("#output")
+            .unwrap()
+            .unwrap()
+            .inner_html();
+
+        assert!(output.contains("1 is not even"));
+        assert!(output.contains("1 is not divisible by 3"));
+        assert!(output.contains("1 is not divisible by 4"));
+
+        document()
+            .query_selector("#inc-btn")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+
+        sleep(Duration::ZERO).await;
+
+        let output = document()
+            .query_selector("#output")
+            .unwrap()
+            .unwrap()
+            .inner_html();
+
+        assert!(output.contains("2 is even"));
+        assert!(output.contains("2 is not divisible by 3"));
+        assert!(output.contains("2 is not divisible by 4"));
+
+        document()
+            .query_selector("#inc-btn")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+
+        sleep(Duration::ZERO).await;
+
+        let output = document()
+            .query_selector("#output")
+            .unwrap()
+            .unwrap()
+            .inner_html();
+
+        assert!(output.contains("3 is not even"));
+        assert!(output.contains("3 is divisible by 3"));
+        assert!(output.contains("3 is not divisible by 4"));
+
+        document()
+            .query_selector("#inc-btn")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+
+        sleep(Duration::ZERO).await;
+
+        let output = document()
+            .query_selector("#output")
+            .unwrap()
+            .unwrap()
+            .inner_html();
+
+        assert!(output.contains("4 is even"));
+        assert!(output.contains("4 is not divisible by 3"));
+        assert!(output.contains("4 is divisible by 4"));
+    }
 }
