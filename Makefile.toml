@@ -1,13 +1,6 @@
 [env]
 CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
 
-### Tests ###
-
-# wasm-pack
-[tasks.wasm-tests]
-command = "wasm-pack"
-args = ["test", "--headless", "--firefox"]
-
 ### Lints ###
 
 # cargo clippy --all-targets --release -- --deny=warnings
@@ -33,8 +26,28 @@ private = true
 command = "cargo"
 args = ["fmt", "--all", "--", "--check"]
 
-# Each Workspace Member needs to be checked separately so that
+# Each workspace member needs to be checked separately so that
 # feature flags will not be merged.
 [tasks.lints.run_task]
 name = ["fmt-lint", "release-lint", "releasing-lint"]
+fork = true
+
+### Tests ###
+
+# wasm-pack test --headless --firefox
+[tasks.wasm-test]
+private = true
+command = "wasm-pack"
+args = ["test", "--headless", "--firefox"]
+
+# cargo test
+[tasks.native-test]
+private = true
+command = "cargo"
+args = ["test"]
+
+# Each workspace member needs to be tested separately so that
+# feature flags will not be merged.
+[tasks.tests.run_task]
+name = ["wasm-test", "native-test"]
 fork = true

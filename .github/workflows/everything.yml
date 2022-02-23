@@ -73,7 +73,7 @@ jobs:
         run: |
           for d in "examples/"*
           do
-            trunk build --release examples/$d/index.html
+            trunk build --release $d/index.html
           done
 
   test:
@@ -110,7 +110,7 @@ jobs:
         uses: davidB/rust-cargo-make@v1
 
       - name: Run Browser Tests
-        run: cargo make wasm-tests
+        run: cargo make tests
 
   publish:
     name: Publish to crates.io
