@@ -68,8 +68,13 @@ impl Query for UuidQuery {
     }
 }
 
+#[derive(Debug, Properties, PartialEq)]
+struct ContentProps {
+    ord: usize,
+}
+
 #[function_component(Content)]
-fn content() -> Html {
+fn content(props: &ContentProps) -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
     let text = match uuid_state.result() {
@@ -80,7 +85,7 @@ fn content() -> Html {
 
     html! {
         <>
-            <div>{text}</div>
+            <div id={format!("query-content-{}", props.ord)}>{text}</div>
         </>
     }
 }
@@ -144,16 +149,18 @@ fn echo() -> Html {
 
     html! {
         <>
-            <div>{resp}</div>
-            <input type="text" {disabled} placeholder="Enter Content Here..." oninput={on_input} value={value.to_string()} />
-            <button {disabled} onclick={on_send_clicked}>{"Send"}</button>
+            <div id="mut-resp">{resp}</div>
+            <input id="mut-input" type="text" {disabled} placeholder="Enter Content Here..." oninput={on_input} value={value.to_string()} />
+            <button id="mut-submit" {disabled} onclick={on_send_clicked}>{"Send"}</button>
         </>
     }
 }
 
 #[function_component(App)]
 fn app() -> Html {
-    let contents = (0..2).map(|_| html! { <Content /> }).collect::<Vec<_>>();
+    let contents = (0..2)
+        .map(|m| html! { <Content ord={m} /> })
+        .collect::<Vec<_>>();
 
     html! {
         <BounceRoot>
@@ -170,4 +177,119 @@ fn app() -> Html {
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
     yew::start_app::<App>();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gloo::timers::future::sleep;
+    use gloo::utils::document;
+    use std::time::Duration;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_test::*;
+    use web_sys::{EventTarget, HtmlElement};
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    async fn get_text_content_by_id<S: AsRef<str>>(id: S) -> String {
+        sleep(Duration::ZERO).await;
+
+        document()
+            .query_selector(&format!("#{}", id.as_ref()))
+            .unwrap()
+            .unwrap()
+            .text_content()
+            .unwrap()
+    }
+
+    async fn click_by_id<S: AsRef<str>>(id: S) {
+        sleep(Duration::ZERO).await;
+
+        document()
+            .query_selector(&format!("#{}", id.as_ref()))
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+    }
+
+    #[wasm_bindgen_test]
+    async fn test_query_mutation() {
+        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+
+        assert_eq!(
+            get_text_content_by_id("query-content-0").await,
+            "Loading UUID, Please wait..."
+        );
+        assert_eq!(
+            get_text_content_by_id("query-content-1").await,
+            "Loading UUID, Please wait..."
+        );
+
+        let mut found = false;
+        for _i in 0..20 {
+            sleep(Duration::from_millis(100)).await;
+
+            if get_text_content_by_id("query-content-0")
+                .await
+                .starts_with("Random UUID: ")
+            {
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("query-content-0").await,
+                    get_text_content_by_id("query-content-1").await
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "request didn't finish in time!");
+
+        document()
+            .query_selector("#mut-input")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlInputElement>()
+            .set_value("some content");
+
+        document()
+            .query_selector("#mut-input")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<EventTarget>()
+            .dispatch_event(&Event::new("input").unwrap())
+            .unwrap();
+
+        assert_eq!(
+            get_text_content_by_id("mut-resp").await,
+            "To send the content to server, please click 'Send'."
+        );
+
+        click_by_id("mut-submit").await;
+
+        let mut found = false;
+        for _i in 0..20 {
+            sleep(Duration::from_millis(100)).await;
+
+            if get_text_content_by_id("mut-resp")
+                .await
+                .starts_with("Server Response: ")
+            {
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("mut-resp").await,
+                    "Server Response: some content"
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "mutation didn't finish in time!");
+    }
 }
