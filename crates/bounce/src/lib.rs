@@ -115,6 +115,7 @@ pub use bounce_macros::future_notion;
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
 
+pub use states::artifact::{use_artifacts, Artifact};
 pub use states::atom::{use_atom, use_atom_setter, use_atom_value, CloneAtom, UseAtomHandle};
 pub use states::future_notion::{use_future_notion_runner, Deferred, FutureNotion};
 pub use states::input_selector::{use_input_selector_value, InputSelector};
