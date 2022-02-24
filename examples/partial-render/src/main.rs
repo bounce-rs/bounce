@@ -66,8 +66,8 @@ fn comp_a() -> Html {
 
     html! {
         <div>
-            <p>{"Slice A: "}{a.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-a-a">{"Slice A: "}{a.0}</p>
+            <p id="val-a-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -88,8 +88,8 @@ fn comp_b() -> Html {
 
     html! {
         <div>
-            <p>{"Slice B: "}{b.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-b-b">{"Slice B: "}{b.0}</p>
+            <p id="val-b-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -110,8 +110,8 @@ fn comp_c() -> Html {
 
     html! {
         <div>
-            <p>{"Slice C: "}{c.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-c-c">{"Slice C: "}{c.0}</p>
+            <p id="val-c-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -133,9 +133,9 @@ fn comp_ab() -> Html {
 
     html! {
         <div>
-            <p>{"Slice A: "}{a.0}</p>
-            <p>{"Slice B: "}{b.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-ab-a">{"Slice A: "}{a.0}</p>
+            <p id="val-ab-b">{"Slice B: "}{b.0}</p>
+            <p id="val-ab-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -157,9 +157,9 @@ fn comp_ac() -> Html {
 
     html! {
         <div>
-            <p>{"Slice A: "}{a.0}</p>
-            <p>{"Slice C: "}{c.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-ac-a">{"Slice A: "}{a.0}</p>
+            <p id="val-ac-c">{"Slice C: "}{c.0}</p>
+            <p id="val-ac-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -181,9 +181,9 @@ fn comp_bc() -> Html {
 
     html! {
         <div>
-            <p>{"Slice B: "}{b.0}</p>
-            <p>{"Slice C: "}{c.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-bc-b">{"Slice B: "}{b.0}</p>
+            <p id="val-bc-c">{"Slice C: "}{c.0}</p>
+            <p id="val-bc-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -209,10 +209,10 @@ fn comp_abc() -> Html {
             grid-column-start: 1;
             grid-column-end: 4;
         "#)}>
-            <p>{"Slice A: "}{a.0}</p>
-            <p>{"Slice B: "}{b.0}</p>
-            <p>{"Slice C: "}{c.0}</p>
-            <p>{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-abc-a">{"Slice A: "}{a.0}</p>
+            <p id="val-abc-b">{"Slice B: "}{b.0}</p>
+            <p id="val-abc-c">{"Slice C: "}{c.0}</p>
+            <p id="val-abc-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
         </div>
     }
 }
@@ -230,9 +230,9 @@ fn setters() -> Html {
     html! {
         <div class={css!(r#"
         "#)}>
-            <button onclick={inc_a}>{"Increase A"}</button>
-            <button onclick={inc_b}>{"Increase B"}</button>
-            <button onclick={inc_c}>{"Increase C"}</button>
+            <button id="btn-inc-a" onclick={inc_a}>{"Increase A"}</button>
+            <button id="btn-inc-b" onclick={inc_b}>{"Increase B"}</button>
+            <button id="btn-inc-c" onclick={inc_c}>{"Increase C"}</button>
         </div>
     }
 }
@@ -267,4 +267,226 @@ fn app() -> Html {
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
     yew::start_app::<App>();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gloo::timers::future::sleep;
+    use gloo::utils::document;
+    use std::time::Duration;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_test::*;
+    use web_sys::HtmlElement;
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    async fn get_text_content_by_id<S: AsRef<str>>(id: S) -> String {
+        sleep(Duration::ZERO).await;
+
+        document()
+            .query_selector(&format!("#{}", id.as_ref()))
+            .unwrap()
+            .unwrap()
+            .text_content()
+            .unwrap()
+    }
+
+    async fn click_by_id<S: AsRef<str>>(id: S) {
+        sleep(Duration::ZERO).await;
+
+        document()
+            .query_selector(&format!("#{}", id.as_ref()))
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+    }
+
+    #[wasm_bindgen_test]
+    async fn test_partial_render() {
+        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+
+        assert_eq!(get_text_content_by_id("val-a-a").await, "Slice A: 0");
+        assert_eq!(get_text_content_by_id("val-ab-a").await, "Slice A: 0");
+        assert_eq!(get_text_content_by_id("val-ac-a").await, "Slice A: 0");
+        assert_eq!(get_text_content_by_id("val-abc-a").await, "Slice A: 0");
+
+        assert_eq!(get_text_content_by_id("val-b-b").await, "Slice B: 0");
+        assert_eq!(get_text_content_by_id("val-ab-b").await, "Slice B: 0");
+        assert_eq!(get_text_content_by_id("val-bc-b").await, "Slice B: 0");
+        assert_eq!(get_text_content_by_id("val-abc-b").await, "Slice B: 0");
+
+        assert_eq!(get_text_content_by_id("val-c-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-ac-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-bc-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-abc-c").await, "Slice C: 0");
+
+        assert_eq!(
+            get_text_content_by_id("val-a-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-b-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-c-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ab-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ac-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-bc-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-abc-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+
+        click_by_id("btn-inc-a").await;
+
+        assert_eq!(get_text_content_by_id("val-a-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-ab-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-ac-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-abc-a").await, "Slice A: 1");
+
+        assert_eq!(get_text_content_by_id("val-b-b").await, "Slice B: 0");
+        assert_eq!(get_text_content_by_id("val-ab-b").await, "Slice B: 0");
+        assert_eq!(get_text_content_by_id("val-bc-b").await, "Slice B: 0");
+        assert_eq!(get_text_content_by_id("val-abc-b").await, "Slice B: 0");
+
+        assert_eq!(get_text_content_by_id("val-c-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-ac-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-bc-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-abc-c").await, "Slice C: 0");
+
+        assert_eq!(
+            get_text_content_by_id("val-a-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-b-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-c-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ab-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ac-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-bc-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-abc-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+
+        click_by_id("btn-inc-b").await;
+
+        assert_eq!(get_text_content_by_id("val-a-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-ab-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-ac-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-abc-a").await, "Slice A: 1");
+
+        assert_eq!(get_text_content_by_id("val-b-b").await, "Slice B: 1");
+        assert_eq!(get_text_content_by_id("val-ab-b").await, "Slice B: 1");
+        assert_eq!(get_text_content_by_id("val-bc-b").await, "Slice B: 1");
+        assert_eq!(get_text_content_by_id("val-abc-b").await, "Slice B: 1");
+
+        assert_eq!(get_text_content_by_id("val-c-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-ac-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-bc-c").await, "Slice C: 0");
+        assert_eq!(get_text_content_by_id("val-abc-c").await, "Slice C: 0");
+
+        assert_eq!(
+            get_text_content_by_id("val-a-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-b-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-c-render-ctr").await,
+            "Rendered: 1 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ab-render-ctr").await,
+            "Rendered: 3 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ac-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-bc-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-abc-render-ctr").await,
+            "Rendered: 3 Time(s)"
+        );
+
+        click_by_id("btn-inc-c").await;
+
+        assert_eq!(get_text_content_by_id("val-a-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-ab-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-ac-a").await, "Slice A: 1");
+        assert_eq!(get_text_content_by_id("val-abc-a").await, "Slice A: 1");
+
+        assert_eq!(get_text_content_by_id("val-b-b").await, "Slice B: 1");
+        assert_eq!(get_text_content_by_id("val-ab-b").await, "Slice B: 1");
+        assert_eq!(get_text_content_by_id("val-bc-b").await, "Slice B: 1");
+        assert_eq!(get_text_content_by_id("val-abc-b").await, "Slice B: 1");
+
+        assert_eq!(get_text_content_by_id("val-c-c").await, "Slice C: 1");
+        assert_eq!(get_text_content_by_id("val-ac-c").await, "Slice C: 1");
+        assert_eq!(get_text_content_by_id("val-bc-c").await, "Slice C: 1");
+        assert_eq!(get_text_content_by_id("val-abc-c").await, "Slice C: 1");
+
+        assert_eq!(
+            get_text_content_by_id("val-a-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-b-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-c-render-ctr").await,
+            "Rendered: 2 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ab-render-ctr").await,
+            "Rendered: 3 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-ac-render-ctr").await,
+            "Rendered: 3 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-bc-render-ctr").await,
+            "Rendered: 3 Time(s)"
+        );
+        assert_eq!(
+            get_text_content_by_id("val-abc-render-ctr").await,
+            "Rendered: 4 Time(s)"
+        );
+    }
 }

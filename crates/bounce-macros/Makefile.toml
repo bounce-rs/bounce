@@ -1,0 +1,3 @@
+[tasks.wasm-tests]
+clear = true
+script = "exit 0"

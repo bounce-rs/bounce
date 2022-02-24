@@ -35,7 +35,7 @@ impl fmt::Display for Username {
 fn reader() -> Html {
     let username = use_atom_value::<Username>();
 
-    html! { <div>{"Hello, "}{username}</div> }
+    html! { <div id="reader">{"Hello, "}{username}</div> }
 }
 
 #[function_component(Setter)]
@@ -54,7 +54,7 @@ fn setter() -> Html {
 
     html! {
         <div>
-            <input type_="text" oninput={on_text_input} value={username.to_string()} />
+            <input id="input" type_="text" oninput={on_text_input} value={username.to_string()} />
         </div>
     }
 }
@@ -65,7 +65,7 @@ fn resetter() -> Html {
 
     let on_reset_clicked = Callback::from(move |_| set_username(Username::default()));
 
-    html! { <button onclick={on_reset_clicked}>{"Reset"}</button> }
+    html! { <button id="btn-reset" onclick={on_reset_clicked}>{"Reset"}</button> }
 }
 
 #[function_component(App)]
@@ -82,4 +82,70 @@ fn app() -> Html {
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
     yew::start_app::<App>();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gloo::timers::future::sleep;
+    use gloo::utils::document;
+    use std::time::Duration;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_test::*;
+    use web_sys::Event;
+    use web_sys::EventTarget;
+    use web_sys::HtmlElement;
+    use web_sys::HtmlInputElement;
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    async fn get_text_content_by_id<S: AsRef<str>>(id: S) -> String {
+        sleep(Duration::ZERO).await;
+
+        document()
+            .query_selector(&format!("#{}", id.as_ref()))
+            .unwrap()
+            .unwrap()
+            .text_content()
+            .unwrap()
+    }
+
+    async fn click_by_id<S: AsRef<str>>(id: S) {
+        sleep(Duration::ZERO).await;
+
+        document()
+            .query_selector(&format!("#{}", id.as_ref()))
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlElement>()
+            .click();
+    }
+
+    #[wasm_bindgen_test]
+    async fn test_simple() {
+        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+
+        assert_eq!(get_text_content_by_id("reader").await, "Hello, Jane Doe");
+
+        document()
+            .query_selector("#input")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlInputElement>()
+            .set_value("John Smith");
+
+        document()
+            .query_selector("#input")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<EventTarget>()
+            .dispatch_event(&Event::new("input").unwrap())
+            .unwrap();
+
+        assert_eq!(get_text_content_by_id("reader").await, "Hello, John Smith");
+
+        click_by_id("btn-reset").await;
+
+        assert_eq!(get_text_content_by_id("reader").await, "Hello, Jane Doe");
+    }
 }

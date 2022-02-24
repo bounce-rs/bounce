@@ -7,11 +7,11 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "cargo"
-    directory: "/packages/bounce"
+    directory: "/crates/bounce"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "cargo"
-    directory: "/packages/bounce-macros"
+    directory: "/crates/bounce-macros"
     schedule:
       interval: "weekly"

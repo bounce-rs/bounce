@@ -1,0 +1,53 @@
+[env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+### Lints ###
+
+# cargo clippy --all-targets --release -- --deny=warnings
+# Lints --release profile
+[tasks.release-lint]
+private = true
+command = "cargo"
+args = ["clippy", "--all-targets", "--release", "--", "--deny=warnings"]
+
+# env RUSTFLAG="--cfg releasing" cargo clippy --all-targets -- --deny=warnings
+# Lints --cfg releasing flag
+[tasks.releasing-lint]
+private = true
+command = "cargo"
+args = ["clippy", "--all-targets", "--", "--deny=warnings"]
+
+[tasks.releasing-lint.env]
+RUSTFLAG = "--cfg releasing"
+
+# cargo fmt --all -- --check
+[tasks.fmt-lint]
+private = true
+command = "cargo"
+args = ["fmt", "--all", "--", "--check"]
+
+# Each workspace member needs to be checked separately so that
+# feature flags will not be merged.
+[tasks.lints.run_task]
+name = ["fmt-lint", "release-lint", "releasing-lint"]
+fork = true
+
+### Tests ###
+
+# wasm-pack test --headless --firefox
+[tasks.wasm-test]
+private = true
+command = "wasm-pack"
+args = ["test", "--headless", "--firefox"]
+
+# cargo test
+[tasks.native-test]
+private = true
+command = "cargo"
+args = ["test"]
+
+# Each workspace member needs to be tested separately so that
+# feature flags will not be merged.
+[tasks.tests.run_task]
+name = ["wasm-test", "native-test"]
+fork = true

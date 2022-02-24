@@ -1,5 +1,5 @@
 /target
-packages/*/target
+crates/*/target
 
 examples/*/target
 examples/*/dist
