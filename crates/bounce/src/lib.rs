@@ -9,15 +9,10 @@
 extern crate self as bounce;
 
 mod any_state;
-mod atom;
-mod future_notion;
-mod input_selector;
 mod provider;
 mod root_state;
-mod selector;
-mod slice;
+mod states;
 mod utils;
-mod with_notion;
 
 #[cfg_attr(documenting, doc(cfg(feature = "query")))]
 #[cfg(feature = "query")]
@@ -48,7 +43,7 @@ pub mod query;
 /// }
 /// ```
 /// See: [`use_atom`](crate::use_atom)
-pub use atom::Atom;
+pub use states::atom::Atom;
 
 /// A reducer-based state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
 ///
@@ -81,7 +76,7 @@ pub use atom::Atom;
 /// }
 /// ```
 /// See: [`use_slice`](crate::use_slice)
-pub use slice::Slice;
+pub use states::slice::Slice;
 
 /// A future-based notion that notifies states when it begins and finishes.
 ///
@@ -117,14 +112,17 @@ pub use slice::Slice;
 /// See: [`use_future_notion_runner`](crate::use_future_notion_runner)
 pub use bounce_macros::future_notion;
 
-pub use atom::{use_atom, use_atom_setter, use_atom_value, CloneAtom, UseAtomHandle};
-pub use future_notion::{use_future_notion_runner, Deferred, FutureNotion};
-pub use input_selector::{use_input_selector_value, InputSelector};
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
-pub use selector::{use_selector_value, Selector};
-pub use slice::{use_slice, use_slice_dispatch, use_slice_value, CloneSlice, UseSliceHandle};
-pub use with_notion::{use_notion_applier, WithNotion};
+
+pub use states::atom::{use_atom, use_atom_setter, use_atom_value, CloneAtom, UseAtomHandle};
+pub use states::future_notion::{use_future_notion_runner, Deferred, FutureNotion};
+pub use states::input_selector::{use_input_selector_value, InputSelector};
+pub use states::notion::{use_notion_applier, WithNotion};
+pub use states::selector::{use_selector_value, Selector};
+pub use states::slice::{
+    use_slice, use_slice_dispatch, use_slice_value, CloneSlice, UseSliceHandle,
+};
 
 pub mod prelude {
     //! Default Bounce exports.

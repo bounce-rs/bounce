@@ -11,12 +11,12 @@ use yew::prelude::*;
 
 use super::status::QueryStatus;
 use crate::future_notion;
-use crate::future_notion::{use_future_notion_runner, Deferred};
-use crate::input_selector::{use_input_selector_value, InputSelector};
 use crate::root_state::BounceStates;
-use crate::slice::{use_slice_dispatch, Slice};
+use crate::states::future_notion::{use_future_notion_runner, Deferred};
+use crate::states::input_selector::{use_input_selector_value, InputSelector};
+use crate::states::notion::WithNotion;
+use crate::states::slice::{use_slice_dispatch, Slice};
 use crate::utils::Id;
-use crate::with_notion::WithNotion;
 
 /// A Result returned by queries.
 pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;

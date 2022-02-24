@@ -3,7 +3,7 @@ use std::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
 
-use crate::slice::{use_slice, use_slice_dispatch, use_slice_value, Slice, UseSliceHandle};
+use super::slice::{use_slice, use_slice_dispatch, use_slice_value, Slice, UseSliceHandle};
 
 pub use bounce_macros::Atom;
 

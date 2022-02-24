@@ -8,10 +8,10 @@ use anymap2::{Entry, Map};
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
-use crate::atom::{Atom, AtomSlice};
-use crate::input_selector::{InputSelector, InputSelectorsState};
-use crate::selector::{Selector, UnitSelector};
-use crate::slice::{Slice, SliceState};
+use crate::states::atom::{Atom, AtomSlice};
+use crate::states::input_selector::{InputSelector, InputSelectorsState};
+use crate::states::selector::{Selector, UnitSelector};
+use crate::states::slice::{Slice, SliceState};
 use crate::utils::Id;
 use crate::utils::Listener;
 
