@@ -34,7 +34,7 @@ jobs:
       - name: Install cargo-make
         uses: davidB/rust-cargo-make@v1
 
-      - name: Run lints
+      - name: Run Lints
         run: cargo make lints
 
   build:
@@ -109,7 +109,7 @@ jobs:
       - name: Install cargo-make
         uses: davidB/rust-cargo-make@v1
 
-      - name: Run Browser Tests
+      - name: Run Tests
         run: cargo make tests
 
   publish:
@@ -142,7 +142,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --dry-run --manifest-path packages/bounce-macros/Cargo.toml
+          args: --dry-run --manifest-path crates/bounce-macros/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
 
@@ -151,7 +151,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path packages/bounce-macros/Cargo.toml
+          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce-macros/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
 
@@ -166,7 +166,7 @@ jobs:
       #   uses: actions-rs/cargo@v1
       #   with:
       #     command: publish
-      #     args: --dry-run --manifest-path packages/bounce/Cargo.toml
+      #     args: --dry-run --manifest-path crates/bounce/Cargo.toml
       #   env:
       #     RUSTFLAGS: "--cfg releasing"
 
@@ -175,6 +175,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path packages/bounce/Cargo.toml
+          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
