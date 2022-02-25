@@ -76,6 +76,10 @@ where
 /// # Example
 ///
 /// ```
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// # use std::rc::Rc;
+/// #
 /// #[derive(Debug, PartialEq)]
 /// pub struct Title {
 ///     inner: String,
@@ -92,7 +96,7 @@ where
 ///         <>
 ///             <Artifact<Title> value={Rc::new(Title { inner: "My Title 1".into() })} />
 ///             <Inner />
-///         <>
+///         </>
 ///     }
 /// }
 ///
@@ -126,12 +130,16 @@ where
 /// # Example
 ///
 /// ```
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// # use std::rc::Rc;
+/// #
 /// #[derive(Debug, PartialEq)]
 /// pub struct Title {
 ///     inner: String,
 /// }
 ///
-/// html! {<Artifact<Title> value={Rc::new(Title { inner: "My Title".into() })} />}
+/// let rendered = html! {<Artifact<Title> value={Rc::new(Title { inner: "My Title".into() })} />};
 /// ```
 #[function_component(Artifact)]
 pub fn artifact<T>(props: &ArtifactProps<T>) -> Html
