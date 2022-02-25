@@ -19,6 +19,7 @@ use crate::utils::{notify_listeners, Listener, ListenerVec};
 /// It will automatically update when any selected state changes and only notifies registered
 /// hooks when `prev_value != next_value`.
 pub trait InputSelector: PartialEq {
+    /// The input type of the current input selector.
     type Input: 'static + Eq + Hash;
 
     /// Selects `self` from existing bounce states with an input.

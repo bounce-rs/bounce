@@ -41,14 +41,23 @@ where
     T: FutureNotion,
 {
     /// A future notion is running.
-    Pending { input: Rc<T::Input> },
+    Pending {
+        /// The input value of a future notion.
+        input: Rc<T::Input>,
+    },
     /// A future notion has completed.
     Completed {
+        /// The input value of a future notion.
         input: Rc<T::Input>,
+
+        /// The output value of a future notion.
         output: Rc<T::Output>,
     },
     /// The states used in the future notion run has been changed.
-    Outdated { input: Rc<T::Input> },
+    Outdated {
+        /// The input value of a future notion.
+        input: Rc<T::Input>,
+    },
 }
 
 impl<T> Deferred<T>

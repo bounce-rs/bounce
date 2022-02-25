@@ -1,14 +1,20 @@
+//! The uncomplicated Yew State management library.
+
 #![deny(clippy::all)]
 #![deny(missing_debug_implementations)]
 #![deny(unsafe_code)]
 #![deny(non_snake_case)]
 #![deny(clippy::cognitive_complexity)]
+#![deny(missing_docs)]
 #![cfg_attr(documenting, feature(doc_cfg))]
 #![cfg_attr(any(releasing, not(debug_assertions)), deny(dead_code, unused_imports))]
 
 extern crate self as bounce;
 
 mod any_state;
+#[cfg_attr(documenting, doc(cfg(feature = "helmet")))]
+#[cfg(feature = "helmet")]
+mod helmet;
 mod provider;
 mod root_state;
 mod states;
@@ -115,7 +121,7 @@ pub use bounce_macros::future_notion;
 pub use provider::{BounceRoot, BounceRootProps};
 pub use root_state::BounceStates;
 
-pub use states::artifact::{use_artifacts, Artifact};
+pub use states::artifact::{use_artifacts, Artifact, ArtifactProps};
 pub use states::atom::{use_atom, use_atom_setter, use_atom_value, CloneAtom, UseAtomHandle};
 pub use states::future_notion::{use_future_notion_runner, Deferred, FutureNotion};
 pub use states::input_selector::{use_input_selector_value, InputSelector};
@@ -130,7 +136,7 @@ pub mod prelude {
 
     pub use crate::future_notion;
     pub use crate::BounceStates;
-    pub use crate::{use_artifacts, Artifact};
+    pub use crate::{use_artifacts, Artifact, ArtifactProps};
     pub use crate::{use_atom, use_atom_setter, use_atom_value, Atom, CloneAtom, UseAtomHandle};
     pub use crate::{use_future_notion_runner, Deferred, FutureNotion};
     pub use crate::{use_input_selector_value, InputSelector};

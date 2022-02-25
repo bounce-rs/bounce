@@ -72,6 +72,35 @@ where
 ///
 /// An artifact is a global side effect (e.g.: document title) that will be collected in the
 /// rendering order.
+///
+/// # Example
+///
+/// ```
+/// #[derive(Debug, PartialEq)]
+/// pub struct Title {
+///     inner: String,
+/// }
+///
+/// #[function_component(Inner)]
+/// fn inner() -> Html {
+///     html! {<Artifact<Title> value={Rc::new(Title { inner: "My Title 2".into() })} />}
+/// }
+///
+/// #[function_component(Outer)]
+/// fn outer() -> Html {
+///     html! {
+///         <>
+///             <Artifact<Title> value={Rc::new(Title { inner: "My Title 1".into() })} />
+///             <Inner />
+///         <>
+///     }
+/// }
+///
+/// # fn inner() {
+/// // [Title { inner: "My Title 1" }, Title { inner: "My Title 2" }]
+/// let title_artifacts = use_artifacts::<Title>();
+/// # }
+/// ```
 pub fn use_artifacts<T>() -> Vec<Rc<T>>
 where
     T: PartialEq + 'static,
@@ -79,11 +108,13 @@ where
     use_slice_value::<ArtifactSlice<T>>().get()
 }
 
+/// Properties of the [`Artifact`] Component.
 #[derive(Debug, Properties, PartialEq)]
 pub struct ArtifactProps<T>
 where
     T: PartialEq + 'static,
 {
+    /// The Rc'ed value of the artifact.
     pub value: Rc<T>,
 }
 
@@ -91,6 +122,17 @@ where
 ///
 /// The artifact is registered in rendering order and is collected into a vector
 /// that can be read with the [`use_artifacts`] hook.
+///
+/// # Example
+///
+/// ```
+/// #[derive(Debug, PartialEq)]
+/// pub struct Title {
+///     inner: String,
+/// }
+///
+/// html! {<Artifact<Title> value={Rc::new(Title { inner: "My Title".into() })} />}
+/// ```
 #[function_component(Artifact)]
 pub fn artifact<T>(props: &ArtifactProps<T>) -> Html
 where
@@ -98,7 +140,7 @@ where
 {
     let id = *use_state(Id::new);
 
-    // we need to register root as a dependency of effects so that when the root changes it the artifact can
+    // we need to register root as a dependency of effects so that when the root changes the artifact can
     // be moved from 1 root to another.
     let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
