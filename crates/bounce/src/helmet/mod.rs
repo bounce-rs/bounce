@@ -7,6 +7,7 @@
 //! - `script`
 //! - `html`
 //! - `body`
+//! - `base`
 
 mod bridge;
 mod comp;

@@ -4,7 +4,9 @@ use std::rc::Rc;
 use gloo::utils::document;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlElement, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement};
+use web_sys::{
+    Element, HtmlBaseElement, HtmlElement, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement,
+};
 
 thread_local! {
     static HEAD: HtmlHeadElement = document().head().unwrap_throw();
@@ -32,6 +34,9 @@ pub(crate) enum HelmetTag {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
     Body {
+        attrs: BTreeMap<&'static str, Rc<str>>,
+    },
+    Base {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
 }
@@ -163,6 +168,26 @@ impl HelmetTag {
 
                 None
             }
+
+            Self::Base { attrs } => {
+                let el = create_element::<HtmlBaseElement>("base");
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set base attribute");
+                        }
+                    }
+                }
+
+                append_to_head(&el);
+
+                Some(el.into())
+            }
         }
     }
 
@@ -205,6 +230,7 @@ impl HelmetTag {
                     }
                 }
             }
+            Self::Base { .. } => {}
         }
     }
 }

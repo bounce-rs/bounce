@@ -74,31 +74,38 @@ pub fn helmet(props: &HelmetProps) -> Html {
         .map(|m| match m {
             VNode::VTag(m) => match m.tag() {
                 "title" => HelmetTag::Title(collect_text_content(&m).into()).into(),
+
                 "script" => {
                     let attrs = collect_attributes(&m);
                     let content: Rc<str> = collect_text_content(&m).into();
 
                     HelmetTag::Script { attrs, content }.into()
                 }
-
                 "style" => {
                     let attrs = collect_attributes(&m);
                     let content: Rc<str> = collect_text_content(&m).into();
 
                     HelmetTag::Style { attrs, content }.into()
                 }
+
                 "html" => {
                     assert_empty_children(&m);
                     let attrs = collect_attributes(&m);
 
                     HelmetTag::Html { attrs }.into()
                 }
-
                 "body" => {
                     assert_empty_children(&m);
                     let attrs = collect_attributes(&m);
 
                     HelmetTag::Body { attrs }.into()
+                }
+
+                "base" => {
+                    assert_empty_children(&m);
+                    let attrs = collect_attributes(&m);
+
+                    HelmetTag::Base { attrs }.into()
                 }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },
