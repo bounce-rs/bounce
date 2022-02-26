@@ -77,14 +77,11 @@ fn script_helmet(props: &ScriptHelmetProps) -> Html {
     let id = *use_state(Id::new);
     let ScriptHelmetProps { attrs, content } = props.clone();
 
-    let tags = vec![Rc::new(
-        HelmetTag::Script {
-            attrs,
-            content,
-            _id: id,
-        }
-        .into(),
-    )];
+    let tags = vec![Rc::new(HelmetTag::Script {
+        attrs,
+        content,
+        _id: id,
+    })];
     let state = Rc::new(HelmetState { tags });
 
     html! {<Artifact<HelmetState> value={state} />}
@@ -142,6 +139,12 @@ pub fn helmet(props: &HelmetProps) -> Html {
                     let attrs = collect_attributes(&m);
 
                     Some(HelmetTag::Link { attrs }.into())
+                }
+                "meta" => {
+                    assert_empty_children(&m);
+                    let attrs = collect_attributes(&m);
+
+                    Some(HelmetTag::Meta { attrs }.into())
                 }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },

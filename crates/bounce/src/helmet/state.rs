@@ -5,8 +5,8 @@ use gloo::utils::document;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{
-    Element, HtmlBaseElement, HtmlElement, HtmlHeadElement, HtmlLinkElement, HtmlScriptElement,
-    HtmlStyleElement,
+    Element, HtmlBaseElement, HtmlElement, HtmlHeadElement, HtmlLinkElement, HtmlMetaElement,
+    HtmlScriptElement, HtmlStyleElement,
 };
 
 use crate::utils::Id;
@@ -46,6 +46,9 @@ pub(crate) enum HelmetTag {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
     Link {
+        attrs: BTreeMap<&'static str, Rc<str>>,
+    },
+    Meta {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
 }
@@ -207,10 +210,40 @@ impl HelmetTag {
                             add_class_list(&el, &*value);
                         }
                         "href" => {
-                            el.set_href(&value);
+                            el.set_href(value);
                         }
                         "rel" => {
-                            el.set_rel(&value);
+                            el.set_rel(value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set link attribute");
+                        }
+                    }
+                }
+
+                Some(el.into())
+            }
+
+            Self::Meta { attrs } => {
+                let el = create_element::<HtmlMetaElement>("meta");
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        "name" => {
+                            el.set_name(value);
+                        }
+                        "http-equiv" => {
+                            el.set_http_equiv(value);
+                        }
+                        "content" => {
+                            el.set_content(value);
+                        }
+                        "scheme" => {
+                            el.set_scheme(value);
                         }
                         _ => {
                             el.set_attribute(name, value)
@@ -230,9 +263,6 @@ impl HelmetTag {
         }
 
         match self {
-            Self::Title(_) => {}
-            Self::Script { .. } => {}
-            Self::Style { .. } => {}
             Self::Html { attrs } => {
                 let el = HTML_TAG.with(|m| m.clone());
 
@@ -258,13 +288,18 @@ impl HelmetTag {
                         }
                         _ => {
                             el.remove_attribute(name)
-                                .expect_throw("failed to remove html attribute");
+                                .expect_throw("failed to remove body attribute");
                         }
                     }
                 }
             }
-            Self::Base { .. } => {}
-            Self::Link { .. } => {}
+
+            Self::Title(_)
+            | Self::Script { .. }
+            | Self::Style { .. }
+            | Self::Base { .. }
+            | Self::Link { .. }
+            | Self::Meta { .. } => {}
         }
     }
 }

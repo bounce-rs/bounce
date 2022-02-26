@@ -65,6 +65,7 @@ impl PartialEq for HelmetBridgeProps {
 /// ```
 /// # use yew::prelude::*;
 /// # use bounce::prelude::*;
+/// # use bounce::BounceRoot;
 /// # use bounce::helmet::HelmetBridge;
 ///
 /// # #[function_component(Comp)]
@@ -95,8 +96,9 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             let mut base_attrs = BTreeMap::new();
 
             // BTreeMap<(rel, href), ..>
-            let mut link_tags: BTreeMap<(Option<Rc<str>>, Option<Rc<str>>), Rc<HelmetTag>> =
-                BTreeMap::new();
+            let mut link_tags = BTreeMap::new();
+            // BTreeMap<(name, http-equiv, scheme, charset), ..>
+            let mut meta_tags = BTreeMap::new();
 
             let merge_attrs =
                 |target: &mut BTreeMap<&'static str, Rc<str>>,
@@ -151,6 +153,17 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                                 tag.clone(),
                             );
                         }
+                        HelmetTag::Meta { ref attrs } => {
+                            meta_tags.insert(
+                                (
+                                    attrs.get(&"name").cloned(),
+                                    attrs.get(&"http-equiv").cloned(),
+                                    attrs.get(&"scheme").cloned(),
+                                    attrs.get(&"charset").cloned(),
+                                ),
+                                tag.clone(),
+                            );
+                        }
                     }
                 }
             }
@@ -177,6 +190,8 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             to_render.insert(HelmetTag::Base { attrs: base_attrs }.into());
             // link elements.
             to_render.extend(link_tags.into_values());
+            // meta elements.
+            to_render.extend(meta_tags.into_values());
 
             // Render tags with consideration of currently rendered tags.
             let mut rendered = rendered.borrow_mut();

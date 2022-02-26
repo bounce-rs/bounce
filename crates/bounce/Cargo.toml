@@ -33,6 +33,8 @@ features = [
     "HtmlStyleElement",
     "DomTokenList",
     "HtmlLinkElement",
+    "HtmlMetaElement",
+    "HtmlBaseElement",
 ]
 
 [features]
