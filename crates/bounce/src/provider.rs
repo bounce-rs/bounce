@@ -5,6 +5,7 @@ use crate::root_state::BounceRootState;
 /// Properties for [`BounceRoot`].
 #[derive(Properties, Debug, PartialEq)]
 pub struct BounceRootProps {
+    /// Children of a Bounce Root.
     #[prop_or_default]
     pub children: Children,
 }

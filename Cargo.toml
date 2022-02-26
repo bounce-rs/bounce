@@ -10,5 +10,7 @@ members = [
     "examples/divisibility",
     "examples/divisibility-input",
     "examples/queries-mutations",
+    "examples/title",
+    "examples/helmet-title",
 ]
 resolver = "2"

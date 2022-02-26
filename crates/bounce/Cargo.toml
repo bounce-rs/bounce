@@ -22,9 +22,24 @@ yew = "0.19.3"
 bounce-macros = { path = "../bounce-macros", version = "0.2.0" }
 futures = "0.3.19"
 async-trait = { version = "0.1.52", optional = true }
+gloo = { version = "0.5", features = ["futures"], optional = true }
+
+[dependencies.web-sys]
+version = "0.3.55"
+optional = true
+features = [
+    "Document",
+    "HtmlScriptElement",
+    "HtmlStyleElement",
+    "DomTokenList",
+    "HtmlLinkElement",
+    "HtmlMetaElement",
+    "HtmlBaseElement",
+]
 
 [features]
 query = ["async-trait"]
+helmet = ["gloo", "web-sys"]
 
 [dev-dependencies.web-sys]
 version = "0.3.55"

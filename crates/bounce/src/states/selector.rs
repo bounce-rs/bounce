@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::input_selector::{use_input_selector_value, InputSelector};
+use super::input_selector::{use_input_selector_value, InputSelector};
 use crate::root_state::BounceStates;
 
 /// An auto-updating derived state.

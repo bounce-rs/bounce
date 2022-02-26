@@ -37,17 +37,29 @@ fork = true
 # wasm-pack test --headless --firefox
 [tasks.wasm-test]
 private = true
+workspace = true
 command = "wasm-pack"
 args = ["test", "--headless", "--firefox"]
 
 # cargo test
 [tasks.native-test]
 private = true
+workspace = true
 command = "cargo"
 args = ["test"]
 
+# cargo test --doc --all-features
+[tasks.doc-test]
+private = true
+workspace = false
+command = "cargo"
+args = ["test", "--doc", "--all-features", "--workspace"]
+
 # Each workspace member needs to be tested separately so that
 # feature flags will not be merged.
+[tasks.tests]
+workspace = false
+
 [tasks.tests.run_task]
-name = ["wasm-test", "native-test"]
+name = ["wasm-test", "native-test", "doc-test"]
 fork = true

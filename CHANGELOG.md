@@ -1,3 +1,10 @@
+## Release 0.3.0
+
+### Other Changes
+
+- Added Artifact API
+- Added Helmet API
+
 ## Release 0.2.0
 
 ### Breaking Changes

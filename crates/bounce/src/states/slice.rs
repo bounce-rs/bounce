@@ -251,11 +251,15 @@ where
         let root = root.clone();
         use_effect_with_deps(
             move |root| {
-                let listener = root
-                    .get_state::<SliceState<T>>()
-                    .listen(Rc::new(Callback::from(move |m| {
-                        val.set(m);
-                    })));
+                let state = root.get_state::<SliceState<T>>();
+
+                // we need to set the value here again in case the value has changed between the
+                // initial render and the listener is registered.
+                val.set(state.get());
+
+                let listener = state.listen(Rc::new(Callback::from(move |m| {
+                    val.set(m);
+                })));
 
                 move || {
                     std::mem::drop(listener);
