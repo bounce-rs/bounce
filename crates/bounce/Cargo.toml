@@ -30,6 +30,8 @@ optional = true
 features = [
     "Document",
     "HtmlScriptElement",
+    "HtmlStyleElement",
+    "DomTokenList",
 ]
 
 [features]
@@ -40,8 +42,6 @@ helmet = ["gloo", "web-sys"]
 version = "0.3.55"
 features = [
     "HtmlInputElement",
-    "HtmlStyleElement",
-    "DomTokenList",
 ]
 
 [package.metadata.docs.rs]

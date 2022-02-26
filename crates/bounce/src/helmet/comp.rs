@@ -46,6 +46,24 @@ fn collect_attributes(tag: &VTag) -> BTreeMap<&'static str, Rc<str>> {
         .collect::<BTreeMap<&'static str, Rc<str>>>()
 }
 
+fn assert_empty_node(node: &VNode) {
+    match node {
+        VNode::VTag(_) => throw_str("expected nothing, found tag."),
+        VNode::VText(_) => throw_str("expected nothing, found text content."),
+        VNode::VList(ref m) => {
+            for node in m.iter() {
+                assert_empty_node(node);
+            }
+        }
+        VNode::VComp(_) => throw_str("expected nothing, found component."),
+        VNode::VPortal(_) => throw_str("expected nothing, found portal."),
+        VNode::VRef(_) => throw_str("expected nothing, found node reference."),
+    }
+}
+fn assert_empty_children(tag: &VTag) {
+    assert_empty_node(&tag.children().clone().into())
+}
+
 /// A component to register helmet tags.
 #[function_component(Helmet)]
 pub fn helmet(props: &HelmetProps) -> Html {
@@ -68,6 +86,19 @@ pub fn helmet(props: &HelmetProps) -> Html {
                     let content: Rc<str> = collect_text_content(&m).into();
 
                     HelmetTag::Style { attrs, content }.into()
+                }
+                "html" => {
+                    assert_empty_children(&m);
+                    let attrs = collect_attributes(&m);
+
+                    HelmetTag::Html { attrs }.into()
+                }
+
+                "body" => {
+                    assert_empty_children(&m);
+                    let attrs = collect_attributes(&m);
+
+                    HelmetTag::Body { attrs }.into()
                 }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },

@@ -4,11 +4,12 @@ use std::rc::Rc;
 use gloo::utils::document;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement};
+use web_sys::{Element, HtmlElement, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement};
 
 thread_local! {
     static HEAD: HtmlHeadElement = document().head().unwrap_throw();
     static HTML_TAG: Element = document().document_element().unwrap_throw();
+    static BODY_TAG: HtmlElement = document().body().unwrap_throw();
 }
 
 #[derive(PartialEq, Debug)]
@@ -28,6 +29,9 @@ pub(crate) enum HelmetTag {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
     Html {
+        attrs: BTreeMap<&'static str, Rc<str>>,
+    },
+    Body {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
 }
@@ -114,7 +118,7 @@ impl HelmetTag {
                         }
                         _ => {
                             el.set_attribute(name, value)
-                                .expect_throw("failed to set script attribute");
+                                .expect_throw("failed to set style attribute");
                         }
                     }
                 }
@@ -134,7 +138,25 @@ impl HelmetTag {
                         }
                         _ => {
                             el.set_attribute(name, value)
-                                .expect_throw("failed to set script attribute");
+                                .expect_throw("failed to set html attribute");
+                        }
+                    }
+                }
+
+                None
+            }
+
+            Self::Body { attrs } => {
+                let el = BODY_TAG.with(|m| m.clone());
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set body attribute");
                         }
                     }
                 }
@@ -155,6 +177,21 @@ impl HelmetTag {
             Self::Style { .. } => {}
             Self::Html { attrs } => {
                 let el = HTML_TAG.with(|m| m.clone());
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            remove_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.remove_attribute(name)
+                                .expect_throw("failed to remove html attribute");
+                        }
+                    }
+                }
+            }
+            Self::Body { attrs } => {
+                let el = BODY_TAG.with(|m| m.clone());
 
                 for (name, value) in attrs.iter() {
                     match *name {

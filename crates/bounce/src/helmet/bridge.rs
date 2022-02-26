@@ -91,6 +91,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             let mut title: Option<Rc<str>> = None;
 
             let mut html_attrs = BTreeMap::new();
+            let mut body_attrs = BTreeMap::new();
 
             let merge_attrs =
                 |target: &mut BTreeMap<&'static str, Rc<str>>,
@@ -131,11 +132,15 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                         HelmetTag::Html { ref attrs } => {
                             merge_attrs(&mut html_attrs, attrs);
                         }
+
+                        HelmetTag::Body { ref attrs } => {
+                            merge_attrs(&mut body_attrs, attrs);
+                        }
                     }
                 }
             }
 
-            // calculate title from it.
+            // title.
             if let Some(m) = title
                 .map(|m| {
                     props
@@ -151,6 +156,8 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
             // html element.
             to_render.insert(HelmetTag::Html { attrs: html_attrs }.into());
+            // body element.
+            to_render.insert(HelmetTag::Body { attrs: body_attrs }.into());
 
             // Render tags with consideration of currently rendered tags.
             let mut rendered = rendered.borrow_mut();
