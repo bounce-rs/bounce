@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use wasm_bindgen::throw_str;
@@ -48,6 +49,17 @@ pub fn helmet(props: &HelmetProps) -> Html {
         .map(|m| match m {
             VNode::VTag(m) => match m.tag() {
                 "title" => HelmetTag::Title(collect_text_content(&m).into()).into(),
+                "script" => {
+                    let attrs = m
+                        .attributes
+                        .iter()
+                        .map(|(k, v)| (k, v.into()))
+                        .collect::<BTreeMap<&'static str, Rc<str>>>();
+
+                    let content: Rc<str> = collect_text_content(&m).into();
+
+                    HelmetTag::Script { attrs, content }.into()
+                }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },
             _ => throw_str(

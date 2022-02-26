@@ -86,6 +86,8 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     use_effect_with_deps(
         move |(helmet_states, props)| {
             // Calculate tags to render.
+            let mut to_render = BTreeSet::new();
+
             let mut title: Option<Rc<str>> = None;
 
             for state in helmet_states {
@@ -94,11 +96,13 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                         HelmetTag::Title(ref m) => {
                             title = Some(m.clone());
                         }
+
+                        HelmetTag::Script { .. } => {
+                            to_render.insert(tag.clone());
+                        }
                     }
                 }
             }
-
-            let mut to_render = BTreeSet::new();
 
             // calculate title from it.
             if let Some(m) = title
@@ -111,7 +115,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                 })
                 .or_else(|| props.default_title.as_ref().map(|m| m.to_string().into()))
             {
-                to_render.insert(HelmetTag::Title(m));
+                to_render.insert(HelmetTag::Title(m).into());
             }
 
             // Render tags with consideration of currently rendered tags.
@@ -139,7 +143,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                             Ordering::Greater => {
                                 let el = next_to_render.apply();
 
-                                current_rendered.insert(Rc::new(next_to_render), el);
+                                current_rendered.insert(next_to_render, el);
 
                                 break 'inner;
                             }
@@ -152,7 +156,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                             // next_last_rendered key is equal to next_to_render, move to
                             // current_rendered
                             Ordering::Equal => {
-                                current_rendered.insert(Rc::new(next_to_render), value.take());
+                                current_rendered.insert(next_to_render, value.take());
 
                                 next_last_rendered = None;
                                 break 'inner;
@@ -163,7 +167,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                         None => {
                             let el = next_to_render.apply();
 
-                            current_rendered.insert(Rc::new(next_to_render), el);
+                            current_rendered.insert(next_to_render, el);
 
                             break 'inner;
                         }

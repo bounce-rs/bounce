@@ -28,7 +28,8 @@ gloo = { version = "0.5", features = ["futures"], optional = true }
 version = "0.3.55"
 optional = true
 features = [
-    "Document"
+    "Document",
+    "HtmlScriptElement",
 ]
 
 [features]
