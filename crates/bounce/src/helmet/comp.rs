@@ -44,10 +44,10 @@ pub fn helmet(props: &HelmetProps) -> Html {
         .clone()
         .into_iter()
         .map(|m| match m.tag() {
-            "title" => HelmetTag::Title(collect_text_content(&m)),
+            "title" => HelmetTag::Title(collect_text_content(&m)).into(),
             _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
         })
-        .collect::<Vec<HelmetTag>>();
+        .collect::<Vec<Rc<HelmetTag>>>();
 
     let state = Rc::new(HelmetState { tags });
 
