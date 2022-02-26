@@ -12,9 +12,6 @@
 extern crate self as bounce;
 
 mod any_state;
-#[cfg_attr(documenting, doc(cfg(feature = "helmet")))]
-#[cfg(feature = "helmet")]
-mod helmet;
 mod provider;
 mod root_state;
 mod states;
@@ -23,6 +20,10 @@ mod utils;
 #[cfg_attr(documenting, doc(cfg(feature = "query")))]
 #[cfg(feature = "query")]
 pub mod query;
+
+#[cfg_attr(documenting, doc(cfg(feature = "helmet")))]
+#[cfg(feature = "helmet")]
+pub mod helmet;
 
 /// A simple state that is Copy-on-Write and notifies registered hooks when `prev_value != next_value`.
 ///

@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 use std::rc::Rc;
 
 use web_sys::Element;
@@ -9,9 +10,9 @@ use yew::virtual_dom::AttrValue;
 use super::state::{HelmetState, HelmetTag};
 use crate::states::artifact::use_artifacts;
 
-/// Properties of the [HelmetProvider]
+/// Properties of the [HelmetBridge]
 #[derive(Properties, Clone)]
-pub struct HelmetProviderProps {
+pub struct HelmetBridgeProps {
     /// The default title to apply if no title is provided.
     #[prop_or_default]
     pub default_title: Option<AttrValue>,
@@ -19,14 +20,26 @@ pub struct HelmetProviderProps {
     /// The function to format title.
     #[prop_or_default]
     pub format_title: Option<Rc<dyn Fn(&str) -> String>>,
+}
 
-    /// The children of the title provider.
-    #[prop_or_default]
-    pub children: Children,
+impl fmt::Debug for HelmetBridgeProps {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HelmetBridgeProps")
+            .field("default_title", &self.default_title)
+            .field(
+                "format_title",
+                if self.format_title.is_some() {
+                    &"Some(_)"
+                } else {
+                    &"None"
+                },
+            )
+            .finish()
+    }
 }
 
 #[allow(clippy::vtable_address_comparisons)]
-impl PartialEq for HelmetProviderProps {
+impl PartialEq for HelmetBridgeProps {
     fn eq(&self, rhs: &Self) -> bool {
         let format_title_eq = match (&self.format_title, &rhs.format_title) {
             (Some(ref m), Some(ref n)) => Rc::ptr_eq(m, n),
@@ -34,22 +47,38 @@ impl PartialEq for HelmetProviderProps {
             _ => false,
         };
 
-        format_title_eq && self.default_title == rhs.default_title && self.children == rhs.children
+        format_title_eq && self.default_title == rhs.default_title
     }
 }
 
-/// The Helmet Provider.
+/// The Helmet Bridge.
 ///
 /// This component is responsible to reconclie all helmet tags to the real dom.
 ///
 /// It accepts two props, a string `default_title` and a function `format_title`.
 ///
-/// You can only register 1 `HelmetProvider` per `BounceRoot`. Having multiple `HelmetProvider`s
+/// You can only register 1 `HelmetBridge` per `BounceRoot`. Having multiple `HelmetBridge`s
 /// under the same bounce root may cause unexpected results.
-#[function_component(HelmetProvider)]
-pub fn helmet_provider(props: &HelmetProviderProps) -> Html {
-    let children = props.children.clone();
-
+///
+/// # Example
+///
+/// ```
+/// # use yew::prelude::*;
+/// # use bounce::prelude::*;
+/// # use bounce::helmet::HelmetBridge;
+///
+/// # #[function_component(Comp)]
+/// # fn comp() -> Html {
+///     html! {
+///         <BounceRoot>
+///             <HelmetBridge default_title="default title" />
+///             // other components.
+///         </BounceRoot>
+///     }
+/// # }
+/// ```
+#[function_component(HelmetBridge)]
+pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     let helmet_states = use_artifacts::<HelmetState>();
 
     let rendered = use_mut_ref(|| -> Option<BTreeMap<Rc<HelmetTag>, Option<Element>>> { None });
@@ -149,5 +178,5 @@ pub fn helmet_provider(props: &HelmetProviderProps) -> Html {
         (helmet_states, props.clone()),
     );
 
-    html! {<>{children}</>}
+    Html::default()
 }

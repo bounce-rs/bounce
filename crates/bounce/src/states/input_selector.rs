@@ -276,12 +276,17 @@ where
         let root = root;
         use_effect_with_deps(
             move |(root, input)| {
-                let listener = root
+                let state = root
                     .get_state::<InputSelectorsState<T>>()
-                    .get_state(input.clone())
-                    .listen(Rc::new(Callback::from(move |m| {
-                        val.set(m);
-                    })));
+                    .get_state(input.clone());
+
+                // we need to set the value here again in case the value has changed between the
+                // initial render and the listener is registered.
+                val.set(state.get(root.states()));
+
+                let listener = state.listen(Rc::new(Callback::from(move |m| {
+                    val.set(m);
+                })));
 
                 move || {
                     std::mem::drop(listener);

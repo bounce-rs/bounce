@@ -1,6 +1,8 @@
+//! A module to manipulate common tags under the `<head />` element.
+
+mod bridge;
 mod comp;
-mod provider;
 mod state;
 
+pub use bridge::{HelmetBridge, HelmetBridgeProps};
 pub use comp::{Helmet, HelmetProps};
-pub use provider::{HelmetProvider, HelmetProviderProps};
