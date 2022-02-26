@@ -94,6 +94,10 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             let mut body_attrs = BTreeMap::new();
             let mut base_attrs = BTreeMap::new();
 
+            // BTreeMap<(rel, href), ..>
+            let mut link_tags: BTreeMap<(Option<Rc<str>>, Option<Rc<str>>), Rc<HelmetTag>> =
+                BTreeMap::new();
+
             let merge_attrs =
                 |target: &mut BTreeMap<&'static str, Rc<str>>,
                  current_attrs: &BTreeMap<&'static str, Rc<str>>| {
@@ -141,6 +145,12 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                         HelmetTag::Base { ref attrs } => {
                             merge_attrs(&mut base_attrs, attrs);
                         }
+                        HelmetTag::Link { ref attrs } => {
+                            link_tags.insert(
+                                (attrs.get(&"rel").cloned(), attrs.get(&"href").cloned()),
+                                tag.clone(),
+                            );
+                        }
                     }
                 }
             }
@@ -163,8 +173,10 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             to_render.insert(HelmetTag::Html { attrs: html_attrs }.into());
             // body element.
             to_render.insert(HelmetTag::Body { attrs: body_attrs }.into());
-            // body element.
+            // base element.
             to_render.insert(HelmetTag::Base { attrs: base_attrs }.into());
+            // link elements.
+            to_render.extend(link_tags.into_values());
 
             // Render tags with consideration of currently rendered tags.
             let mut rendered = rendered.borrow_mut();

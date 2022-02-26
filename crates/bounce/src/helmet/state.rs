@@ -5,8 +5,11 @@ use gloo::utils::document;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{
-    Element, HtmlBaseElement, HtmlElement, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement,
+    Element, HtmlBaseElement, HtmlElement, HtmlHeadElement, HtmlLinkElement, HtmlScriptElement,
+    HtmlStyleElement,
 };
+
+use crate::utils::Id;
 
 thread_local! {
     static HEAD: HtmlHeadElement = document().head().unwrap_throw();
@@ -23,6 +26,9 @@ pub(crate) struct HelmetState {
 pub(crate) enum HelmetTag {
     Title(Rc<str>),
     Script {
+        // we need to always render script as long as they are not the same tag, so we use an Id to
+        // distinguish between them.
+        _id: Id,
         content: Rc<str>,
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
@@ -37,6 +43,9 @@ pub(crate) enum HelmetTag {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
     Base {
+        attrs: BTreeMap<&'static str, Rc<str>>,
+    },
+    Link {
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
 }
@@ -84,7 +93,7 @@ impl HelmetTag {
                 None
             }
 
-            Self::Script { content, attrs } => {
+            Self::Script { content, attrs, .. } => {
                 let el = create_element::<HtmlScriptElement>("script");
 
                 el.set_text(content)
@@ -188,6 +197,30 @@ impl HelmetTag {
 
                 Some(el.into())
             }
+
+            Self::Link { attrs } => {
+                let el = create_element::<HtmlLinkElement>("link");
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        "href" => {
+                            el.set_href(&value);
+                        }
+                        "rel" => {
+                            el.set_rel(&value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set link attribute");
+                        }
+                    }
+                }
+
+                Some(el.into())
+            }
         }
     }
 
@@ -231,6 +264,7 @@ impl HelmetTag {
                 }
             }
             Self::Base { .. } => {}
+            Self::Link { .. } => {}
         }
     }
 }

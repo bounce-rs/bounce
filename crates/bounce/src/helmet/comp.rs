@@ -7,6 +7,7 @@ use yew::virtual_dom::{VNode, VTag};
 
 use super::state::{HelmetState, HelmetTag};
 use crate::states::artifact::Artifact;
+use crate::utils::Id;
 
 /// Properties for [Helmet].
 #[derive(Properties, Debug, PartialEq)]
@@ -64,48 +65,83 @@ fn assert_empty_children(tag: &VTag) {
     assert_empty_node(&tag.children().clone().into())
 }
 
+#[derive(Properties, PartialEq, Clone)]
+struct ScriptHelmetProps {
+    attrs: BTreeMap<&'static str, Rc<str>>,
+    content: Rc<str>,
+}
+
+// A special component to render the script tag with a unique id.
+#[function_component(ScriptHelmet)]
+fn script_helmet(props: &ScriptHelmetProps) -> Html {
+    let id = *use_state(Id::new);
+    let ScriptHelmetProps { attrs, content } = props.clone();
+
+    let tags = vec![Rc::new(
+        HelmetTag::Script {
+            attrs,
+            content,
+            _id: id,
+        }
+        .into(),
+    )];
+    let state = Rc::new(HelmetState { tags });
+
+    html! {<Artifact<HelmetState> value={state} />}
+}
+
 /// A component to register helmet tags.
 #[function_component(Helmet)]
 pub fn helmet(props: &HelmetProps) -> Html {
+    let mut script_helmets = Vec::new();
+
     let tags = props
         .children
         .clone()
         .into_iter()
-        .map(|m| match m {
+        .filter_map(|m| match m {
             VNode::VTag(m) => match m.tag() {
-                "title" => HelmetTag::Title(collect_text_content(&m).into()).into(),
+                "title" => Some(HelmetTag::Title(collect_text_content(&m).into()).into()),
 
                 "script" => {
                     let attrs = collect_attributes(&m);
                     let content: Rc<str> = collect_text_content(&m).into();
 
-                    HelmetTag::Script { attrs, content }.into()
+                    script_helmets.push(html! { <ScriptHelmet {attrs} {content} /> });
+
+                    None
                 }
                 "style" => {
                     let attrs = collect_attributes(&m);
                     let content: Rc<str> = collect_text_content(&m).into();
 
-                    HelmetTag::Style { attrs, content }.into()
+                    Some(HelmetTag::Style { attrs, content }.into())
                 }
 
                 "html" => {
                     assert_empty_children(&m);
                     let attrs = collect_attributes(&m);
 
-                    HelmetTag::Html { attrs }.into()
+                    Some(HelmetTag::Html { attrs }.into())
                 }
                 "body" => {
                     assert_empty_children(&m);
                     let attrs = collect_attributes(&m);
 
-                    HelmetTag::Body { attrs }.into()
+                    Some(HelmetTag::Body { attrs }.into())
                 }
 
                 "base" => {
                     assert_empty_children(&m);
                     let attrs = collect_attributes(&m);
 
-                    HelmetTag::Base { attrs }.into()
+                    Some(HelmetTag::Base { attrs }.into())
+                }
+                "link" => {
+                    assert_empty_children(&m);
+                    let attrs = collect_attributes(&m);
+
+                    Some(HelmetTag::Link { attrs }.into())
                 }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },
@@ -117,5 +153,10 @@ pub fn helmet(props: &HelmetProps) -> Html {
 
     let state = Rc::new(HelmetState { tags });
 
-    html! {<Artifact<HelmetState> value={state} />}
+    html! {
+        <>
+            <Artifact<HelmetState> value={state} />
+            {script_helmets}
+        </>
+    }
 }
