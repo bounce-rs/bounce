@@ -27,6 +27,7 @@ fn a() -> Html {
         <>
             <Helmet>
                 <title>{"Page A"}</title>
+                <meta name="description" content="page A" />
             </Helmet>
             <div>{"This is page A."}</div>
         </>
@@ -46,6 +47,7 @@ fn home() -> Html {
         <>
             <Helmet>
                 <title>{"Home Page"}</title>
+                <meta name="description" content="home page" />
             </Helmet>
             <div>{"This is home page."}</div>
         </>
@@ -80,6 +82,10 @@ fn app() -> Html {
     html! {
         <BounceRoot>
             <HelmetBridge default_title="Example" format_title={Some(Rc::new(format_title) as Rc<dyn Fn(&str) -> String>)} />
+            <Helmet>
+                <meta charset="utf-8" />
+                <meta name="description" content="default page" />
+            </Helmet>
             <BrowserRouter>
                 <Switch<Route> render={Switch::render(render_fn)} />
                 <Links />
@@ -101,7 +107,7 @@ mod tests {
     use std::time::Duration;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_test::*;
-    use web_sys::HtmlElement;
+    use web_sys::{HtmlElement, HtmlMetaElement};
 
     wasm_bindgen_test_configure!(run_in_browser);
 
@@ -124,16 +130,46 @@ mod tests {
 
         assert_eq!(document().title(), "Home Page - Example");
 
+        sleep(Duration::ZERO).await;
+
+        let description = document()
+            .query_selector("meta[name='description']")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlMetaElement>()
+            .content();
+        assert_eq!("home page", description);
+
         click_by_id("go-to-a").await;
 
         sleep(Duration::ZERO).await;
 
         assert_eq!(document().title(), "Page A - Example");
 
+        sleep(Duration::ZERO).await;
+
+        let description = document()
+            .query_selector("meta[name='description']")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlMetaElement>()
+            .content();
+        assert_eq!("page A", description);
+
         click_by_id("go-to-b").await;
 
         sleep(Duration::ZERO).await;
 
         assert_eq!(document().title(), "Example");
+
+        sleep(Duration::ZERO).await;
+
+        let description = document()
+            .query_selector("meta[name='description']")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlMetaElement>()
+            .content();
+        assert_eq!("default page", description);
     }
 }

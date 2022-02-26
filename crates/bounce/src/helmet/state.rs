@@ -22,7 +22,7 @@ pub(crate) struct HelmetState {
     pub tags: Vec<Rc<HelmetTag>>,
 }
 
-// TODO: fully type this.
+// TODO: fully type attributes for these elements.
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum HelmetTag {
     Title(Rc<str>),
@@ -223,6 +223,8 @@ impl HelmetTag {
                     }
                 }
 
+                append_to_head(&el);
+
                 Some(el.into())
             }
 
@@ -253,6 +255,8 @@ impl HelmetTag {
                     }
                 }
 
+                append_to_head(&el);
+
                 Some(el.into())
             }
         }
@@ -260,7 +264,9 @@ impl HelmetTag {
 
     pub fn detach(&self, element: Option<Element>) {
         if let Some(m) = element {
-            m.parent_element().as_ref().map(|m| m.remove_child(m));
+            m.parent_element()
+                .as_ref()
+                .map(|parent| parent.remove_child(&m));
         }
 
         match self {

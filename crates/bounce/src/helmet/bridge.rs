@@ -185,11 +185,17 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             }
 
             // html element.
-            to_render.insert(HelmetTag::Html { attrs: html_attrs }.into());
+            if !html_attrs.is_empty() {
+                to_render.insert(HelmetTag::Html { attrs: html_attrs }.into());
+            }
             // body element.
-            to_render.insert(HelmetTag::Body { attrs: body_attrs }.into());
+            if !body_attrs.is_empty() {
+                to_render.insert(HelmetTag::Body { attrs: body_attrs }.into());
+            }
             // base element.
-            to_render.insert(HelmetTag::Base { attrs: base_attrs }.into());
+            if !base_attrs.is_empty() {
+                to_render.insert(HelmetTag::Base { attrs: base_attrs }.into());
+            }
             // link elements.
             to_render.extend(link_tags.into_values());
             // meta elements.
@@ -249,6 +255,16 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                             break 'inner;
                         }
                     }
+                }
+            }
+
+            if let Some((key, value)) = next_last_rendered {
+                key.detach(value);
+            }
+
+            if let Some(last_rendered) = last_rendered {
+                for (key, value) in last_rendered.into_iter() {
+                    key.detach(value);
                 }
             }
 
