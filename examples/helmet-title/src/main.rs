@@ -28,6 +28,7 @@ fn a() -> Html {
             <Helmet>
                 <title>{"Page A"}</title>
                 <meta name="description" content="page A" />
+                <style>{"html { font-family: sans-serif; }"}</style>
             </Helmet>
             <div>{"This is page A."}</div>
         </>
