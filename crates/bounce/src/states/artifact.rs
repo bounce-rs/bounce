@@ -73,6 +73,11 @@ where
 /// An artifact is a global side effect (e.g.: document title) that will be collected in the
 /// rendering order.
 ///
+/// # Note
+///
+/// If you are trying to manipulate elements in the `<head />` element (e.g.: document title),
+/// it is recommended to use the [Helmet](crate::helmet) API instead.
+///
 /// # Example
 ///
 /// ```
@@ -127,6 +132,11 @@ where
 /// The artifact is registered in rendering order and is collected into a vector
 /// that can be read with the [`use_artifacts`] hook.
 ///
+/// # Note
+///
+/// If you are trying to manipulate elements in the `<head />` element (e.g.: document title),
+/// it is recommended to use the [Helmet](crate::helmet) API instead.
+///
 /// # Example
 ///
 /// ```
@@ -139,7 +149,9 @@ where
 ///     inner: String,
 /// }
 ///
-/// let rendered = html! {<Artifact<Title> value={Rc::new(Title { inner: "My Title".into() })} />};
+/// let artifact = Rc::new(Title { inner: "My Title".into() });
+///
+/// let rendered = html! {<Artifact<Title> value={artifact} />};
 /// ```
 #[function_component(Artifact)]
 pub fn artifact<T>(props: &ArtifactProps<T>) -> Html

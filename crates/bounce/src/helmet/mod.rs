@@ -14,6 +14,8 @@
 //! - `html`
 //! - `body`
 //!
+//! # Example
+//!
 //! ```
 //! # use yew::prelude::*;
 //! # use bounce::BounceRoot;

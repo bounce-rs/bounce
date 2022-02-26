@@ -89,11 +89,30 @@ fn script_helmet(props: &ScriptHelmetProps) -> Html {
     html! {<Artifact<HelmetState> value={state} />}
 }
 
-/// A component to register helmet tags.
+/// A component to register head elements.
 ///
 /// # Panics
 ///
 /// This component will panic if unsupported elements are passed as children.
+///
+/// # Example
+///
+/// ```
+/// # use yew::prelude::*;
+/// # use bounce::BounceRoot;
+/// # use bounce::prelude::*;
+/// use bounce::helmet::Helmet;
+///
+/// # #[function_component(Comp)]
+/// # fn comp() -> Html {
+/// html! {
+///     <Helmet>
+///         // The title to apply.
+///         <title>{"page a title"}</title>
+///     </Helmet>
+/// }
+/// # }
+/// ```
 #[function_component(Helmet)]
 pub fn helmet(props: &HelmetProps) -> Html {
     let mut script_helmets = Vec::new();
@@ -154,9 +173,7 @@ pub fn helmet(props: &HelmetProps) -> Html {
                 }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },
-            _ => throw_str(
-                "unsupported helmet tag type, expect html tag of title, meta, link, script, style",
-            ),
+            _ => throw_str("unsupported helmet node type, expect a supported helmet tag."),
         })
         .collect::<Vec<Rc<HelmetTag>>>();
 

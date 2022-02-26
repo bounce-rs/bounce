@@ -10,7 +10,7 @@ use yew::virtual_dom::AttrValue;
 use super::state::{HelmetState, HelmetTag};
 use crate::states::artifact::use_artifacts;
 
-/// Properties of the [HelmetBridge]
+/// Properties of the [HelmetBridge].
 #[derive(Properties, Clone)]
 pub struct HelmetBridgeProps {
     /// The default title to apply if no title is provided.
