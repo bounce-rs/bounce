@@ -90,6 +90,29 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
             let mut title: Option<Rc<str>> = None;
 
+            let mut html_attrs = BTreeMap::new();
+
+            let merge_attrs =
+                |target: &mut BTreeMap<&'static str, Rc<str>>,
+                 current_attrs: &BTreeMap<&'static str, Rc<str>>| {
+                    for (name, value) in current_attrs.iter() {
+                        match *name {
+                            "class" => match target.get(&"class").cloned() {
+                                Some(m) => {
+                                    target
+                                        .insert(*name, Rc::<str>::from(format!("{} {}", value, m)));
+                                }
+                                None => {
+                                    target.insert(*name, value.clone());
+                                }
+                            },
+                            _ => {
+                                target.insert(*name, value.clone());
+                            }
+                        }
+                    }
+                };
+
             for state in helmet_states {
                 for tag in state.tags.iter() {
                     match **tag {
@@ -103,6 +126,10 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
                         HelmetTag::Style { .. } => {
                             to_render.insert(tag.clone());
+                        }
+
+                        HelmetTag::Html { ref attrs } => {
+                            merge_attrs(&mut html_attrs, attrs);
                         }
                     }
                 }
@@ -121,6 +148,9 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             {
                 to_render.insert(HelmetTag::Title(m).into());
             }
+
+            // html element.
+            to_render.insert(HelmetTag::Html { attrs: html_attrs }.into());
 
             // Render tags with consideration of currently rendered tags.
             let mut rendered = rendered.borrow_mut();

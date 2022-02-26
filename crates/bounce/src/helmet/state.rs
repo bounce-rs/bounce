@@ -8,6 +8,7 @@ use web_sys::{Element, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement};
 
 thread_local! {
     static HEAD: HtmlHeadElement = document().head().unwrap_throw();
+    static HTML_TAG: Element = document().document_element().unwrap_throw();
 }
 
 #[derive(PartialEq, Debug)]
@@ -26,6 +27,9 @@ pub(crate) enum HelmetTag {
         content: Rc<str>,
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
+    Html {
+        attrs: BTreeMap<&'static str, Rc<str>>,
+    },
 }
 
 pub(crate) fn create_element<T>(tag_name: &str) -> T
@@ -35,6 +39,24 @@ where
     let element = document().create_element(tag_name).unwrap_throw();
 
     JsValue::from(&element).dyn_into::<T>().unwrap_throw()
+}
+
+pub(crate) fn add_class_list(element: &Element, classes_str: &str) {
+    let class_list = element.class_list();
+
+    for class in classes_str.split_whitespace() {
+        class_list.add_1(class).expect_throw("failed to add class");
+    }
+}
+
+pub(crate) fn remove_class_list(element: &Element, classes_str: &str) {
+    let class_list = element.class_list();
+
+    for class in classes_str.split_whitespace() {
+        class_list
+            .remove_1(class)
+            .expect_throw("failed to remove class");
+    }
 }
 
 pub(crate) fn append_to_head(element: &Element) {
@@ -60,11 +82,17 @@ impl HelmetTag {
                     .expect_throw("failed to set script content");
 
                 for (name, value) in attrs.iter() {
-                    if name == &"type" {
-                        el.set_type(value);
-                    } else {
-                        el.set_attribute(name, value)
-                            .expect_throw("failed to set script attribute");
+                    match *name {
+                        "type" => {
+                            el.set_type(value);
+                        }
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set script attribute");
+                        }
                     }
                 }
 
@@ -80,13 +108,38 @@ impl HelmetTag {
                     .expect_throw("failed to set style content");
 
                 for (name, value) in attrs.iter() {
-                    el.set_attribute(name, value)
-                        .expect_throw("failed to set script attribute");
+                    match *name {
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set script attribute");
+                        }
+                    }
                 }
 
                 append_to_head(&el);
 
                 Some(el.into())
+            }
+
+            Self::Html { attrs } => {
+                let el = HTML_TAG.with(|m| m.clone());
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            add_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.set_attribute(name, value)
+                                .expect_throw("failed to set script attribute");
+                        }
+                    }
+                }
+
+                None
             }
         }
     }
@@ -100,6 +153,21 @@ impl HelmetTag {
             Self::Title(_) => {}
             Self::Script { .. } => {}
             Self::Style { .. } => {}
+            Self::Html { attrs } => {
+                let el = HTML_TAG.with(|m| m.clone());
+
+                for (name, value) in attrs.iter() {
+                    match *name {
+                        "class" => {
+                            remove_class_list(&el, &*value);
+                        }
+                        _ => {
+                            el.remove_attribute(name)
+                                .expect_throw("failed to remove html attribute");
+                        }
+                    }
+                }
+            }
         }
     }
 }
