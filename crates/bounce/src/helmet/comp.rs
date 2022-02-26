@@ -12,7 +12,9 @@ use crate::utils::Id;
 /// Properties for [Helmet].
 #[derive(Properties, Debug, PartialEq)]
 pub struct HelmetProps {
-    /// Children of helmet tags.
+    /// Children of the [Helmet] component.
+    ///
+    /// This property only accepts a list of elements denoted in the module documentation.
     #[prop_or_default]
     pub children: Children,
 }
@@ -88,6 +90,10 @@ fn script_helmet(props: &ScriptHelmetProps) -> Html {
 }
 
 /// A component to register helmet tags.
+///
+/// # Panics
+///
+/// This component will panic if unsupported elements are passed as children.
 #[function_component(Helmet)]
 pub fn helmet(props: &HelmetProps) -> Html {
     let mut script_helmets = Vec::new();

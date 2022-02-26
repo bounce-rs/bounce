@@ -17,12 +17,13 @@ thread_local! {
     static BODY_TAG: HtmlElement = document().body().unwrap_throw();
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub(crate) struct HelmetState {
     pub tags: Vec<Rc<HelmetTag>>,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+// TODO: fully type this.
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum HelmetTag {
     Title(Rc<str>),
     Script {
@@ -247,7 +248,7 @@ impl HelmetTag {
                         }
                         _ => {
                             el.set_attribute(name, value)
-                                .expect_throw("failed to set link attribute");
+                                .expect_throw("failed to set meta attribute");
                         }
                     }
                 }

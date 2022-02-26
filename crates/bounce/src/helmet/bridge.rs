@@ -55,7 +55,9 @@ impl PartialEq for HelmetBridgeProps {
 ///
 /// This component is responsible to reconclie all helmet tags to the real dom.
 ///
-/// It accepts two props, a string `default_title` and a function `format_title`.
+/// It accepts two properties, a `default_title` which will be applied when no other title elements
+/// are registered and a `format_title` function which is used to format the title before it is
+/// passed to the document.
 ///
 /// You can only register 1 `HelmetBridge` per `BounceRoot`. Having multiple `HelmetBridge`s
 /// under the same bounce root may cause unexpected results.
@@ -67,15 +69,15 @@ impl PartialEq for HelmetBridgeProps {
 /// # use bounce::prelude::*;
 /// # use bounce::BounceRoot;
 /// # use bounce::helmet::HelmetBridge;
-///
+/// #
 /// # #[function_component(Comp)]
 /// # fn comp() -> Html {
-///     html! {
-///         <BounceRoot>
-///             <HelmetBridge default_title="default title" />
-///             // other components.
-///         </BounceRoot>
-///     }
+/// html! {
+///     <BounceRoot>
+///         <HelmetBridge default_title="default title" />
+///         // other components.
+///     </BounceRoot>
+/// }
 /// # }
 /// ```
 #[function_component(HelmetBridge)]
