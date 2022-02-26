@@ -4,7 +4,7 @@ use std::rc::Rc;
 use gloo::utils::document;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlHeadElement, HtmlScriptElement};
+use web_sys::{Element, HtmlHeadElement, HtmlScriptElement, HtmlStyleElement};
 
 thread_local! {
     static HEAD: HtmlHeadElement = document().head().unwrap_throw();
@@ -19,6 +19,10 @@ pub(crate) struct HelmetState {
 pub(crate) enum HelmetTag {
     Title(Rc<str>),
     Script {
+        content: Rc<str>,
+        attrs: BTreeMap<&'static str, Rc<str>>,
+    },
+    Style {
         content: Rc<str>,
         attrs: BTreeMap<&'static str, Rc<str>>,
     },
@@ -68,6 +72,22 @@ impl HelmetTag {
 
                 Some(el.into())
             }
+
+            Self::Style { content, attrs } => {
+                let el = create_element::<HtmlStyleElement>("style");
+
+                el.append_child(&document().create_text_node(content))
+                    .expect_throw("failed to set style content");
+
+                for (name, value) in attrs.iter() {
+                    el.set_attribute(name, value)
+                        .expect_throw("failed to set script attribute");
+                }
+
+                append_to_head(&el);
+
+                Some(el.into())
+            }
         }
     }
 
@@ -78,10 +98,8 @@ impl HelmetTag {
 
         match self {
             Self::Title(_) => {}
-
-            Self::Script { .. } => {
-                todo!();
-            }
+            Self::Script { .. } => {}
+            Self::Style { .. } => {}
         }
     }
 }

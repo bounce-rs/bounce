@@ -39,6 +39,13 @@ fn collect_text_content(tag: &VTag) -> String {
     collect_str_in_children(&tag.children().clone().into())
 }
 
+fn collect_attributes(tag: &VTag) -> BTreeMap<&'static str, Rc<str>> {
+    tag.attributes
+        .iter()
+        .map(|(k, v)| (k, v.into()))
+        .collect::<BTreeMap<&'static str, Rc<str>>>()
+}
+
 /// A component to register helmet tags.
 #[function_component(Helmet)]
 pub fn helmet(props: &HelmetProps) -> Html {
@@ -50,15 +57,17 @@ pub fn helmet(props: &HelmetProps) -> Html {
             VNode::VTag(m) => match m.tag() {
                 "title" => HelmetTag::Title(collect_text_content(&m).into()).into(),
                 "script" => {
-                    let attrs = m
-                        .attributes
-                        .iter()
-                        .map(|(k, v)| (k, v.into()))
-                        .collect::<BTreeMap<&'static str, Rc<str>>>();
-
+                    let attrs = collect_attributes(&m);
                     let content: Rc<str> = collect_text_content(&m).into();
 
                     HelmetTag::Script { attrs, content }.into()
+                }
+
+                "style" => {
+                    let attrs = collect_attributes(&m);
+                    let content: Rc<str> = collect_text_content(&m).into();
+
+                    HelmetTag::Style { attrs, content }.into()
                 }
                 _ => throw_str(&format!("unsupported helmet tag type: {}", m.tag())),
             },

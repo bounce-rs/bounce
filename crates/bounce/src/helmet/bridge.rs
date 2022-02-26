@@ -100,6 +100,10 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                         HelmetTag::Script { .. } => {
                             to_render.insert(tag.clone());
                         }
+
+                        HelmetTag::Style { .. } => {
+                            to_render.insert(tag.clone());
+                        }
                     }
                 }
             }
