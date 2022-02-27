@@ -11,7 +11,7 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
     };
 
     let notion_ident = Ident::new("notion", Span::mixed_site());
-    let notion_apply_impls = create_notion_apply_impls(&notion_ident, notion_idents);
+    let notion_apply_impls = create_notion_apply_impls(&notion_ident, &notion_idents);
 
     let ident = input.ident;
 
@@ -24,6 +24,17 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
                 #(#notion_apply_impls)*
 
                 self
+            }
+
+            fn notion_ids(&self) -> &'static [::std::any::TypeId] {
+                static NOTION_IDS: ::bounce::__vendored::once_cell::sync::OnceCell<::std::vec::Vec<::std::any::TypeId>> =
+                    ::bounce::__vendored::once_cell::sync::OnceCell::new();
+
+                NOTION_IDS.get_or_init(
+                    || {
+                        ::std::vec![#(::std::any::TypeId::of::<#notion_idents>(),)*]
+                    }
+                )
             }
         }
     }

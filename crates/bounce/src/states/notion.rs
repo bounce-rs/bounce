@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
@@ -88,6 +87,6 @@ where
 
     // Recreate the dispatch function in case root has changed.
     Rc::new(move |notion: T| {
-        root.apply_notion(Rc::new(notion) as Rc<dyn Any>);
+        root.apply_notion(Rc::new(notion));
     })
 }
