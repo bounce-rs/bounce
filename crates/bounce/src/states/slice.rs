@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::cell::RefCell;
 use std::fmt;
 use std::ops::Deref;
@@ -31,6 +31,9 @@ pub trait Slice: PartialEq + Default {
     fn apply(self: Rc<Self>, notion: Rc<dyn Any>) -> Rc<Self> {
         self
     }
+
+    /// Returns a list of notion ids that this Slice accepts.
+    fn notion_ids(&self) -> &'static [TypeId];
 }
 
 /// A trait to provide cloning on slices.
@@ -125,6 +128,10 @@ where
         if let Some(next_val) = maybe_next_val {
             self.notify_listeners(next_val);
         }
+    }
+
+    fn notion_ids(&self) -> &'static [TypeId] {
+        self.value.borrow().notion_ids()
     }
 }
 
@@ -224,7 +231,7 @@ where
 ///     let dec = {
 ///         let ctr = ctr.clone();
 ///         Callback::from(move |_| {ctr.dispatch(CounterAction::Decrement);})
-///     };;
+///     };
 ///
 ///     html! {
 ///         <div>

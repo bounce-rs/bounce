@@ -152,5 +152,6 @@ pub mod prelude {
 #[doc(hidden)]
 pub mod __vendored {
     pub use futures;
+    pub use once_cell;
     pub use yew;
 }
