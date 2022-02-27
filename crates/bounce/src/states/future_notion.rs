@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -206,7 +205,7 @@ where
         spawn_local(async move {
             root.apply_notion(Rc::new(Deferred::<T>::Pending {
                 input: input.clone(),
-            }) as Rc<dyn Any>);
+            }));
 
             let states = root.states();
 
@@ -228,7 +227,7 @@ where
                     if !last_listener_run || listeners.is_some() {
                         root.apply_notion(Rc::new(Deferred::<T>::Outdated {
                             input: input.clone(),
-                        }) as Rc<dyn Any>);
+                        }));
                     }
                 })))
             }
@@ -242,7 +241,7 @@ where
             root.apply_notion(Rc::new(Deferred::<T>::Completed {
                 input,
                 output: output.into(),
-            }) as Rc<dyn Any>);
+            }));
         });
     })
 }

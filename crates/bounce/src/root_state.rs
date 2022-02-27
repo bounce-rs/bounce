@@ -1,5 +1,7 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::cell::RefCell;
+use std::collections::hash_map;
+use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
@@ -16,12 +18,13 @@ use crate::utils::Id;
 use crate::utils::Listener;
 
 pub(crate) type StateMap = Map<dyn CloneAny>;
+type AnyStateMap = HashMap<TypeId, Vec<Rc<dyn AnyState>>>;
 
 #[derive(Clone)]
 pub(crate) struct BounceRootState {
     id: Id,
     states: Rc<RefCell<StateMap>>,
-    any_states: Rc<RefCell<Vec<Rc<dyn AnyState>>>>,
+    notion_states: Rc<RefCell<AnyStateMap>>,
 }
 
 impl Default for BounceRootState {
@@ -29,7 +32,7 @@ impl Default for BounceRootState {
         Self {
             id: Id::new(),
             states: Rc::default(),
-            any_states: Rc::default(),
+            notion_states: Rc::default(),
         }
     }
 }
@@ -52,23 +55,35 @@ impl BounceRootState {
                 let state = T::default();
                 m.insert(state.clone());
 
-                let mut any_states = self.any_states.borrow_mut();
-                any_states.push(Rc::new(state.clone()) as Rc<dyn AnyState>);
+                let mut notion_states = self.notion_states.borrow_mut();
+                for notion_id in state.notion_ids() {
+                    match notion_states.entry(*notion_id) {
+                        hash_map::Entry::Occupied(mut m) => {
+                            m.get_mut().push(Rc::new(state.clone()) as Rc<dyn AnyState>);
+                        }
+                        hash_map::Entry::Vacant(m) => {
+                            m.insert(vec![Rc::new(state.clone()) as Rc<dyn AnyState>]);
+                        }
+                    }
+                }
 
                 state
             }
         }
     }
 
-    pub fn get_any_states(&self) -> Vec<Rc<dyn AnyState>> {
-        self.any_states.borrow().clone()
-    }
+    pub fn apply_notion<T>(&self, notion: Rc<T>)
+    where
+        T: 'static,
+    {
+        let notion_states = self.notion_states.borrow();
 
-    pub fn apply_notion(&self, notion: Rc<dyn Any>) {
-        let any_states = self.get_any_states();
+        let notion = notion as Rc<dyn Any>;
 
-        for any_state in any_states.iter() {
-            any_state.apply(notion.clone());
+        if let Some(m) = notion_states.get(&TypeId::of::<T>()) {
+            for any_state in m.iter() {
+                any_state.apply(notion.clone());
+            }
         }
     }
 
