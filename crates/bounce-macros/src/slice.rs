@@ -18,6 +18,34 @@ pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Typ
     Ok(notion_idents)
 }
 
+pub(crate) fn parse_find_observed(input: DeriveInput) -> syn::Result<bool> {
+    let mut observed = false;
+
+    for attr in input.attrs.iter() {
+        if !attr.path.is_ident("observed") {
+            continue;
+        }
+
+        if !attr.tokens.is_empty() {
+            return Err(syn::Error::new_spanned(
+                &attr.tokens,
+                "observed attribute accepts no argument",
+            ));
+        }
+
+        if observed {
+            return Err(syn::Error::new_spanned(
+                &attr.path,
+                "you can only have 1 observed attribute",
+            ));
+        }
+
+        observed = true;
+    }
+
+    Ok(observed)
+}
+
 pub(crate) fn create_notion_apply_impls(notion_ident: &Ident, idents: &[Type]) -> Vec<TokenStream> {
     let mut notion_apply_impls = Vec::new();
 
@@ -40,6 +68,10 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
         Ok(m) => m,
         Err(e) => return e.into_compile_error(),
     };
+    let observed = match parse_find_observed(input.clone()) {
+        Ok(m) => m,
+        Err(e) => return e.into_compile_error(),
+    };
 
     let notion_ident = Ident::new("notion", Span::mixed_site());
     let notion_apply_impls = create_notion_apply_impls(&notion_ident, &notion_idents);
@@ -47,6 +79,14 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
     let type_ident = input.ident;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let impl_observed = observed.then(|| {
+        quote! {
+            fn changed(self: ::std::rc::Rc<Self>) {
+                ::bounce::Observed::changed(self);
+            }
+        }
+    });
 
     quote! {
         #[automatically_derived]
@@ -73,6 +113,8 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
                     }
                 )
             }
+
+            #impl_observed
         }
     }
 }

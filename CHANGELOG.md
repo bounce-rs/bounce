@@ -4,6 +4,7 @@
 
 - Added Artifact API
 - Added Helmet API
+- Added Observer API
 
 ## Release 0.2.0
 

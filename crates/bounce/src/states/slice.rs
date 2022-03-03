@@ -34,6 +34,9 @@ pub trait Slice: PartialEq + Default {
 
     /// Returns a list of notion ids that this Slice accepts.
     fn notion_ids(&self) -> &'static [TypeId];
+
+    /// Notifies a slice that it has changed.
+    fn changed(self: Rc<Self>) {}
 }
 
 /// A trait to provide cloning on slices.
@@ -93,6 +96,7 @@ where
     }
 
     pub fn notify_listeners(&self, val: Rc<T>) {
+        val.clone().changed();
         notify_listeners(self.listeners.clone(), val);
     }
 

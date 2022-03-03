@@ -12,5 +12,6 @@ members = [
     "examples/queries-mutations",
     "examples/title",
     "examples/helmet-title",
+    "examples/persist",
 ]
 resolver = "2"
