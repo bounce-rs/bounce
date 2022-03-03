@@ -138,6 +138,7 @@ pub mod prelude {
 
     pub use crate::future_notion;
     pub use crate::BounceStates;
+    pub use crate::Observed;
     pub use crate::{use_artifacts, Artifact, ArtifactProps};
     pub use crate::{use_atom, use_atom_setter, use_atom_value, Atom, CloneAtom, UseAtomHandle};
     pub use crate::{use_future_notion_runner, Deferred, FutureNotion};
