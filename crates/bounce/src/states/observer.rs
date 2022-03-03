@@ -9,6 +9,7 @@ use std::rc::Rc;
 ///
 /// ```
 /// use bounce::prelude::*;
+/// use std::rc::Rc;
 ///
 /// #[derive(Atom, PartialEq, Default)]
 /// #[observed] // observed states need to be denoted with the observed attribute.
