@@ -94,7 +94,6 @@ mod tests {
     use wasm_bindgen_test::*;
     use web_sys::Event;
     use web_sys::EventTarget;
-    use web_sys::HtmlElement;
     use web_sys::HtmlInputElement;
 
     wasm_bindgen_test_configure!(run_in_browser);
@@ -110,20 +109,11 @@ mod tests {
             .unwrap()
     }
 
-    async fn click_by_id<S: AsRef<str>>(id: S) {
-        sleep(Duration::ZERO).await;
-
-        document()
-            .query_selector(&format!("#{}", id.as_ref()))
-            .unwrap()
-            .unwrap()
-            .unchecked_into::<HtmlElement>()
-            .click();
-    }
-
     #[wasm_bindgen_test]
-    async fn test_simple() {
-        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+    async fn test_persist() {
+        let handle = yew::start_app_in_element::<App>(
+            document().query_selector("#output").unwrap().unwrap(),
+        );
 
         assert_eq!(get_text_content_by_id("reader").await, "Hello, Jane Doe");
 
@@ -144,8 +134,13 @@ mod tests {
 
         assert_eq!(get_text_content_by_id("reader").await, "Hello, John Smith");
 
-        click_by_id("btn-reset").await;
+        handle.destroy();
 
-        assert_eq!(get_text_content_by_id("reader").await, "Hello, Jane Doe");
+        // make sure that app has been destroyed.
+        assert_eq!(get_text_content_by_id("output").await, "");
+
+        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+
+        assert_eq!(get_text_content_by_id("reader").await, "Hello, John Smith");
     }
 }
