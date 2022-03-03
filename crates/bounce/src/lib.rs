@@ -127,6 +127,7 @@ pub use states::atom::{use_atom, use_atom_setter, use_atom_value, CloneAtom, Use
 pub use states::future_notion::{use_future_notion_runner, Deferred, FutureNotion};
 pub use states::input_selector::{use_input_selector_value, InputSelector};
 pub use states::notion::{use_notion_applier, WithNotion};
+pub use states::observer::Observed;
 pub use states::selector::{use_selector_value, Selector};
 pub use states::slice::{
     use_slice, use_slice_dispatch, use_slice_value, CloneSlice, UseSliceHandle,

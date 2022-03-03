@@ -329,7 +329,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
                 guard.dispatch(HelmetBridgeGuardAction::Decrement);
             }
         },
-        root.clone(),
+        root,
     );
 
     use_effect_with_deps(

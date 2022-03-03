@@ -15,6 +15,8 @@ pub trait Atom: PartialEq + Default {
     }
 
     fn notion_ids(&self) -> &'static [TypeId];
+
+    fn changed(self: Rc<Self>) {}
 }
 
 /// A trait to provide cloning on atoms.
@@ -61,6 +63,10 @@ where
 
     fn notion_ids(&self) -> &'static [TypeId] {
         self.inner.notion_ids()
+    }
+
+    fn changed(self: Rc<Self>) {
+        self.inner.clone().changed();
     }
 }
 

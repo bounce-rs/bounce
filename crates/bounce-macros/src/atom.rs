@@ -2,10 +2,15 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DeriveInput, Ident};
 
-use super::slice::{create_notion_apply_impls, parse_with_notion_attrs};
+use super::slice::{create_notion_apply_impls, parse_find_observed, parse_with_notion_attrs};
 
 pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
     let notion_idents = match parse_with_notion_attrs(input.clone()) {
+        Ok(m) => m,
+        Err(e) => return e.into_compile_error(),
+    };
+
+    let observed = match parse_find_observed(input.clone()) {
         Ok(m) => m,
         Err(e) => return e.into_compile_error(),
     };
@@ -16,6 +21,14 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
     let ident = input.ident;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let impl_observed = observed.then(|| {
+        quote! {
+            fn changed(self: ::std::rc::Rc<Self>) {
+                ::bounce::Observed::changed(self);
+            }
+        }
+    });
 
     quote! {
         #[automatically_derived]
@@ -36,6 +49,8 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
                     }
                 )
             }
+
+            #impl_observed
         }
     }
 }

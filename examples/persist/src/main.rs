@@ -1,12 +1,15 @@
 use std::fmt;
+use std::rc::Rc;
 
 use bounce::*;
+use gloo::storage::{LocalStorage, Storage};
 use log::Level;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew::InputEvent;
 
 #[derive(PartialEq, Atom)]
+#[observed]
 struct Username {
     inner: String,
 }
@@ -20,7 +23,7 @@ impl From<String> for Username {
 impl Default for Username {
     fn default() -> Self {
         Self {
-            inner: "Jane Doe".into(),
+            inner: LocalStorage::get("username").unwrap_or_else(|_| "Jane Doe".into()),
         }
     }
 }
@@ -28,6 +31,12 @@ impl Default for Username {
 impl fmt::Display for Username {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inner)
+    }
+}
+
+impl Observed for Username {
+    fn changed(self: Rc<Self>) {
+        LocalStorage::set("username", &self.inner).expect("failed to set username.");
     }
 }
 
@@ -59,22 +68,13 @@ fn setter() -> Html {
     }
 }
 
-#[function_component(Resetter)]
-fn resetter() -> Html {
-    let set_username = use_atom_setter::<Username>();
-
-    let on_reset_clicked = Callback::from(move |_| set_username(Username::default()));
-
-    html! { <button id="btn-reset" onclick={on_reset_clicked}>{"Reset"}</button> }
-}
-
 #[function_component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>
             <Reader />
             <Setter />
-            <Resetter />
+            <div>{"Type a username, and it will be saved in the local storage."}</div>
         </BounceRoot>
     }
 }
