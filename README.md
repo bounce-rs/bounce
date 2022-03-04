@@ -99,7 +99,7 @@ fn setter() -> Html {
 
     html! {
         <div>
-            <input type_="text" oninput={on_text_input} value={username.inner.to_string()} />
+            <input type="text" oninput={on_text_input} value={username.inner.to_string()} />
         </div>
     }
 }
@@ -118,48 +118,6 @@ fn reader() -> Html {
 ```
 
 You can find the full example [here](https://github.com/futursolo/bounce/blob/master/examples/simple/src/main.rs).
-
-## Complex State
-
-If you wish to have a reducer-based state that changes based on actions,
-you can use a `Slice`.
-
-It shares the same API as the `Reducible` trait for `yew`, but is
-initialised with `Default`.
-
-You can use it with `use_slice`, `use_slice_value` and
-`use_slice_dispatch` hooks.
-
-You can find an example of slices [here](https://github.com/futursolo/bounce/blob/master/examples/partial-render/src/main.rs).
-
-## Notion and Future Notion
-
-A notion is an action that can be applied on multiple states using
-`use_notion_applier`.
-
-You can find an example of notion [here](https://github.com/futursolo/bounce/blob/master/examples/notion/src/main.rs).
-
-A future notion is a notion that is applied twice when it starts running
-and finishes running. This can be handy when handling
-asynchronous tasks.
-
-If you are trying to interact with a backend, it is recommended to use
-the Query API instead.
-
-You can find an example of future notion [here](https://github.com/futursolo/bounce/blob/master/examples/random-uuid/src/main.rs).
-
-## Selector
-
-A selector is a state derived from other states and auto updated when
-any underlying states changes.
-
-You can find an example of selector [here](https://github.com/futursolo/bounce/blob/master/examples/divisibility/src/main.rs).
-
-## Query & Mutation
-
-Queries and Mutations are states that can be connected to a backend API.
-
-You can find an example of the Query API [here](https://github.com/futursolo/bounce/blob/master/examples/queries-mutations/src/main.rs).
 
 ## License
 
