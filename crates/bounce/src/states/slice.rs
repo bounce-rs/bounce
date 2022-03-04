@@ -1,4 +1,4 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::cell::RefCell;
 use std::fmt;
 use std::ops::Deref;
@@ -31,9 +31,6 @@ pub trait Slice: PartialEq + Default {
     fn apply(self: Rc<Self>, notion: Rc<dyn Any>) -> Rc<Self> {
         self
     }
-
-    /// Returns a list of notion ids that this Slice accepts.
-    fn notion_ids(&self) -> &'static [TypeId];
 
     /// Notifies a slice that it has changed.
     fn changed(self: Rc<Self>) {}
@@ -132,10 +129,6 @@ where
         if let Some(next_val) = maybe_next_val {
             self.notify_listeners(next_val);
         }
-    }
-
-    fn notion_ids(&self) -> &'static [TypeId] {
-        self.value.borrow().notion_ids()
     }
 }
 

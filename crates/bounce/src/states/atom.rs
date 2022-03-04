@@ -1,4 +1,4 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -13,8 +13,6 @@ pub trait Atom: PartialEq + Default {
     fn apply(self: Rc<Self>, notion: Rc<dyn Any>) -> Rc<Self> {
         self
     }
-
-    fn notion_ids(&self) -> &'static [TypeId];
 
     fn changed(self: Rc<Self>) {}
 }
@@ -59,10 +57,6 @@ where
             inner: self.inner.clone().apply(notion),
         }
         .into()
-    }
-
-    fn notion_ids(&self) -> &'static [TypeId] {
-        self.inner.notion_ids()
     }
 
     fn changed(self: Rc<Self>) {
