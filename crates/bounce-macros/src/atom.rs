@@ -39,6 +39,10 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
                 self
             }
 
+            fn notion_ids(&self) -> ::std::vec::Vec<::std::any::TypeId> {
+                ::std::vec![#(::std::any::TypeId::of::<#notion_idents>(),)*]
+            }
+
             #impl_observed
         }
     }

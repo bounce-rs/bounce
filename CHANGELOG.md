@@ -5,6 +5,7 @@
 - Added Artifact API
 - Added Helmet API
 - Added Observer API
+- Notion is now registered and does not iterate over all states.
 
 ## Release 0.2.0
 
