@@ -1,0 +1,15 @@
+[book]
+authors = ["Kaede Hoshikawa"]
+language = "en"
+multilingual = false
+src = "book-src"
+title = "The Bounce Book"
+
+[rust]
+edition = "2021"
+
+[build]
+build-dir = "book-build"
+
+[output.html]
+preferred-dark-theme = "ayu"

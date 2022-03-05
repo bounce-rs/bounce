@@ -4,4 +4,6 @@ crates/*/target
 examples/*/target
 examples/*/dist
 
+book-build
+
 Cargo.lock
