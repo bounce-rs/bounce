@@ -103,15 +103,8 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
                 self
             }
 
-            fn notion_ids(&self) -> &'static [::std::any::TypeId] {
-                static NOTION_IDS: ::bounce::__vendored::once_cell::sync::OnceCell<::std::vec::Vec<::std::any::TypeId>> =
-                    ::bounce::__vendored::once_cell::sync::OnceCell::new();
-
-                NOTION_IDS.get_or_init(
-                    || {
-                        ::std::vec![#(::std::any::TypeId::of::<#notion_idents>(),)*]
-                    }
-                )
+            fn notion_ids(&self) -> ::std::vec::Vec<::std::any::TypeId> {
+                ::std::vec![#(::std::any::TypeId::of::<#notion_idents>(),)*]
             }
 
             #impl_observed

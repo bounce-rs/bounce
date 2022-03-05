@@ -7,7 +7,7 @@ pub(crate) trait AnyState {
     fn apply(&self, notion: Rc<dyn Any>);
 
     /// Returns a list of notion ids that this state accepts.
-    fn notion_ids(&self) -> &'static [TypeId] {
-        &[]
+    fn notion_ids(&self) -> Vec<TypeId> {
+        Vec::new()
     }
 }

@@ -14,7 +14,7 @@ pub trait Atom: PartialEq + Default {
         self
     }
 
-    fn notion_ids(&self) -> &'static [TypeId];
+    fn notion_ids(&self) -> Vec<TypeId>;
 
     fn changed(self: Rc<Self>) {}
 }
@@ -61,7 +61,7 @@ where
         .into()
     }
 
-    fn notion_ids(&self) -> &'static [TypeId] {
+    fn notion_ids(&self) -> Vec<TypeId> {
         self.inner.notion_ids()
     }
 

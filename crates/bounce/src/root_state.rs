@@ -57,7 +57,7 @@ impl BounceRootState {
 
                 let mut notion_states = self.notion_states.borrow_mut();
                 for notion_id in state.notion_ids() {
-                    match notion_states.entry(*notion_id) {
+                    match notion_states.entry(notion_id) {
                         hash_map::Entry::Occupied(mut m) => {
                             m.get_mut().push(Rc::new(state.clone()) as Rc<dyn AnyState>);
                         }

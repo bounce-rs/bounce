@@ -33,7 +33,7 @@ pub trait Slice: PartialEq + Default {
     }
 
     /// Returns a list of notion ids that this Slice accepts.
-    fn notion_ids(&self) -> &'static [TypeId];
+    fn notion_ids(&self) -> Vec<TypeId>;
 
     /// Notifies a slice that it has changed.
     fn changed(self: Rc<Self>) {}
@@ -134,7 +134,7 @@ where
         }
     }
 
-    fn notion_ids(&self) -> &'static [TypeId] {
+    fn notion_ids(&self) -> Vec<TypeId> {
         self.value.borrow().notion_ids()
     }
 }
