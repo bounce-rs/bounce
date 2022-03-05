@@ -41,6 +41,10 @@ features = [
 query = ["async-trait"]
 helmet = ["gloo", "web-sys"]
 
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+gloo = { version = "0.6.0", features = ["futures"] }
+
 [dev-dependencies.web-sys]
 version = "0.3.55"
 features = [
