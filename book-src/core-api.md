@@ -1,1 +1,1 @@
-# Query API
+# Core API
