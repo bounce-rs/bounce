@@ -144,6 +144,9 @@ fn reader() -> Html {
 
 ## 6. Create a component to update the username
 
+The `use_atom` hook can be used to establish a bi-directional connection
+between a component and a bounce state.
+
 ```rust
 #[function_component(Setter)]
 fn setter() -> Html {
@@ -168,3 +171,27 @@ fn setter() -> Html {
     }
 }
 ```
+
+## 7. Update app
+
+To make sure that our `<Getter />` and `<Setter />` component can
+communicate with `<BounceRoot />`, we need to put them under the bounce
+root.
+
+```rust
+use bounce::BounceRoot;
+use yew::prelude::*;
+
+#[function_component(App)]
+pub fn app() -> Html {
+    html! {
+        <BounceRoot>
+            <Getter />
+            <Setter />
+        </BounceRoot>
+    }
+}
+```
+
+You may refer to the [simple](https://github.com/futursolo/bounce/tree/master/examples/simple)
+example for a complete example.
