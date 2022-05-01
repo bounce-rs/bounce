@@ -1,5 +1,8 @@
 ## Release 0.3.0
 
+### Breaking Changes
+- `with_notion` now needs to be wrapped inside `bounce`.
+
 ### Other Changes
 
 - Added Artifact API

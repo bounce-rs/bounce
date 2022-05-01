@@ -170,7 +170,7 @@ where
 /// }
 ///
 /// #[derive(PartialEq, Default, Atom)]
-/// #[with_notion(Deferred<FetchUser>)]  // A future notion with type `T` will be applied as `Deferred<T>`.
+/// #[bounce(with_notion(Deferred<FetchUser>))]  // A future notion with type `T` will be applied as `Deferred<T>`.
 /// struct UserState {
 ///     inner: Option<Rc<User>>,
 /// }
