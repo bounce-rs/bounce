@@ -152,30 +152,201 @@ html! {
 
 A derived state. Unlike Atoms or Slices, a selector cannot store any
 value. It derives its value from other states (atoms, slices or
-selectors) and subscribes to the state used to derive values
-automatically so it will update its value whenever any value it
-subscribes to changes.
+other selectors) and subscribes to the state used to derive values
+so it will update its value when any value it
+subscribes to changes automatically.
+
+#### Example
+
+A selector that checks if the pervious counter slice is even.
+
+```rust
+#[derive(PartialEq)]
+pub struct IsEven {
+    inner: bool,
+}
+
+impl Selector for IsEven {
+    fn select(states: &BounceStates) -> Rc<Self> {
+        // The IsEven selector will subscribe to the Counter slice.
+        // If the value of the counter slice changes,
+        // the value of IsEven will be updated as well.
+        let val = states.get_slice_value::<Counter>();
+
+        Self {
+            inner: val.inner % 2 == 0,
+        }
+        .into()
+    }
+}
+```
+
+API Reference:
+
+- [`Selector`](https://docs.rs/bounce/0.2.0/bounce/trait.Selector.html)
+- [`use_selector_value`](https://docs.rs/bounce/0.2.0/bounce/fn.use_selector_value.html)
 
 ### Input Selector
 
 A derived state family. Similar to Selectors, but also allows an
 additional input to be provided to select states.
 
+An input selector will refresh its value upon either the input or the selected states change.
+
+API Reference:
+
+- [`InputSelector`](https://docs.rs/bounce/0.2.0/bounce/trait.InputSelector.html)
+- [`use_input_selector_value`](https://docs.rs/bounce/0.2.0/bounce/fn.use_input_selector_value.html)
+
 ### Notion
 
-A action that can be applied to multiple states.
+An action that can be applied to multiple states.
+
+A notion can be any type that is `'static`.
+
+When a notion is applied, it will be broadcasted to all states that
+listen to this notion.
+
+To listen to a notion, apply `#[with_notion(NotionType)]` tag to your
+slice or atom and define how it can be applied with the
+`WithNotion<NotionType>` trait.
+
+```
+use yew::prelude::*;
+
+pub struct Reset;
+
+pub enum CounterAction {
+    Increment,
+    Decrement,
+}
+
+#[derive(Slice, PartialEq, Default)]
+#[with_notion(Reset)] // The slice that listens to a notion of type T needs to be denoted with `#[with_notion(T)]`.
+pub struct Counter {
+    inner: u32
+}
+
+impl Reducible for Counter {
+    type Action = CounterAction;
+
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        match action {
+            CounterAction::Increment => {
+                Self { inner: self.inner + 1 }.into()
+            }
+            CounterAction::Decrement => {
+                Self { inner: self.inner - 1 }.into()
+            }
+        }
+    }
+}
+
+// A WithNotion<T> is required for each notion denoted in the #[with_notion] attribute.
+impl WithNotion<Reset> for Counter {
+    fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
+        Self::default().into()
+    }
+}
+```
+
+A notion can be applied with the `use_notion_applier` hook.
+
+```
+let reset_everything = use_notion_applier::<Reset>();
+reset_everything(Reset);
+```
+
+API Reference:
+
+- [`WithNotion`](https://docs.rs/bounce/0.2.0/bounce/trait.WithNotion.html)
+- [`use_notion_applier`](https://docs.rs/bounce/0.2.0/bounce/fn.use_notion_applier.html)
 
 ### Future Notion
 
-A future notion is a notion that is applied twice upon the initiation
-and completion of an asynchronous task.
+A notion that is applied upon the initiation and completion of an asynchronous task.
+
+A future notion can be defined with the `#[future_notion]` attribute.
+
+```rust
+struct User {
+    id: u64,
+    name: String,
+}
+
+#[future_notion(FetchUser)]
+async fn fetch_user(id: &u64) -> User {
+    // fetch user
+
+    User { id: *id, name: "John Smith".into() }
+}
+```
+
+Slices and Atoms can receive updates of a future notion by listening to
+the Deferred notion.
+
+```rust
+#[derive(PartialEq, Default, Atom)]
+#[with_notion(Deferred<FetchUser>)]  // A future notion with type `T` will be applied as `Deferred<T>`.
+struct UserState {
+    inner: Option<Rc<User>>,
+}
+
+// Each time a future notion is run, it will be applied twice.
+impl WithNotion<Deferred<FetchUser>> for UserState {
+    fn apply(self: Rc<Self>, notion: Rc<Deferred<FetchUser>>) -> Rc<Self> {
+        match notion.output() {
+            Some(m) => Self { inner: Some(m) }.into(),
+            None => self,
+        }
+    }
+}
+```
+
+Future Notions can be initiated with the `use_future_notion_runner`
+hook.
+
+```rust
+let load_user = use_future_notion_runner::<FetchUser>();
+load_user(1);
+```
+
+API Reference:
+
+- [`#[future_notion]`](https://docs.rs/bounce/0.2.0/bounce/attr.future_notion.html)
+- [`Deferred`](https://docs.rs/bounce/0.2.0/bounce/enum.Deferred.html)
+- [`use_future_notion_runner`](https://docs.rs/bounce/0.2.0/bounce/fn.use_future_notion_runner.html)
+
+#### Note
+
+The Future Notion API is a low-level API to execute asynchronous tasks.
+
+If you are trying to interact with a backend API,
+it is recommended to use the [Query API](query-api.md) instead.
+
+The Query API is built with the Future Notion API.
 
 ### Artifact
 
 An artifact is a side-effect API that collects all values of a state
 registered in its defining order.
 
+This API is useful when declaring global side effects (e.g.: document title).
+
+<!-- API Reference:                                                                 -->
+
+<!-- - [`Artifact`](https://docs.rs/bounce/0.2.0/bounce/type.Artifact.html)         -->
+<!-- - [`use_artifacts`](https://docs.rs/bounce/0.2.0/bounce/fn.use_artifacts.html) -->
+
+#### Note
+
+If you are trying to manipulate elements in the `<head />` element (e.g.: document title),
+it is recommended to use the [Helmet API](helmet-api.md) instead.
+
 ### Observer
 
 The observer API can be used to create an observed state that notifies
 the observer when a state changes.
+
+This API can be used to persist a state to the local storage or
+synchronise it to other tabs.
