@@ -1,86 +1,259 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{DeriveInput, Ident, Type};
+use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
+use syn::{Attribute, DeriveInput, Ident, Meta, NestedMeta, Path};
 
-pub(crate) fn parse_with_notion_attrs(input: DeriveInput) -> syn::Result<Vec<Type>> {
-    let mut notion_idents = Vec::new();
-
-    for attr in input.attrs.iter() {
-        if !attr.path.is_ident("with_notion") {
-            continue;
-        }
-
-        let ident = attr.parse_args::<Type>()?;
-
-        notion_idents.push(ident);
-    }
-
-    Ok(notion_idents)
+pub(crate) struct WithNotionAttr {
+    pub path: Path,
 }
 
-pub(crate) fn parse_find_observed(input: DeriveInput) -> syn::Result<bool> {
-    let mut observed = false;
+impl WithNotionAttr {
+    fn parse(meta: &Meta) -> syn::Result<Option<Vec<Self>>> {
+        match meta {
+            Meta::Path(m) => {
+                if !m.is_ident("with_notion") {
+                    return Ok(None);
+                }
 
-    for attr in input.attrs.iter() {
-        if !attr.path.is_ident("observed") {
-            continue;
+                Err(syn::Error::new_spanned(m, "expected list of types"))
+            }
+            Meta::List(m) => {
+                if !m.path.is_ident("with_notion") {
+                    return Ok(None);
+                }
+
+                let mut attrs = Vec::new();
+
+                for attr in m.nested.iter() {
+                    match attr {
+                        NestedMeta::Meta(Meta::Path(m)) => {
+                            attrs.push(Self { path: m.clone() });
+                        }
+                        _ => return Err(syn::Error::new_spanned(attr, "expected type")),
+                    }
+                }
+
+                Ok(Some(attrs))
+            }
+            Meta::NameValue(m) => {
+                if !m.path.is_ident("with_notion") {
+                    return Ok(None);
+                }
+
+                Err(syn::Error::new_spanned(m, "expected list of types"))
+            }
         }
-
-        if !attr.tokens.is_empty() {
-            return Err(syn::Error::new_spanned(
-                &attr.tokens,
-                "observed attribute accepts no argument",
-            ));
-        }
-
-        if observed {
-            return Err(syn::Error::new_spanned(
-                &attr.path,
-                "you can only have 1 observed attribute",
-            ));
-        }
-
-        observed = true;
     }
-
-    Ok(observed)
 }
 
-pub(crate) fn create_notion_apply_impls(notion_ident: &Ident, idents: &[Type]) -> Vec<TokenStream> {
-    let mut notion_apply_impls = Vec::new();
+pub(crate) struct ObservedAttr {
+    ident: Ident,
+}
 
-    for ident in idents {
-        let notion_apply_impl = quote! {
-            let #notion_ident = match <::std::rc::Rc::<dyn std::any::Any>>::downcast::<#ident>(#notion_ident) {
-                ::std::result::Result::Ok(m) => return ::bounce::WithNotion::<#ident>::apply(::std::clone::Clone::clone(&self), m),
-                ::std::result::Result::Err(e) => e,
+impl ObservedAttr {
+    fn parse(meta: &Meta) -> syn::Result<Option<Self>> {
+        match meta {
+            Meta::Path(m) => match m.get_ident() {
+                Some(m) => {
+                    if m == "observed" {
+                        return Ok(Some(Self {
+                            ident: m.to_owned(),
+                        }));
+                    }
+
+                    Ok(None)
+                }
+                None => Ok(None),
+            },
+            Meta::List(m) => {
+                if !m.path.is_ident("observed") {
+                    return Ok(None);
+                }
+
+                Err(syn::Error::new_spanned(
+                    m,
+                    "observed attribute accepts no argument",
+                ))
+            }
+            Meta::NameValue(m) => {
+                if !m.path.is_ident("observed") {
+                    return Ok(None);
+                }
+
+                Err(syn::Error::new_spanned(
+                    m,
+                    "observed attribute accepts no argument",
+                ))
+            }
+        }
+    }
+}
+
+pub(crate) enum BounceAttr {
+    WithNotion(WithNotionAttr),
+    Observed(ObservedAttr),
+}
+
+impl Parse for BounceAttr {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        todo!()
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct BounceAttrs {
+    pub notions: Vec<WithNotionAttr>,
+    pub observed: Option<ObservedAttr>,
+}
+
+impl Parse for BounceAttrs {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        let attrs = Punctuated::<BounceAttr, Comma>::parse_terminated(input)?;
+
+        let mut this = Self::default();
+
+        for attr in attrs {
+            match attr {
+                BounceAttr::WithNotion(m) => {
+                    this.notions.push(m);
+                }
+                BounceAttr::Observed(m) => {
+                    if this.observed.is_some() {
+                        return Err(syn::Error::new_spanned(
+                            m.ident,
+                            "you can only have 1 observed attribute",
+                        ));
+                    }
+
+                    this.observed = Some(m);
+                }
+            }
+        }
+
+        Ok(this)
+    }
+}
+
+impl BounceAttrs {
+    pub fn parse_one(&mut self, attr: &Attribute) -> syn::Result<()> {
+        if !attr.path.is_ident("bounce") {
+            return Ok(());
+        }
+
+        let meta = attr.parse_meta()?;
+
+        match meta {
+            Meta::Path(m) => {
+                return Err(syn::Error::new_spanned(
+                    m,
+                    "expected additional attribute content, found #[bounce]",
+                ));
+            }
+            Meta::List(m) => {
+                for attr in m.nested.iter() {
+                    match attr {
+                        NestedMeta::Meta(ref m) => {
+                            if let Some(m) = WithNotionAttr::parse(m)? {
+                                self.notions.extend(m);
+
+                                continue;
+                            }
+
+                            if ObservedAttr::parse(m)?.is_some() {
+                                if self.observed {
+                                    return Err(syn::Error::new_spanned(
+                                        m,
+                                        "you can only have 1 observed attribute",
+                                    ));
+                                }
+
+                                self.observed = true;
+
+                                continue;
+                            }
+                            return Err(syn::Error::new_spanned(attr, "unknown attribute"));
+                        }
+                        NestedMeta::Lit(ref l) => {
+                            return Err(syn::Error::new_spanned(
+                                l,
+                                "expected additional attribute content, found literal",
+                            ));
+                        }
+                    }
+                }
+            }
+            Meta::NameValue(m) => {
+                return Err(syn::Error::new_spanned(
+                    m,
+                    "expected bracketed list, found name value pair",
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
+        let mut this = Self::default();
+
+        for attr in attrs {
+            this.parse_one(attr)?;
+        }
+
+        Ok(this)
+    }
+
+    pub fn notion_idents(&self) -> Vec<Path> {
+        self.notions.iter().map(|m| m.path.clone()).collect()
+    }
+
+    pub fn create_notion_apply_impls(&self, notion_ident: &Ident) -> Vec<TokenStream> {
+        let idents = self.notion_idents();
+        let mut notion_apply_impls = Vec::new();
+
+        for ident in idents {
+            let notion_apply_impl = quote! {
+                let #notion_ident = match <::std::rc::Rc::<dyn std::any::Any>>::downcast::<#ident>(#notion_ident) {
+                    ::std::result::Result::Ok(m) => return ::bounce::WithNotion::<#ident>::apply(::std::clone::Clone::clone(&self), m),
+                    ::std::result::Result::Err(e) => e,
+                };
             };
-        };
 
-        notion_apply_impls.push(notion_apply_impl);
+            notion_apply_impls.push(notion_apply_impl);
+        }
+
+        notion_apply_impls
     }
 
-    notion_apply_impls
+    pub fn create_notion_id_impls(&self) -> Vec<TokenStream> {
+        self.notions
+            .iter()
+            .map(|m| {
+                let path = &m.path;
+
+                quote! { ::std::any::TypeId::of::<#path>() }
+            })
+            .collect()
+    }
 }
 
 pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
-    let notion_idents = match parse_with_notion_attrs(input.clone()) {
-        Ok(m) => m,
-        Err(e) => return e.into_compile_error(),
-    };
-    let observed = match parse_find_observed(input.clone()) {
+    let bounce_attrs = match BounceAttrs::parse(&input.attrs) {
         Ok(m) => m,
         Err(e) => return e.into_compile_error(),
     };
 
     let notion_ident = Ident::new("notion", Span::mixed_site());
-    let notion_apply_impls = create_notion_apply_impls(&notion_ident, &notion_idents);
+    let notion_apply_impls = bounce_attrs.create_notion_apply_impls(&notion_ident);
+    let notion_ids_impls = bounce_attrs.create_notion_id_impls();
 
     let type_ident = input.ident;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let impl_observed = observed.then(|| {
+    let impl_observed = bounce_attrs.observed.then(|| {
         quote! {
             fn changed(self: ::std::rc::Rc<Self>) {
                 ::bounce::Observed::changed(self);
@@ -104,7 +277,7 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
             }
 
             fn notion_ids(&self) -> ::std::vec::Vec<::std::any::TypeId> {
-                ::std::vec![#(::std::any::TypeId::of::<#notion_idents>(),)*]
+                ::std::vec![#(#notion_ids_impls,)*]
             }
 
             #impl_observed

@@ -218,7 +218,7 @@ where
 }
 
 #[derive(Slice)]
-#[with_notion(Deferred<RunQuery<T>>)]
+#[bounce(with_notion(Deferred<RunQuery<T>>))]
 struct QueryState<T>
 where
     T: Query + 'static,
