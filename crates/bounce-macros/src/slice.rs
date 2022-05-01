@@ -1,50 +1,38 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::parse::{Parse, ParseStream};
+use syn::parse::discouraged::Speculative;
+use syn::parse::{Parse, ParseBuffer, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::{Attribute, DeriveInput, Ident, Meta, NestedMeta, Path};
+use syn::{parenthesized, Attribute, DeriveInput, Ident, Meta, Type};
 
 pub(crate) struct WithNotionAttr {
-    pub path: Path,
+    notion_idents: Vec<Type>,
 }
 
 impl WithNotionAttr {
-    fn parse(meta: &Meta) -> syn::Result<Option<Vec<Self>>> {
-        match meta {
-            Meta::Path(m) => {
-                if !m.is_ident("with_notion") {
-                    return Ok(None);
-                }
+    fn parse_parens_content(input: ParseStream<'_>) -> syn::Result<ParseBuffer<'_>> {
+        let content;
 
-                Err(syn::Error::new_spanned(m, "expected list of types"))
-            }
-            Meta::List(m) => {
-                if !m.path.is_ident("with_notion") {
-                    return Ok(None);
-                }
+        parenthesized!(content in input);
 
-                let mut attrs = Vec::new();
+        Ok(content)
+    }
 
-                for attr in m.nested.iter() {
-                    match attr {
-                        NestedMeta::Meta(Meta::Path(m)) => {
-                            attrs.push(Self { path: m.clone() });
-                        }
-                        _ => return Err(syn::Error::new_spanned(attr, "expected type")),
-                    }
-                }
+    fn try_parse(input: ParseStream<'_>) -> syn::Result<Option<Self>> {
+        let ident = input.parse::<Ident>()?;
 
-                Ok(Some(attrs))
-            }
-            Meta::NameValue(m) => {
-                if !m.path.is_ident("with_notion") {
-                    return Ok(None);
-                }
-
-                Err(syn::Error::new_spanned(m, "expected list of types"))
-            }
+        if ident != "with_notion" {
+            return Ok(None);
         }
+
+        let content = Self::parse_parens_content(input)?;
+
+        let idents = Punctuated::<Type, Comma>::parse_terminated(&content)?;
+
+        Ok(Some(Self {
+            notion_idents: idents.into_iter().collect(),
+        }))
     }
 }
 
@@ -53,41 +41,14 @@ pub(crate) struct ObservedAttr {
 }
 
 impl ObservedAttr {
-    fn parse(meta: &Meta) -> syn::Result<Option<Self>> {
-        match meta {
-            Meta::Path(m) => match m.get_ident() {
-                Some(m) => {
-                    if m == "observed" {
-                        return Ok(Some(Self {
-                            ident: m.to_owned(),
-                        }));
-                    }
+    fn try_parse(input: ParseStream<'_>) -> syn::Result<Option<Self>> {
+        let ident = input.parse::<Ident>()?;
 
-                    Ok(None)
-                }
-                None => Ok(None),
-            },
-            Meta::List(m) => {
-                if !m.path.is_ident("observed") {
-                    return Ok(None);
-                }
-
-                Err(syn::Error::new_spanned(
-                    m,
-                    "observed attribute accepts no argument",
-                ))
-            }
-            Meta::NameValue(m) => {
-                if !m.path.is_ident("observed") {
-                    return Ok(None);
-                }
-
-                Err(syn::Error::new_spanned(
-                    m,
-                    "observed attribute accepts no argument",
-                ))
-            }
+        if ident != "observed" {
+            return Ok(None);
         }
+
+        Ok(Some(Self { ident }))
     }
 }
 
@@ -98,7 +59,19 @@ pub(crate) enum BounceAttr {
 
 impl Parse for BounceAttr {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
-        todo!()
+        let forked_input = input.fork();
+        if let Some(m) = ObservedAttr::try_parse(&forked_input)? {
+            input.advance_to(&forked_input);
+            return Ok(Self::Observed(m));
+        }
+
+        let forked_input = input.fork();
+        if let Some(m) = WithNotionAttr::try_parse(&forked_input)? {
+            input.advance_to(&forked_input);
+            return Ok(Self::WithNotion(m));
+        }
+
+        Err(input.error("unknown attribute: expected either with_notion or observed"))
     }
 }
 
@@ -142,55 +115,20 @@ impl BounceAttrs {
             return Ok(());
         }
 
-        let meta = attr.parse_meta()?;
+        let other = attr.parse_args::<BounceAttrs>()?;
 
-        match meta {
-            Meta::Path(m) => {
+        if let Some(m) = other.observed {
+            if self.observed.is_some() {
                 return Err(syn::Error::new_spanned(
-                    m,
-                    "expected additional attribute content, found #[bounce]",
+                    m.ident,
+                    "you can only have 1 observed attribute",
                 ));
             }
-            Meta::List(m) => {
-                for attr in m.nested.iter() {
-                    match attr {
-                        NestedMeta::Meta(ref m) => {
-                            if let Some(m) = WithNotionAttr::parse(m)? {
-                                self.notions.extend(m);
 
-                                continue;
-                            }
-
-                            if ObservedAttr::parse(m)?.is_some() {
-                                if self.observed {
-                                    return Err(syn::Error::new_spanned(
-                                        m,
-                                        "you can only have 1 observed attribute",
-                                    ));
-                                }
-
-                                self.observed = true;
-
-                                continue;
-                            }
-                            return Err(syn::Error::new_spanned(attr, "unknown attribute"));
-                        }
-                        NestedMeta::Lit(ref l) => {
-                            return Err(syn::Error::new_spanned(
-                                l,
-                                "expected additional attribute content, found literal",
-                            ));
-                        }
-                    }
-                }
-            }
-            Meta::NameValue(m) => {
-                return Err(syn::Error::new_spanned(
-                    m,
-                    "expected bracketed list, found name value pair",
-                ));
-            }
+            self.observed = Some(m);
         }
+
+        self.notions.extend(other.notions);
 
         Ok(())
     }
@@ -205,8 +143,11 @@ impl BounceAttrs {
         Ok(this)
     }
 
-    pub fn notion_idents(&self) -> Vec<Path> {
-        self.notions.iter().map(|m| m.path.clone()).collect()
+    pub fn notion_idents(&self) -> Vec<Type> {
+        self.notions
+            .iter()
+            .flat_map(|m| m.notion_idents.clone())
+            .collect()
     }
 
     pub fn create_notion_apply_impls(&self, notion_ident: &Ident) -> Vec<TokenStream> {
@@ -228,12 +169,10 @@ impl BounceAttrs {
     }
 
     pub fn create_notion_id_impls(&self) -> Vec<TokenStream> {
-        self.notions
+        self.notion_idents()
             .iter()
             .map(|m| {
-                let path = &m.path;
-
-                quote! { ::std::any::TypeId::of::<#path>() }
+                quote! { ::std::any::TypeId::of::<#m>() }
             })
             .collect()
     }
@@ -253,7 +192,7 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let impl_observed = bounce_attrs.observed.then(|| {
+    let impl_observed = bounce_attrs.observed.is_some().then(|| {
         quote! {
             fn changed(self: ::std::rc::Rc<Self>) {
                 ::bounce::Observed::changed(self);

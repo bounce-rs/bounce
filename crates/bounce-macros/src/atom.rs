@@ -18,7 +18,7 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let impl_observed = bounce_attrs.observed.then(|| {
+    let impl_observed = bounce_attrs.observed.is_some().then(|| {
         quote! {
             fn changed(self: ::std::rc::Rc<Self>) {
                 ::bounce::Observed::changed(self);
