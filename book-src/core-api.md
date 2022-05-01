@@ -150,15 +150,16 @@ html! {
 
 ### Selector
 
-A derived state. Unlike Atoms or Slices, a selector cannot store any
-value. It derives its value from other states (atoms, slices or
+A derived state. Unlike Atoms or Slices, a selector does not store any
+value in itself. It derives its value from other states (atoms, slices or
 other selectors) and subscribes to the state used to derive values
 so it will update its value when any value it
 subscribes to changes automatically.
 
 #### Example
 
-A selector that checks if the pervious counter slice is even.
+A selector that checks if the counter slice defined in the previous
+example is even.
 
 ```rust
 #[derive(PartialEq)]
@@ -201,8 +202,6 @@ API Reference:
 ### Notion
 
 An action that can be applied to multiple states.
-
-A notion can be any type that is `'static`.
 
 When a notion is applied, it will be broadcasted to all states that
 listen to this notion.
@@ -321,7 +320,7 @@ API Reference:
 
 The Future Notion API is a low-level API to execute asynchronous tasks.
 
-If you are trying to interact with a backend API,
+If you want to interact with an API,
 it is recommended to use the [Query API](query-api.md) instead.
 
 The Query API is built with the Future Notion API.

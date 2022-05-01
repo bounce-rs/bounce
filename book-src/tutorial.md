@@ -1,6 +1,6 @@
 # Tutorial
 
-This tutorial will guide you through to create a simple application that
+This tutorial will guide you to create a simple application that
 greets the user with the entered name.
 
 ## 0. Prerequisites
@@ -18,7 +18,7 @@ You need the following tools:
 1. [Rust](https://rustup.rs/) with `wasm32-unknown-unknown` target toolchain
 
    If you installed Rust with rustup, You can obtain the
-`wasm32-unknown-unknown` target with the following command:
+`wasm32-unknown-unknown` target toolchain with the following command:
 
    ```shell
    rustup target add wasm32-unknown-unknown
@@ -32,7 +32,7 @@ You need the following tools:
 
 This tutorial uses the `yew-trunk-minimal-template`.
 This template repository has a minimal setup of Yew with Trunk.
-You can a new repository using the template with the following commands:
+You can create a new repository using the template with the following commands:
 
 ```shell
 mkdir my-first-bounce-app
