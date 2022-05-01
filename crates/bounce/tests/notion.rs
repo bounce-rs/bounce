@@ -25,7 +25,7 @@ async fn get_text_content<S: AsRef<str>>(selector: S) -> String {
 #[test]
 async fn test_notion_generic() {
     #[derive(Atom, PartialEq, Default)]
-    #[with_notion(State<T>)]
+    #[bounce(with_notion(State<T>))]
     struct State<T>
     where
         T: PartialEq + Default + 'static,
