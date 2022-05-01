@@ -29,7 +29,8 @@ The Helmet API supports setting attributes of the following elements:
 
 ### Helmet Bridge
 
-Before using the helmet API, it needs to be bridged with a `<HelmetBridge />`.
+The `<HelmetBridge />` component is used to customise the behaviour and
+responsible of reconciling the elements to the `<head />` element.
 
 ```rust
 html! {
