@@ -15,8 +15,8 @@ pub enum SliceAction {
 }
 
 #[derive(Default, PartialEq, Slice)]
-#[with_notion(SliceAction)]
-#[with_notion(Reset)]
+#[bounce(with_notion(SliceAction))]
+#[bounce(with_notion(Reset))]
 pub struct SliceA(i64);
 
 impl Reducible for SliceA {
@@ -44,8 +44,8 @@ impl WithNotion<Reset> for SliceA {
 }
 
 #[derive(Default, PartialEq, Slice)]
-#[with_notion(SliceAction)]
-#[with_notion(Reset)]
+#[bounce(with_notion(SliceAction))]
+#[bounce(with_notion(Reset))]
 pub struct SliceB(i64);
 
 impl Reducible for SliceB {
@@ -73,8 +73,8 @@ impl WithNotion<Reset> for SliceB {
 }
 
 #[derive(Default, PartialEq, Slice)]
-#[with_notion(SliceAction)]
-#[with_notion(Reset)]
+#[bounce(with_notion(SliceAction))]
+#[bounce(with_notion(Reset))]
 pub struct SliceC(i64);
 
 impl Reducible for SliceC {

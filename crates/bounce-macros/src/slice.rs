@@ -4,7 +4,7 @@ use syn::parse::discouraged::Speculative;
 use syn::parse::{Parse, ParseBuffer, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::{parenthesized, Attribute, DeriveInput, Ident, Meta, Type};
+use syn::{parenthesized, Attribute, DeriveInput, Ident, Type};
 
 pub(crate) struct WithNotionAttr {
     notion_idents: Vec<Type>,

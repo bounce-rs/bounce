@@ -9,7 +9,7 @@ use yew::prelude::*;
 use yew::InputEvent;
 
 #[derive(PartialEq, Atom)]
-#[observed]
+#[bounce(observed)]
 struct Username {
     inner: String,
 }
