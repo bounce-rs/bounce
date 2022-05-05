@@ -12,7 +12,7 @@
 //!
 //! Bounce does not provide an implementation of HTTP Client.
 //!
-//! You can use reqwest or reqwasm if you need a generic HTTP Client.
+//! You can use reqwest or gloo-net if you need a generic HTTP Client.
 //!
 //! If your backend is GraphQL, you can use graphql-client in conjunction with reqwest.
 
