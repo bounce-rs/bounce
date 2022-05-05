@@ -2,27 +2,23 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DeriveInput, Ident};
 
-use super::slice::{create_notion_apply_impls, parse_find_observed, parse_with_notion_attrs};
+use super::slice::BounceAttrs;
 
 pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
-    let notion_idents = match parse_with_notion_attrs(input.clone()) {
-        Ok(m) => m,
-        Err(e) => return e.into_compile_error(),
-    };
-
-    let observed = match parse_find_observed(input.clone()) {
+    let bounce_attrs = match BounceAttrs::parse(&input.attrs) {
         Ok(m) => m,
         Err(e) => return e.into_compile_error(),
     };
 
     let notion_ident = Ident::new("notion", Span::mixed_site());
-    let notion_apply_impls = create_notion_apply_impls(&notion_ident, &notion_idents);
+    let notion_apply_impls = bounce_attrs.create_notion_apply_impls(&notion_ident);
+    let notion_ids_impls = bounce_attrs.create_notion_id_impls();
 
     let ident = input.ident;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let impl_observed = observed.then(|| {
+    let impl_observed = bounce_attrs.observed.is_some().then(|| {
         quote! {
             fn changed(self: ::std::rc::Rc<Self>) {
                 ::bounce::Observed::changed(self);
@@ -40,7 +36,7 @@ pub(crate) fn macro_fn(input: DeriveInput) -> TokenStream {
             }
 
             fn notion_ids(&self) -> ::std::vec::Vec<::std::any::TypeId> {
-                ::std::vec![#(::std::any::TypeId::of::<#notion_idents>(),)*]
+                ::std::vec![#(#notion_ids_impls,)*]
             }
 
             #impl_observed

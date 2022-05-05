@@ -12,7 +12,7 @@ use std::rc::Rc;
 /// use std::rc::Rc;
 ///
 /// #[derive(Atom, PartialEq, Default)]
-/// #[observed] // observed states need to be denoted with the observed attribute.
+/// #[bounce(observed)] // observed states need to be denoted with the observed attribute.
 /// struct State {
 ///     value: usize,
 /// }

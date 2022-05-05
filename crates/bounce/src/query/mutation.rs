@@ -122,7 +122,7 @@ enum MutationStateAction {
 }
 
 #[derive(Slice, Debug)]
-#[with_notion(Deferred<RunMutation<T>>)]
+#[bounce(with_notion(Deferred<RunMutation<T>>))]
 struct MutationState<T>
 where
     T: Mutation + 'static,

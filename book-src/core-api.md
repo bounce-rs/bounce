@@ -206,7 +206,7 @@ An action that can be applied to multiple states.
 When a notion is applied, it will be broadcasted to all states that
 listen to this notion.
 
-To listen to a notion, apply `#[with_notion(NotionType)]` tag to your
+To listen to a notion, apply `#[bounce(with_notion(NotionType))]` tag to your
 slice or atom and define how it can be applied with the
 `WithNotion<NotionType>` trait.
 
@@ -221,7 +221,7 @@ pub enum CounterAction {
 }
 
 #[derive(Slice, PartialEq, Default)]
-#[with_notion(Reset)] // The slice that listens to a notion of type T needs to be denoted with `#[with_notion(T)]`.
+#[bounce(with_notion(Reset))] // The slice that listens to a notion of type T needs to be denoted with `#[bounce(with_notion(T))]`.
 pub struct Counter {
     inner: u32
 }
@@ -241,7 +241,7 @@ impl Reducible for Counter {
     }
 }
 
-// A WithNotion<T> is required for each notion denoted in the #[with_notion] attribute.
+// A WithNotion<T> is required for each notion denoted in the #[bounce(with_notion(T))] attribute.
 impl WithNotion<Reset> for Counter {
     fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
         Self::default().into()
@@ -286,7 +286,7 @@ the Deferred notion.
 
 ```rust
 #[derive(PartialEq, Default, Atom)]
-#[with_notion(Deferred<FetchUser>)]  // A future notion with type `T` will be applied as `Deferred<T>`.
+#[bounce(with_notion(Deferred<FetchUser>))]  // A future notion with type `T` will be applied as `Deferred<T>`.
 struct UserState {
     inner: Option<Rc<User>>,
 }

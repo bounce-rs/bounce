@@ -39,12 +39,12 @@ pub trait WithNotion<T: 'static> {
 /// pub struct Reset;
 ///
 /// #[derive(PartialEq, Atom)]
-/// #[with_notion(Reset)] // A #[with_notion(Notion)] needs to be denoted for the notion.
+/// #[bounce(with_notion(Reset))] // A #[bounce(with_notion(Notion))] needs to be denoted for the notion.
 /// struct Username {
 ///     inner: String,
 /// }
 ///
-/// // A WithNotion<T> is required for each notion denoted in the #[with_notion] attribute.
+/// // A WithNotion<T> is required for each notion denoted in the #[bounce(with_notion)] attribute.
 /// impl WithNotion<Reset> for Username {
 ///     fn apply(self: Rc<Self>, _notion: Rc<Reset>) -> Rc<Self> {
 ///         Self::default().into()
@@ -53,7 +53,7 @@ pub trait WithNotion<T: 'static> {
 ///
 /// // second state
 /// #[derive(PartialEq, Atom, Default)]
-/// #[with_notion(Reset)]
+/// #[bounce(with_notion(Reset))]
 /// struct Session {
 ///     token: Option<String>,
 /// }
