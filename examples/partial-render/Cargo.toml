@@ -9,11 +9,11 @@ edition = "2021"
 bounce = { path = "../../crates/bounce" }
 yew = "0.19.3"
 stylist = { version = "0.10.0", features = ["yew_integration"] }
-log = "0.4.14"
+log = "0.4.17"
 console_log = { version = "0.2.0", features = ["color"] }
-wasm-bindgen = "0.2.78"
+wasm-bindgen = "0.2.80"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3"
-gloo = { version = "0.6.0", features = ["futures"] }
-web-sys = "0.3"
+wasm-bindgen-test = "0.3.30"
+gloo = { version = "0.7.0", features = ["futures"] }
+web-sys = "0.3.57"

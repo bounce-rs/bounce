@@ -8,21 +8,21 @@ edition = "2021"
 [dependencies]
 bounce = { path = "../../crates/bounce", features = ["query"] }
 yew = "0.19.3"
-log = "0.4.14"
+log = "0.4.17"
 console_log = { version = "0.2.0", features = ["color"] }
-reqwest = { version = "0.11.8", features = ["json"] }
-serde = { version = "1.0.132", features = ["derive"] }
-uuid = { version = "0.8.2", features = ["wasm-bindgen", "serde"] }
-async-trait = "0.1.52"
-wasm-bindgen-futures = "0.4.28"
-wasm-bindgen = "0.2.78"
+reqwest = { version = "0.11.10", features = ["json"] }
+serde = { version = "1.0.137", features = ["derive"] }
+uuid = { version = "1.0.0", features = ["serde"] }
+async-trait = "0.1.53"
+wasm-bindgen-futures = "0.4.30"
+wasm-bindgen = "0.2.80"
 
 [dependencies.web-sys]
-version = "0.3.55"
+version = "0.3.57"
 features = [
     "HtmlInputElement",
 ]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3"
-gloo = { version = "0.6.0", features = ["futures"] }
+wasm-bindgen-test = "0.3.30"
+gloo = { version = "0.7.0", features = ["futures"] }

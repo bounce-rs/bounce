@@ -8,16 +8,16 @@ edition = "2021"
 [dependencies]
 bounce = { path = "../../crates/bounce" }
 yew = "0.19.3"
-log = "0.4.14"
+log = "0.4.17"
 console_log = { version = "0.2.0", features = ["color"] }
-wasm-bindgen = "0.2.78"
-gloo = { version = "0.6.0", features = ["futures"] }
+wasm-bindgen = "0.2.80"
+gloo = { version = "0.7.0", features = ["futures"] }
 
 [dependencies.web-sys]
-version = "0.3.55"
+version = "0.3.57"
 features = [
     "HtmlInputElement",
 ]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3"
+wasm-bindgen-test = "0.3.30"
