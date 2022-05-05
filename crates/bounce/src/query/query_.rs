@@ -136,14 +136,11 @@ where
             .queries
             .get(&input)
         {
-            let current_id = match m {
-                QueryStateValue::Loading(id) => id,
-                QueryStateValue::Completed((id, _)) => id,
-            };
+            let current_id = m.id();
 
             return Self {
                 _marker: PhantomData,
-                inner: *current_id == id,
+                inner: current_id == id,
             }
             .into();
         }
@@ -184,6 +181,7 @@ where
 {
     Loading(Id),
     Completed((Id, QueryResult<T>)),
+    Outdated((Id, QueryResult<T>)),
 }
 
 impl<T> QueryStateValue<T>
@@ -194,6 +192,7 @@ where
         match self {
             Self::Loading(ref id) => *id,
             Self::Completed(ref m) => m.0,
+            Self::Outdated(ref m) => m.0,
         }
     }
 }
@@ -206,6 +205,7 @@ where
         match self {
             Self::Loading(ref id) => Self::Loading(*id),
             Self::Completed(ref m) => Self::Completed(m.clone()),
+            Self::Outdated(ref m) => Self::Outdated(m.clone()),
         }
     }
 }
@@ -285,8 +285,10 @@ where
         match *notion {
             Deferred::Pending { ref input } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
-                if self.queries.contains_key(&input) {
-                    return self;
+                if let Some(m) = self.queries.get(&input) {
+                    if !matches!(m, QueryStateValue::Outdated(_)) {
+                        return self;
+                    }
                 }
 
                 let mut queries = self.queries.clone();
@@ -318,20 +320,20 @@ where
             }
             Deferred::Outdated { ref input } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
-                if let Some(QueryStateValue::Completed((ref m, _))) = self.queries.get(&input) {
-                    if m == &id {
-                        return self;
+                if let Some(QueryStateValue::Completed(ref val)) = self.queries.get(&input) {
+                    if val.0 == id {
+                        let mut queries = self.queries.clone();
+                        queries.insert(input.clone(), QueryStateValue::Outdated(val.clone()));
+
+                        return Self {
+                            ctr: self.ctr + 1,
+                            queries,
+                        }
+                        .into();
                     }
                 }
 
-                let mut queries = self.queries.clone();
-                queries.remove(&input);
-
-                Self {
-                    ctr: self.ctr + 1,
-                    queries,
-                }
-                .into()
+                self
             }
         }
     }
@@ -380,8 +382,10 @@ where
     /// Returns the status of current query.
     pub fn status(&self) -> QueryStatus {
         match self.value {
-            Some(QueryStateValue::Completed((_, Ok(_)))) => QueryStatus::Ok,
-            Some(QueryStateValue::Completed((_, Err(_)))) => QueryStatus::Err,
+            Some(QueryStateValue::Completed((_, Ok(_))))
+            | Some(QueryStateValue::Outdated((_, Ok(_)))) => QueryStatus::Ok,
+            Some(QueryStateValue::Completed((_, Err(_))))
+            | Some(QueryStateValue::Outdated((_, Err(_)))) => QueryStatus::Err,
             Some(QueryStateValue::Loading(_)) => QueryStatus::Loading,
             None => QueryStatus::Idle,
         }
@@ -394,7 +398,8 @@ where
     /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<QueryResult<T>> {
         match self.value {
-            Some(QueryStateValue::Completed((_, ref m))) => Some(m.clone()),
+            Some(QueryStateValue::Completed((_, ref m)))
+            | Some(QueryStateValue::Outdated((_, ref m))) => Some(m.clone()),
             _ => None,
         }
     }
@@ -518,16 +523,18 @@ where
         let input = input.clone();
         let run_query = run_query.clone();
         use_effect_with_deps(
-            move |(id, input)| {
-                run_query(RunQueryInput {
-                    id: *id,
-                    input: input.clone(),
-                    sender: Rc::default(),
-                });
+            move |(id, input, value)| {
+                if value.is_none() || matches!(value, Some(QueryStateValue::Outdated(_))) {
+                    run_query(RunQueryInput {
+                        id: *id,
+                        input: input.clone(),
+                        sender: Rc::default(),
+                    });
+                }
 
                 || {}
             },
-            (id, input),
+            (id, input, value.value.clone()),
         );
     }
 

@@ -41,12 +41,26 @@ workspace = true
 command = "wasm-pack"
 args = ["test", "--headless", "--firefox"]
 
+# wasm-pack test --headless --firefox --all-features
+[tasks.wasm-test-all-features]
+private = true
+workspace = true
+command = "wasm-pack"
+args = ["test", "--headless", "--firefox", "--all-features"]
+
 # cargo test
 [tasks.native-test]
 private = true
 workspace = true
 command = "cargo"
 args = ["test"]
+
+# cargo test --all-features
+[tasks.native-test-all-features]
+private = true
+workspace = true
+command = "cargo"
+args = ["test", "--all-features"]
 
 # cargo test --doc --all-features
 [tasks.doc-test]
@@ -61,5 +75,5 @@ args = ["test", "--doc", "--all-features", "--workspace"]
 workspace = false
 
 [tasks.tests.run_task]
-name = ["wasm-test", "native-test", "doc-test"]
+name = ["wasm-test", "wasm-test-all-features", "native-test", "native-test-all-features", "doc-test"]
 fork = true
