@@ -9,6 +9,8 @@
 - Added Helmet API
 - Added Observer API
 - Notion is now registered and does not iterate over all states.
+- Fixed a bug where the query will not requery itself if any state it
+  selected has updated.
 
 ## Release 0.2.0
 
