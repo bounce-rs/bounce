@@ -33,9 +33,6 @@ jobs:
       - name: Build Website
         run: mdbook build
 
-      - name: Build Website
-        run: mdbook build
-
       - name: Deploy Website
         uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:

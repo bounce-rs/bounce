@@ -45,3 +45,7 @@ The Helmet Bridge component accepts two properties,
 a `default_title` which will be applied when no other title elements
 are registered and a `format_title` function which is used to format
 the title before it is passed to the document.
+
+### API Reference:
+
+- [`Helmet API`](https://docs.rs/bounce/0.3.0/bounce/helmet/index.html)
