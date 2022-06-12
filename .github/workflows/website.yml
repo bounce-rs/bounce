@@ -1,0 +1,46 @@
+---
+name: Publish Website
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish-website:
+    name: Publish Website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: Restore Rust Cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Install mdbook
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: mdbook
+
+      - name: Build Website
+        run: mdbook build
+
+      - name: Build Website
+        run: mdbook build
+
+      - name: Deploy Website
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: main
+          folder: book-build
+
+          ssh-key: "${{ secrets.WEBSITE_DEPLOY_KEY }}"
+          repository-name: "${{ secrets.WEBSITE_DEPLOY_REPO }}"

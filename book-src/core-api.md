@@ -22,7 +22,7 @@ pub struct Counter {
 }
 ```
 
-When the first time its used by a hook, it will be initialised by it's
+When the first time its used by a hook, it will be initialised by its
 default value.
 
 ```rust
