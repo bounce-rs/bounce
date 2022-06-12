@@ -12,8 +12,8 @@ log = "0.4.17"
 console_log = { version = "0.2.0", features = ["color"] }
 reqwest = { version = "0.11.10", features = ["json"] }
 serde = { version = "1.0.137", features = ["derive"] }
-uuid = { version = "1.0.0", features = ["serde"] }
-async-trait = "0.1.53"
+uuid = { version = "1.1.2", features = ["serde"] }
+async-trait = "0.1.56"
 wasm-bindgen-futures = "0.4.30"
 wasm-bindgen = "0.2.80"
 
