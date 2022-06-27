@@ -34,7 +34,7 @@ jobs:
         run: mdbook build
 
       - name: Deploy Website
-        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        uses: JamesIves/github-pages-deploy-action@v4.3.4
         with:
           branch: main
           folder: book-build
