@@ -12,7 +12,7 @@ yew = "0.19.3"
 log = "0.4.17"
 console_log = { version = "0.2.0", features = ["color"] }
 wasm-bindgen = "0.2.80"
-gloo = { version = "0.7.0", features = ["futures"] }
+gloo = { version = "0.8.0", features = ["futures"] }
 
 [dependencies.web-sys]
 version = "0.3.57"
