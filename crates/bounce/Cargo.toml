@@ -22,7 +22,7 @@ yew = "0.19.3"
 bounce-macros = { path = "../bounce-macros", version = "0.4.0" }
 futures = "0.3.21"
 async-trait = { version = "0.1.56", optional = true }
-gloo = { version = "0.7.0", features = ["futures"], optional = true }
+gloo = { version = "0.8.0", features = ["futures"], optional = true }
 
 [dependencies.web-sys]
 version = "0.3.57"
@@ -43,7 +43,7 @@ helmet = ["gloo", "web-sys"]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.30"
-gloo = { version = "0.7.0", features = ["futures"] }
+gloo = { version = "0.8.0", features = ["futures"] }
 
 [dev-dependencies.web-sys]
 version = "0.3.57"
