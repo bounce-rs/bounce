@@ -12,6 +12,7 @@ categories = ["wasm", "web-programming"]
 readme = "../../README.md"
 homepage = "https://github.com/futursolo/bounce"
 license = "MIT OR Apache-2.0"
+rust-version = "1.60.0"
 
 [dependencies]
 anymap2 = "0.13.0"
