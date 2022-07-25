@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use yew::prelude::*;
+
 use super::input_selector::{use_input_selector_value, InputSelector};
 use crate::root_state::BounceStates;
 
@@ -93,6 +95,7 @@ where
 /// # Html::default()
 /// # }
 /// ```
+#[hook]
 pub fn use_selector_value<T>() -> Rc<T>
 where
     T: Selector + 'static,

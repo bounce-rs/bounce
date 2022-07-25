@@ -120,7 +120,7 @@ fn app() -> Html {
 
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
-    yew::start_app::<App>();
+    yew::Renderer::<App>::new().render();
 }
 
 #[cfg(test)]
@@ -137,7 +137,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     async fn test_divisibility_input() {
-        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+        yew::Renderer::<App>::with_root(document().query_selector("#output").unwrap().unwrap())
+            .render();
 
         sleep(Duration::ZERO).await;
 

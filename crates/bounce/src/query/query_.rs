@@ -510,11 +510,12 @@ where
 ///     }
 /// }
 /// ```
+#[hook]
 pub fn use_query_value<T>(input: Rc<T::Input>) -> UseQueryValueHandle<T>
 where
     T: Query + 'static,
 {
-    let id = *use_ref(Id::new);
+    let id = *use_memo(|_| Id::new(), ());
     let value = use_input_selector_value::<QuerySelector<T>>(input.clone());
     let dispatch_state = use_slice_dispatch::<QueryState<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();

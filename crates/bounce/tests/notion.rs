@@ -78,7 +78,8 @@ async fn test_notion_generic() {
         }
     }
 
-    yew::start_app_in_element::<Root>(document().query_selector("#output").unwrap().unwrap());
+    yew::Renderer::<Root>::with_root(document().query_selector("#output").unwrap().unwrap())
+        .render();
 
     let s = get_text_content("#a").await;
     assert_eq!(s, "1");

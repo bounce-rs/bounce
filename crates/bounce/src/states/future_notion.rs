@@ -192,6 +192,7 @@ where
 /// # Html::default()
 /// # }
 /// ```
+#[hook]
 pub fn use_future_notion_runner<T>() -> Rc<dyn Fn(T::Input)>
 where
     T: FutureNotion + 'static,

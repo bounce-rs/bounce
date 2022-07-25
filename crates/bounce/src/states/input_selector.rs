@@ -253,6 +253,7 @@ where
 /// # Html::default()
 /// # }
 /// ```
+#[hook]
 pub fn use_input_selector_value<T>(input: Rc<T::Input>) -> Rc<T>
 where
     T: InputSelector + 'static,
