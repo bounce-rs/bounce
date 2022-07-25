@@ -81,7 +81,7 @@ fn app() -> Html {
 
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
-    yew::start_app::<App>();
+    yew::Renderer::<App>::new().render();
 }
 
 #[cfg(test)]
@@ -123,7 +123,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     async fn test_simple() {
-        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+        yew::Renderer::<App>::with_root(document().query_selector("#output").unwrap().unwrap())
+            .render();
 
         assert_eq!(get_text_content_by_id("reader").await, "Hello, Jane Doe");
 

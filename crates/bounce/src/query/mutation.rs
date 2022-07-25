@@ -407,11 +407,12 @@ where
 ///     }
 /// }
 /// ```
+#[hook]
 pub fn use_mutation_value<T>() -> UseMutationValueHandle<T>
 where
     T: Mutation + 'static,
 {
-    let id = *use_ref(HandleId::default);
+    let id = *use_memo(|_| HandleId::default(), ());
     let dispatch_state = use_slice_dispatch::<MutationState<T>>();
     let run_mutation = use_future_notion_runner::<RunMutation<T>>();
     let state = use_input_selector_value::<MutationSelector<T>>(id.into());

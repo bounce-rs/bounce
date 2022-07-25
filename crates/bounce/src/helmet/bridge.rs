@@ -92,21 +92,21 @@ impl PartialEq for HelmetBridgeProps {
 
 /// Applies attributes on top of existing attributes.
 fn merge_attrs(
-    target: &mut BTreeMap<&'static str, Rc<str>>,
-    current_attrs: &BTreeMap<&'static str, Rc<str>>,
+    target: &mut BTreeMap<Rc<str>, Rc<str>>,
+    current_attrs: &BTreeMap<Rc<str>, Rc<str>>,
 ) {
     for (name, value) in current_attrs.iter() {
-        match *name {
-            "class" => match target.get(&"class").cloned() {
+        match name.as_ref() {
+            "class" => match target.get("class").cloned() {
                 Some(m) => {
-                    target.insert(*name, Rc::<str>::from(format!("{} {}", value, m)));
+                    target.insert(name.clone(), Rc::<str>::from(format!("{} {}", value, m)));
                 }
                 None => {
-                    target.insert(*name, value.clone());
+                    target.insert(name.clone(), value.clone());
                 }
             },
             _ => {
-                target.insert(*name, value.clone());
+                target.insert(name.clone(), value.clone());
             }
         }
     }
@@ -158,17 +158,17 @@ fn merge_helmet_states(
                 }
                 HelmetTag::Link { ref attrs } => {
                     link_tags.insert(
-                        (attrs.get(&"rel").cloned(), attrs.get(&"href").cloned()),
+                        (attrs.get("rel").cloned(), attrs.get("href").cloned()),
                         tag.clone(),
                     );
                 }
                 HelmetTag::Meta { ref attrs } => {
                     meta_tags.insert(
                         (
-                            attrs.get(&"name").cloned(),
-                            attrs.get(&"http-equiv").cloned(),
-                            attrs.get(&"scheme").cloned(),
-                            attrs.get(&"charset").cloned(),
+                            attrs.get("name").cloned(),
+                            attrs.get("http-equiv").cloned(),
+                            attrs.get("scheme").cloned(),
+                            attrs.get("charset").cloned(),
                         ),
                         tag.clone(),
                     );

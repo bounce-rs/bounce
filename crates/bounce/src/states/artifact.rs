@@ -110,6 +110,7 @@ where
 /// let title_artifacts = use_artifacts::<Title>();
 /// # }
 /// ```
+#[hook]
 pub fn use_artifacts<T>() -> Vec<Rc<T>>
 where
     T: PartialEq + 'static,

@@ -246,6 +246,7 @@ where
 ///     }
 /// }
 /// ```
+#[hook]
 pub fn use_slice<T>() -> UseSliceHandle<T>
 where
     T: Slice + 'static,
@@ -339,6 +340,7 @@ where
 ///     }
 /// }
 /// ```
+#[hook]
 pub fn use_slice_dispatch<T>() -> Rc<dyn Fn(T::Action)>
 where
     T: Slice + 'static,
@@ -392,6 +394,7 @@ where
 ///     }
 /// }
 /// ```
+#[hook]
 pub fn use_slice_value<T>() -> Rc<T>
 where
     T: Slice + 'static,

@@ -35,6 +35,7 @@ fn collect_str_in_children(tag: &VNode) -> String {
         VNode::VComp(_) => throw_str("expected text content, found component."),
         VNode::VPortal(_) => throw_str("expected text content, found portal."),
         VNode::VRef(_) => throw_str("expected text content, found node reference."),
+        VNode::VSuspense(_) => throw_str("expected text content, found suspense."),
     }
 }
 
@@ -42,11 +43,14 @@ fn collect_text_content(tag: &VTag) -> String {
     collect_str_in_children(&tag.children().clone().into())
 }
 
-fn collect_attributes(tag: &VTag) -> BTreeMap<&'static str, Rc<str>> {
-    tag.attributes
-        .iter()
-        .map(|(k, v)| (k, v.into()))
-        .collect::<BTreeMap<&'static str, Rc<str>>>()
+fn collect_attributes(tag: &VTag) -> BTreeMap<Rc<str>, Rc<str>> {
+    let mut map = BTreeMap::new();
+
+    for (k, v) in tag.attributes.iter() {
+        map.insert(k.into(), v.into());
+    }
+
+    map
 }
 
 fn assert_empty_node(node: &VNode) {
@@ -61,6 +65,7 @@ fn assert_empty_node(node: &VNode) {
         VNode::VComp(_) => throw_str("expected nothing, found component."),
         VNode::VPortal(_) => throw_str("expected nothing, found portal."),
         VNode::VRef(_) => throw_str("expected nothing, found node reference."),
+        VNode::VSuspense(_) => throw_str("expected nothing, found suspense."),
     }
 }
 fn assert_empty_children(tag: &VTag) {
@@ -69,7 +74,7 @@ fn assert_empty_children(tag: &VTag) {
 
 #[derive(Properties, PartialEq, Clone)]
 struct ScriptHelmetProps {
-    attrs: BTreeMap<&'static str, Rc<str>>,
+    attrs: BTreeMap<Rc<str>, Rc<str>>,
     content: Rc<str>,
 }
 

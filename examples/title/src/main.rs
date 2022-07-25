@@ -88,7 +88,7 @@ fn links() -> Html {
     }
 }
 
-fn render_fn(route: &Route) -> Html {
+fn render_fn(route: Route) -> Html {
     match route {
         Route::A => html! {<A />},
         Route::B => html! {<B />},
@@ -103,7 +103,7 @@ fn app() -> Html {
             <TitleApplier />
             <Artifact<Title> value={Rc::new(Title { value: "Example".into() })} />
             <BrowserRouter>
-                <Switch<Route> render={Switch::render(render_fn)} />
+                <Switch<Route> render={render_fn} />
                 <Links />
             </BrowserRouter>
         </BounceRoot>
@@ -112,7 +112,7 @@ fn app() -> Html {
 
 fn main() {
     console_log::init_with_level(Level::Trace).expect("Failed to initialise Log!");
-    yew::start_app::<App>();
+    yew::Renderer::<App>::default().render();
 }
 
 #[cfg(test)]
@@ -140,7 +140,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     async fn test_title() {
-        yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+        yew::Renderer::<App>::with_root(document().query_selector("#output").unwrap().unwrap())
+            .render();
 
         sleep(Duration::ZERO).await;
 

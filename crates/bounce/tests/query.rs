@@ -92,7 +92,8 @@ async fn test_query_requery_upon_state_change() {
         }
     }
 
-    yew::start_app_in_element::<App>(document().query_selector("#output").unwrap().unwrap());
+    yew::Renderer::<App>::with_root(document().query_selector("#output").unwrap().unwrap())
+        .render();
 
     let s = get_text_content("#content").await;
     assert_eq!(s, "Loading...");

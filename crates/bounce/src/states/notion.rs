@@ -79,6 +79,7 @@ pub trait WithNotion<T: 'static> {
 /// # Html::default()
 /// # }
 /// ```
+#[hook]
 pub fn use_notion_applier<T>() -> Rc<dyn Fn(T)>
 where
     T: 'static,

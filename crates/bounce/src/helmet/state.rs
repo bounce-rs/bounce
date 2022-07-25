@@ -31,26 +31,26 @@ pub(crate) enum HelmetTag {
         // distinguish between them.
         _id: Id,
         content: Rc<str>,
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
     Style {
         content: Rc<str>,
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
     Html {
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
     Body {
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
     Base {
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
     Link {
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
     Meta {
-        attrs: BTreeMap<&'static str, Rc<str>>,
+        attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
 }
 
@@ -104,7 +104,7 @@ impl HelmetTag {
                     .expect_throw("failed to set script content");
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "type" => {
                             el.set_type(value);
                         }
@@ -130,7 +130,7 @@ impl HelmetTag {
                     .expect_throw("failed to set style content");
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             add_class_list(&el, &*value);
                         }
@@ -150,7 +150,7 @@ impl HelmetTag {
                 let el = HTML_TAG.with(|m| m.clone());
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             add_class_list(&el, &*value);
                         }
@@ -168,7 +168,7 @@ impl HelmetTag {
                 let el = BODY_TAG.with(|m| m.clone());
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             add_class_list(&el, &*value);
                         }
@@ -186,7 +186,7 @@ impl HelmetTag {
                 let el = create_element::<HtmlBaseElement>("base");
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             add_class_list(&el, &*value);
                         }
@@ -206,7 +206,7 @@ impl HelmetTag {
                 let el = create_element::<HtmlLinkElement>("link");
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             add_class_list(&el, &*value);
                         }
@@ -232,7 +232,7 @@ impl HelmetTag {
                 let el = create_element::<HtmlMetaElement>("meta");
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             add_class_list(&el, &*value);
                         }
@@ -274,7 +274,7 @@ impl HelmetTag {
                 let el = HTML_TAG.with(|m| m.clone());
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             remove_class_list(&el, &*value);
                         }
@@ -289,7 +289,7 @@ impl HelmetTag {
                 let el = BODY_TAG.with(|m| m.clone());
 
                 for (name, value) in attrs.iter() {
-                    match *name {
+                    match name.as_ref() {
                         "class" => {
                             remove_class_list(&el, &*value);
                         }

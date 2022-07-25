@@ -6,6 +6,7 @@ use std::rc::Rc;
 use super::slice::{use_slice, use_slice_dispatch, use_slice_value, Slice, UseSliceHandle};
 
 pub use bounce_macros::Atom;
+use yew::prelude::*;
 
 #[doc(hidden)]
 pub trait Atom: PartialEq + Default {
@@ -181,6 +182,7 @@ where
 ///     }
 /// }
 /// ```
+#[hook]
 pub fn use_atom<T>() -> UseAtomHandle<T>
 where
     T: Atom + 'static,
@@ -234,6 +236,7 @@ where
 /// # Html::default()
 /// # }
 /// ```
+#[hook]
 pub fn use_atom_setter<T>() -> Rc<dyn Fn(T)>
 where
     T: Atom + 'static,
@@ -277,6 +280,7 @@ where
 ///     html! { <div>{"Hello, "}{username}</div> }
 /// }
 /// ```
+#[hook]
 pub fn use_atom_value<T>() -> Rc<T>
 where
     T: Atom + 'static,
