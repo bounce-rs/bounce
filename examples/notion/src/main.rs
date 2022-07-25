@@ -580,19 +580,19 @@ mod tests {
         );
         assert_eq!(
             get_text_content_by_id("val-ab-render-ctr").await,
-            "Rendered: 5 Time(s)"
+            "Rendered: 4 Time(s)"
         );
         assert_eq!(
             get_text_content_by_id("val-ac-render-ctr").await,
-            "Rendered: 5 Time(s)"
+            "Rendered: 4 Time(s)"
         );
         assert_eq!(
             get_text_content_by_id("val-bc-render-ctr").await,
-            "Rendered: 5 Time(s)"
+            "Rendered: 4 Time(s)"
         );
         assert_eq!(
             get_text_content_by_id("val-abc-render-ctr").await,
-            "Rendered: 7 Time(s)"
+            "Rendered: 5 Time(s)"
         );
 
         click_by_id("btn-reset").await;
@@ -626,19 +626,19 @@ mod tests {
         );
         assert_eq!(
             get_text_content_by_id("val-ab-render-ctr").await,
-            "Rendered: 7 Time(s)"
+            "Rendered: 5 Time(s)"
         );
         assert_eq!(
             get_text_content_by_id("val-ac-render-ctr").await,
-            "Rendered: 7 Time(s)"
+            "Rendered: 5 Time(s)"
         );
         assert_eq!(
             get_text_content_by_id("val-bc-render-ctr").await,
-            "Rendered: 7 Time(s)"
+            "Rendered: 5 Time(s)"
         );
         assert_eq!(
             get_text_content_by_id("val-abc-render-ctr").await,
-            "Rendered: 10 Time(s)"
+            "Rendered: 6 Time(s)"
         );
     }
 }
