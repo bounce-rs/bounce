@@ -1,6 +1,6 @@
 # Bounce
 
-[![Run Tests & Publishing](https://github.com/futursolo/bounce/actions/workflows/everything.yml/badge.svg)](https://github.com/futursolo/bounce/actions/workflows/everything.yml)
+[![Run Tests & Publishing](https://github.com/bounce-rs/bounce/actions/workflows/everything.yml/badge.svg)](https://github.com/bounce-rs/bounce/actions/workflows/everything.yml)
 [![crates.io](https://img.shields.io/crates/v/bounce)](https://crates.io/crates/bounce)
 [![docs.rs](https://docs.rs/bounce/badge.svg)](https://docs.rs/bounce/)
 
