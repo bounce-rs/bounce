@@ -94,6 +94,11 @@ impl BounceRootState {
             listener_callbacks: Rc::default(),
         }
     }
+
+    pub fn clear(&self) {
+        self.notion_states.borrow_mut().clear();
+        self.states.borrow_mut().clear();
+    }
 }
 
 impl PartialEq for BounceRootState {
