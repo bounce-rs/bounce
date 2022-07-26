@@ -7,7 +7,7 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bounce = { path = "../../crates/bounce", features = ["csr"] }
+bounce = { path = "../../crates/bounce" }
 yew = { git = "https://github.com/yewstack/yew", features = ["csr"] }
 stylist = { version = "0.10.0", features = ["yew"] }
 log = "0.4.17"
