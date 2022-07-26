@@ -2,7 +2,7 @@
 name = "bounce-macros"
 version = "0.4.0"
 edition = "2021"
-repository = "https://github.com/futursolo/bounce"
+repository = "https://github.com/bounce-rs/bounce"
 authors = [
     "Kaede Hoshiakwa <futursolo@icloud.com>",
 ]
@@ -10,7 +10,7 @@ description = "The uncomplicated state management library for Yew."
 keywords = ["web", "wasm", "yew", "state-management"]
 categories = ["wasm", "web-programming"]
 readme = "README.md"
-homepage = "https://github.com/futursolo/bounce"
+homepage = "https://github.com/bounce-rs/bounce"
 license = "MIT OR Apache-2.0"
 
 [lib]
