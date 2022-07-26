@@ -40,7 +40,7 @@ where
     value: Rc<RefCell<Option<Rc<T>>>>,
     listeners: Rc<RefCell<ListenerVec<T>>>,
     state_listener_handles: Rc<RefCell<Vec<Listener>>>,
-    states: Rc<RefCell<Option<Rc<BounceStates>>>>, // reference cycle?
+    states: Rc<RefCell<Option<Rc<BounceStates>>>>,
 }
 
 impl<T> Clone for InputSelectorState<T>
