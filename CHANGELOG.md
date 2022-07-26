@@ -1,6 +1,17 @@
+## Release 0.4.0
+
+### Breaking Changes
+
+- Bounce now targets Yew 0.20.
+
+### Other Changes
+
+- Fixed a reference cycle that presents in the codebase.
+
 ## Release 0.3.0
 
 ### Breaking Changes
+
 - `with_notion` now needs to be wrapped inside `bounce`.
 
 ### Other Changes
