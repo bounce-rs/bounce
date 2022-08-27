@@ -76,11 +76,11 @@ impl BounceRootState {
     where
         T: 'static,
     {
-        let notion_states = self.notion_states.borrow();
+        let notion_state = self.notion_states.borrow().get(&TypeId::of::<T>()).cloned();
 
         let notion = notion as Rc<dyn Any>;
 
-        if let Some(m) = notion_states.get(&TypeId::of::<T>()) {
+        if let Some(m) = notion_state {
             for any_state in m.iter() {
                 any_state.apply(notion.clone());
             }
