@@ -24,7 +24,7 @@ async fn fetch_uuid(_input: &()) -> String {
     uuid_resp.uuid
 }
 
-#[derive(PartialEq, Atom)]
+#[derive(PartialEq, Atom, Eq)]
 #[bounce(with_notion(Deferred<FetchUuid>))]
 enum UuidState {
     NotStarted,

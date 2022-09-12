@@ -6,7 +6,7 @@ use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew::InputEvent;
 
-#[derive(PartialEq, Atom)]
+#[derive(PartialEq, Atom, Eq)]
 struct Username {
     inner: String,
 }

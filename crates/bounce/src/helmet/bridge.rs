@@ -49,6 +49,8 @@ impl Reducible for HelmetBridgeGuard {
     }
 }
 
+type FormatTitle = Rc<dyn Fn(&str) -> String>;
+
 /// Properties of the [HelmetBridge].
 #[derive(Properties, Clone)]
 pub struct HelmetBridgeProps {
@@ -58,7 +60,7 @@ pub struct HelmetBridgeProps {
 
     /// The function to format title.
     #[prop_or_default]
-    pub format_title: Option<Rc<dyn Fn(&str) -> String>>,
+    pub format_title: Option<FormatTitle>,
 }
 
 impl fmt::Debug for HelmetBridgeProps {

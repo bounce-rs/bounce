@@ -11,7 +11,7 @@ pub enum SliceAction {
     Increment,
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 pub struct Value(i64);
 
 impl Reducible for Value {
@@ -24,7 +24,7 @@ impl Reducible for Value {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct IsEven {
     inner: bool,
 }
@@ -40,7 +40,7 @@ impl Selector for IsEven {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct Div3 {
     inner: bool,
 }
@@ -56,7 +56,7 @@ impl Selector for Div3 {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct Div4 {
     inner: bool,
 }

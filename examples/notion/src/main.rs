@@ -14,7 +14,7 @@ pub enum SliceAction {
     Increment,
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 #[bounce(with_notion(SliceAction))]
 #[bounce(with_notion(Reset))]
 pub struct SliceA(i64);
@@ -43,7 +43,7 @@ impl WithNotion<Reset> for SliceA {
     }
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 #[bounce(with_notion(SliceAction))]
 #[bounce(with_notion(Reset))]
 pub struct SliceB(i64);
@@ -72,7 +72,7 @@ impl WithNotion<Reset> for SliceB {
     }
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 #[bounce(with_notion(SliceAction))]
 #[bounce(with_notion(Reset))]
 pub struct SliceC(i64);

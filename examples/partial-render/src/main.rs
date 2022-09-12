@@ -11,7 +11,7 @@ pub enum SliceAction {
     Increment,
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 pub struct SliceA(i64);
 
 impl Reducible for SliceA {
@@ -24,7 +24,7 @@ impl Reducible for SliceA {
     }
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 pub struct SliceB(i64);
 
 impl Reducible for SliceB {
@@ -37,7 +37,7 @@ impl Reducible for SliceB {
     }
 }
 
-#[derive(Default, PartialEq, Slice)]
+#[derive(Default, PartialEq, Slice, Eq)]
 pub struct SliceC(i64);
 
 impl Reducible for SliceC {
