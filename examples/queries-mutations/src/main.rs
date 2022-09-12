@@ -15,17 +15,17 @@ use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew::TargetCast;
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Eq)]
 struct EchoInput {
     content: String,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Eq)]
 struct EchoMutation {
     content: String,
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Eq)]
 struct EchoResponse {
     json: EchoMutation,
 }
@@ -49,7 +49,7 @@ impl Mutation for EchoMutation {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Eq)]
 struct UuidQuery {
     uuid: Uuid,
 }
@@ -68,7 +68,7 @@ impl Query for UuidQuery {
     }
 }
 
-#[derive(Debug, Properties, PartialEq)]
+#[derive(Debug, Properties, PartialEq, Eq)]
 struct ContentProps {
     ord: usize,
 }

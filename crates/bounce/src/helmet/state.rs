@@ -109,7 +109,7 @@ impl HelmetTag {
                             el.set_type(value);
                         }
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         _ => {
                             el.set_attribute(name, value)
@@ -132,7 +132,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         _ => {
                             el.set_attribute(name, value)
@@ -152,7 +152,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         _ => {
                             el.set_attribute(name, value)
@@ -170,7 +170,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         _ => {
                             el.set_attribute(name, value)
@@ -188,7 +188,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         _ => {
                             el.set_attribute(name, value)
@@ -208,7 +208,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         "href" => {
                             el.set_href(value);
@@ -234,7 +234,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            add_class_list(&el, &*value);
+                            add_class_list(&el, value);
                         }
                         "name" => {
                             el.set_name(value);
@@ -276,7 +276,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            remove_class_list(&el, &*value);
+                            remove_class_list(&el, value);
                         }
                         _ => {
                             el.remove_attribute(name)
@@ -291,7 +291,7 @@ impl HelmetTag {
                 for (name, value) in attrs.iter() {
                     match name.as_ref() {
                         "class" => {
-                            remove_class_list(&el, &*value);
+                            remove_class_list(&el, value);
                         }
                         _ => {
                             el.remove_attribute(name)

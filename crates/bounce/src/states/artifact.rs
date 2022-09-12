@@ -119,7 +119,7 @@ where
 }
 
 /// Properties of the [`Artifact`] Component.
-#[derive(Debug, Properties, PartialEq)]
+#[derive(Debug, Properties, PartialEq, Eq)]
 pub struct ArtifactProps<T>
 where
     T: PartialEq + 'static,

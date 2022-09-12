@@ -6,12 +6,12 @@ use log::Level;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct Title {
     value: String,
 }
 
-#[derive(Routable, PartialEq, Clone)]
+#[derive(Routable, PartialEq, Clone, Eq)]
 pub enum Route {
     #[at("/a")]
     A,

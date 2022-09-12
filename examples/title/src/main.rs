@@ -13,7 +13,7 @@ use log::Level;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct Title {
     value: String,
 }
@@ -40,7 +40,7 @@ pub fn title_applier() -> Html {
     Html::default()
 }
 
-#[derive(Routable, PartialEq, Clone)]
+#[derive(Routable, PartialEq, Clone, Eq)]
 pub enum Route {
     #[at("/a")]
     A,
