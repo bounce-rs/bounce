@@ -10,6 +10,7 @@ use anymap2::{Entry, Map};
 use yew::callback::Callback;
 
 use crate::any_state::AnyState;
+use crate::states::artifact::ArtifactSlice;
 use crate::states::atom::{Atom, AtomSlice};
 use crate::states::input_selector::{InputSelector, InputSelectorsState};
 use crate::states::selector::{Selector, UnitSelector};
@@ -178,6 +179,14 @@ impl BounceStates {
         self.get_input_selector_value::<UnitSelector<T>>(Rc::new(()))
             .inner
             .clone()
+    }
+
+    /// Returns all values of an [`Artifact`].
+    pub fn get_artifacts<T>(&self) -> Vec<Rc<T>>
+    where
+        T: PartialEq + 'static,
+    {
+        self.get_slice_value::<ArtifactSlice<T>>().get()
     }
 
     pub(crate) fn add_listener_callback(&self, callback: Rc<Callback<()>>) {

@@ -1,6 +1,8 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::{self, Write};
 use std::rc::Rc;
 
+use super::FormatTitle;
 use gloo::utils::document;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -8,6 +10,7 @@ use web_sys::{
     Element, HtmlBaseElement, HtmlElement, HtmlHeadElement, HtmlLinkElement, HtmlMetaElement,
     HtmlScriptElement, HtmlStyleElement,
 };
+use yew::prelude::*;
 
 use crate::utils::Id;
 
@@ -89,6 +92,43 @@ pub(crate) fn append_to_head(element: &Element) {
 }
 
 impl HelmetTag {
+    fn write_attrs(w: &mut dyn Write, attrs: &BTreeMap<Rc<str>, Rc<str>>) -> fmt::Result {
+        todo!()
+    }
+
+    pub fn write_static(&self, w: &mut dyn Write) -> fmt::Result {
+        match self {
+            Self::Title(m) => {
+                write!(w, "<title>{}</title>", m)
+            }
+            Self::Script { content, attrs, .. } => {
+                write!(w, "<script")?;
+                Self::write_attrs(w, attrs)?;
+                write!(w, ">")?;
+                write!(w, "{}", content);
+                write!(w, "</script>")
+            }
+            Self::Style { content, attrs } => {
+                todo!()
+            }
+            Self::Body { attrs } => {
+                todo!()
+            }
+            Self::Html { attrs } => {
+                todo!()
+            }
+            Self::Base { attrs } => {
+                todo!()
+            }
+            Self::Link { attrs } => {
+                todo!()
+            }
+            Self::Meta { attrs } => {
+                todo!()
+            }
+        }
+    }
+
     pub fn apply(&self) -> Option<Element> {
         match self {
             Self::Title(m) => {
@@ -309,4 +349,124 @@ impl HelmetTag {
             | Self::Meta { .. } => {}
         }
     }
+}
+
+/// Applies attributes on top of existing attributes.
+fn merge_attrs(
+    target: &mut BTreeMap<Rc<str>, Rc<str>>,
+    current_attrs: &BTreeMap<Rc<str>, Rc<str>>,
+) {
+    for (name, value) in current_attrs.iter() {
+        match name.as_ref() {
+            "class" => match target.get("class").cloned() {
+                Some(m) => {
+                    target.insert(name.clone(), Rc::<str>::from(format!("{} {}", value, m)));
+                }
+                None => {
+                    target.insert(name.clone(), value.clone());
+                }
+            },
+            _ => {
+                target.insert(name.clone(), value.clone());
+            }
+        }
+    }
+}
+
+/// Merges helmet states into a set of tags to be rendered.
+pub(super) fn merge_helmet_states(
+    states: &[Rc<HelmetState>],
+    format_title: Option<&FormatTitle>,
+    default_title: Option<AttrValue>,
+) -> BTreeSet<Rc<HelmetTag>> {
+    let mut tags = BTreeSet::new();
+
+    let mut title: Option<Rc<str>> = None;
+
+    let mut html_attrs = BTreeMap::new();
+    let mut body_attrs = BTreeMap::new();
+    let mut base_attrs = BTreeMap::new();
+
+    // BTreeMap<(rel, href), ..>
+    let mut link_tags = BTreeMap::new();
+    // BTreeMap<(name, http-equiv, scheme, charset), ..>
+    let mut meta_tags = BTreeMap::new();
+
+    for state in states {
+        for tag in state.tags.iter() {
+            match **tag {
+                HelmetTag::Title(ref m) => {
+                    title = Some(m.clone());
+                }
+
+                HelmetTag::Script { .. } => {
+                    tags.insert(tag.clone());
+                }
+
+                HelmetTag::Style { .. } => {
+                    tags.insert(tag.clone());
+                }
+
+                HelmetTag::Html { ref attrs } => {
+                    merge_attrs(&mut html_attrs, attrs);
+                }
+
+                HelmetTag::Body { ref attrs } => {
+                    merge_attrs(&mut body_attrs, attrs);
+                }
+
+                HelmetTag::Base { ref attrs } => {
+                    merge_attrs(&mut base_attrs, attrs);
+                }
+                HelmetTag::Link { ref attrs } => {
+                    link_tags.insert(
+                        (attrs.get("rel").cloned(), attrs.get("href").cloned()),
+                        tag.clone(),
+                    );
+                }
+                HelmetTag::Meta { ref attrs } => {
+                    meta_tags.insert(
+                        (
+                            attrs.get("name").cloned(),
+                            attrs.get("http-equiv").cloned(),
+                            attrs.get("scheme").cloned(),
+                            attrs.get("charset").cloned(),
+                        ),
+                        tag.clone(),
+                    );
+                }
+            }
+        }
+    }
+
+    // title.
+    if let Some(m) = title
+        .map(|m| {
+            format_title
+                .map(|fmt_fn| Rc::<str>::from(fmt_fn.emit(AttrValue::from(m.clone())).to_string()))
+                .unwrap_or(m)
+        })
+        .or_else(|| default_title.map(|m| m.to_string().into()))
+    {
+        tags.insert(HelmetTag::Title(m).into());
+    }
+
+    // html element.
+    if !html_attrs.is_empty() {
+        tags.insert(HelmetTag::Html { attrs: html_attrs }.into());
+    }
+    // body element.
+    if !body_attrs.is_empty() {
+        tags.insert(HelmetTag::Body { attrs: body_attrs }.into());
+    }
+    // base element.
+    if !base_attrs.is_empty() {
+        tags.insert(HelmetTag::Base { attrs: base_attrs }.into());
+    }
+    // link elements.
+    tags.extend(link_tags.into_values());
+    // meta elements.
+    tags.extend(meta_tags.into_values());
+
+    tags
 }

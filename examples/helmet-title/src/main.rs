@@ -1,6 +1,4 @@
-use std::rc::Rc;
-
-use bounce::helmet::{Helmet, HelmetBridge};
+use bounce::helmet::{Helmet, HelmetProvider};
 use bounce::BounceRoot;
 use log::Level;
 use yew::prelude::*;
@@ -74,23 +72,24 @@ fn render_fn(route: Route) -> Html {
     }
 }
 
-fn format_title(s: &str) -> String {
-    format!("{} - Example", s)
+fn format_title(s: AttrValue) -> AttrValue {
+    format!("{} - Example", s).into()
 }
 
 #[function_component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>
-            <HelmetBridge default_title="Example" format_title={Some(Rc::new(format_title) as Rc<dyn Fn(&str) -> String>)} />
-            <Helmet>
-                <meta charset="utf-8" />
-                <meta name="description" content="default page" />
-            </Helmet>
-            <BrowserRouter>
-                <Switch<Route> render={render_fn} />
-                <Links />
-            </BrowserRouter>
+            <HelmetProvider default_title="Example" format_title={format_title}>
+                <Helmet>
+                    <meta charset="utf-8" />
+                    <meta name="description" content="default page" />
+                </Helmet>
+                <BrowserRouter>
+                    <Switch<Route> render={render_fn} />
+                    <Links />
+                </BrowserRouter>
+            </HelmetProvider>
         </BounceRoot>
     }
 }
