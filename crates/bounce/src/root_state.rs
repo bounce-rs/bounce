@@ -181,7 +181,7 @@ impl BounceStates {
             .clone()
     }
 
-    /// Returns all values of an [`Artifact`].
+    /// Returns all values of an [`Artifact`](crate::Artifact).
     pub fn get_artifacts<T>(&self) -> Vec<Rc<T>>
     where
         T: PartialEq + 'static,

@@ -5,9 +5,10 @@ use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 use yew::callback::Callback;
 
-#[derive(PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy)]
+#[derive(PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy, Serialize, Deserialize)]
 pub struct Id(u64);
 
 impl Default for Id {

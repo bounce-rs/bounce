@@ -5,12 +5,13 @@ use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
 use web_sys::Element;
-use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::virtual_dom::AttrValue;
 
 use super::state::{merge_helmet_states, HelmetState, HelmetTag};
-use super::{FormatTitle, StaticWriter};
+use super::FormatTitle;
+#[cfg(feature = "ssr")]
+use super::StaticWriter;
 use crate::root_state::BounceRootState;
 use crate::states::artifact::use_artifacts;
 use crate::states::slice::use_slice;
@@ -67,6 +68,7 @@ pub struct HelmetProviderProps {
     pub children: Children,
 
     /// The StaticWriter to write to.
+    #[cfg(feature = "ssr")]
     #[prop_or_default]
     pub writer: Option<StaticWriter>,
 }
@@ -199,7 +201,10 @@ pub fn helmet_provider(props: &HelmetProviderProps) -> Html {
 
     let rendered = use_mut_ref(|| -> Option<BTreeMap<Rc<HelmetTag>, Option<Element>>> { None });
 
+    #[cfg(feature = "ssr")]
     {
+        use yew::platform::spawn_local;
+
         let writer = props.writer.clone();
         let states = root.states();
         let format_title = props.format_title.clone();

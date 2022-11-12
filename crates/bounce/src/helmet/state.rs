@@ -1,9 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{self, Write};
+use std::fmt;
 use std::rc::Rc;
 
 use super::FormatTitle;
 use gloo::utils::document;
+use serde::de::{Deserializer, MapAccess, Visitor};
+use serde::ser::SerializeMap;
+use serde::ser::Serializer;
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{
@@ -26,33 +30,75 @@ pub(crate) struct HelmetState {
 }
 
 // TODO: fully type attributes for these elements.
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum HelmetTag {
+
+/// An element supported by `<Helmet />` with its attributes and content.
+///
+/// You can use [`write_static`](Self::write_static) to write the content into a [`Write`](fmt::Write).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum HelmetTag {
+    /// `<title>...</title>`
+    #[serde(serialize_with = "HelmetTag::serialize_str")]
+    #[serde(deserialize_with = "HelmetTag::deserialize_str")]
     Title(Rc<str>),
+    /// `<script ...>...</script>`
     Script {
         // we need to always render script as long as they are not the same tag, so we use an Id to
         // distinguish between them.
+        #[doc(hidden)]
         _id: Id,
+        /// The content of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_str")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_str")]
         content: Rc<str>,
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
+    /// `<style ...>...</style>`
     Style {
+        /// The content of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_str")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_str")]
         content: Rc<str>,
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
+    /// `<html ...>`
     Html {
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
+    /// `<body ...>`
     Body {
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
+    /// `<base ... />`
     Base {
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
+    /// `<link ... />`
     Link {
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
+    /// `<meta ... />`
     Meta {
+        /// The attributes of the tag.
+        #[serde(serialize_with = "HelmetTag::serialize_map")]
+        #[serde(deserialize_with = "HelmetTag::deserialize_map")]
         attrs: BTreeMap<Rc<str>, Rc<str>>,
     },
 }
@@ -91,45 +137,85 @@ pub(crate) fn append_to_head(element: &Element) {
     })
 }
 
+// We override serializer and deserializer so we don't have to enable the rc feature on serde.
 impl HelmetTag {
-    fn write_attrs(w: &mut dyn Write, attrs: &BTreeMap<Rc<str>, Rc<str>>) -> fmt::Result {
-        todo!()
+    fn serialize_str<S>(v: &str, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        ser.serialize_str(v)
     }
 
-    pub fn write_static(&self, w: &mut dyn Write) -> fmt::Result {
-        match self {
-            Self::Title(m) => {
-                write!(w, "<title>{}</title>", m)
+    fn serialize_map<S>(v: &BTreeMap<Rc<str>, Rc<str>>, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = ser.serialize_map(Some(v.len()))?;
+
+        for (k, v) in v.iter() {
+            map.serialize_entry(k.as_ref(), v.as_ref())?;
+        }
+
+        map.end()
+    }
+
+    fn deserialize_str<'de, D>(de: D) -> Result<Rc<str>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct StrVisitor;
+
+        impl<'de> Visitor<'de> for StrVisitor {
+            type Value = Rc<str>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a string")
             }
-            Self::Script { content, attrs, .. } => {
-                write!(w, "<script")?;
-                Self::write_attrs(w, attrs)?;
-                write!(w, ">")?;
-                write!(w, "{}", content);
-                write!(w, "</script>")
-            }
-            Self::Style { content, attrs } => {
-                todo!()
-            }
-            Self::Body { attrs } => {
-                todo!()
-            }
-            Self::Html { attrs } => {
-                todo!()
-            }
-            Self::Base { attrs } => {
-                todo!()
-            }
-            Self::Link { attrs } => {
-                todo!()
-            }
-            Self::Meta { attrs } => {
-                todo!()
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(Rc::from(v))
             }
         }
+
+        de.deserialize_str(StrVisitor)
     }
 
-    pub fn apply(&self) -> Option<Element> {
+    fn deserialize_map<'de, D>(de: D) -> Result<BTreeMap<Rc<str>, Rc<str>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct MapVisitor;
+
+        impl<'de> Visitor<'de> for MapVisitor {
+            // The type that our Visitor is going to produce.
+            type Value = BTreeMap<Rc<str>, Rc<str>>;
+
+            // Format a message stating what data this Visitor expects to receive.
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an attribute map")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut map = BTreeMap::new();
+
+                while let Some((key, value)) = access.next_entry::<String, String>()? {
+                    map.insert(Rc::from(key), Rc::from(value));
+                }
+
+                Ok(map)
+            }
+        }
+
+        de.deserialize_map(MapVisitor)
+    }
+
+    pub(crate) fn apply(&self) -> Option<Element> {
         match self {
             Self::Title(m) => {
                 document().set_title(m);
@@ -302,7 +388,7 @@ impl HelmetTag {
         }
     }
 
-    pub fn detach(&self, element: Option<Element>) {
+    pub(crate) fn detach(&self, element: Option<Element>) {
         if let Some(m) = element {
             m.parent_element()
                 .as_ref()
