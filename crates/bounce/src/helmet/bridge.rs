@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::rc::Rc;
 
-use wasm_bindgen::prelude::*;
 use web_sys::Element;
 use yew::prelude::*;
 use yew::virtual_dom::AttrValue;
@@ -21,6 +20,7 @@ mod guard {
     use crate::root_state::BounceRootState;
     use crate::states::slice::use_slice;
     use crate::Slice;
+    use wasm_bindgen::prelude::*;
 
     enum HelmetBridgeGuardAction {
         Increment,
@@ -223,8 +223,10 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
     #[cfg(feature = "ssr")]
     {
-        use crate::root_state::BounceRootState;
+        use wasm_bindgen::prelude::*;
         use yew::platform::spawn_local;
+
+        use crate::root_state::BounceRootState;
 
         let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
         let writer = props.writer.clone();
