@@ -36,6 +36,7 @@ fn collect_str_in_children(tag: &VNode) -> String {
         VNode::VPortal(_) => throw_str("expected text content, found portal."),
         VNode::VRef(_) => throw_str("expected text content, found node reference."),
         VNode::VSuspense(_) => throw_str("expected text content, found suspense."),
+        VNode::VRaw(_) => throw_str("expected text content, found raw html."),
     }
 }
 
@@ -66,6 +67,7 @@ fn assert_empty_node(node: &VNode) {
         VNode::VPortal(_) => throw_str("expected nothing, found portal."),
         VNode::VRef(_) => throw_str("expected nothing, found node reference."),
         VNode::VSuspense(_) => throw_str("expected nothing, found suspense."),
+        VNode::VRaw(_) => throw_str("expected nothing, found raw html."),
     }
 }
 fn assert_empty_children(tag: &VTag) {

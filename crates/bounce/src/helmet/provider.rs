@@ -14,41 +14,64 @@ use super::FormatTitle;
 use super::StaticWriter;
 use crate::root_state::BounceRootState;
 use crate::states::artifact::use_artifacts;
-use crate::states::slice::use_slice;
-use crate::Slice;
 
-enum HelmetProviderGuardAction {
-    Increment,
-    Decrement,
-}
+#[cfg(debug_assertions)]
+mod guard {
+    use super::*;
 
-/// A Guard to prevent multiple providers to be registered.
-#[derive(Default, PartialEq, Slice)]
-struct HelmetProviderGuard {
-    inner: usize,
-}
+    use crate::states::slice::use_slice;
+    use crate::Slice;
 
-impl Reducible for HelmetProviderGuard {
-    type Action = HelmetProviderGuardAction;
+    enum HelmetProviderGuardAction {
+        Increment,
+        Decrement,
+    }
 
-    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        match action {
-            Self::Action::Increment => {
-                debug_assert_eq!(
-                    self.inner, 0,
-                    "attempts to register more than 1 helmet provider."
-                );
+    /// A Guard to prevent multiple providers to be registered.
+    #[derive(Default, PartialEq, Slice)]
+    struct HelmetProviderGuard {
+        inner: usize,
+    }
 
-                Self {
-                    inner: self.inner + 1,
+    impl Reducible for HelmetProviderGuard {
+        type Action = HelmetProviderGuardAction;
+
+        fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+            match action {
+                Self::Action::Increment => {
+                    debug_assert_eq!(
+                        self.inner, 0,
+                        "attempts to register more than 1 helmet provider."
+                    );
+
+                    Self {
+                        inner: self.inner + 1,
+                    }
+                    .into()
                 }
-                .into()
+                Self::Action::Decrement => Self {
+                    inner: self.inner - 1,
+                }
+                .into(),
             }
-            Self::Action::Decrement => Self {
-                inner: self.inner - 1,
-            }
-            .into(),
         }
+    }
+
+    #[hook]
+    pub(super) fn use_helmet_guard() {
+        let guard = use_slice::<HelmetProviderGuard>();
+        let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+        use_effect_with_deps(
+            move |_| {
+                guard.dispatch(HelmetProviderGuardAction::Increment);
+
+                move || {
+                    guard.dispatch(HelmetProviderGuardAction::Decrement);
+                }
+            },
+            root,
+        );
     }
 }
 
@@ -195,8 +218,12 @@ fn render_tags(
 /// ```
 #[function_component(HelmetProvider)]
 pub fn helmet_provider(props: &HelmetProviderProps) -> Html {
+    #[cfg(debug_assertions)]
+    {
+        guard::use_helmet_guard();
+    }
+
     let helmet_states = use_artifacts::<HelmetState>();
-    let guard = use_slice::<HelmetProviderGuard>();
     let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
     let rendered = use_mut_ref(|| -> Option<BTreeMap<Rc<HelmetTag>, Option<Element>>> { None });
@@ -219,17 +246,6 @@ pub fn helmet_provider(props: &HelmetProviderProps) -> Html {
             }
         });
     }
-
-    use_effect_with_deps(
-        move |_| {
-            guard.dispatch(HelmetProviderGuardAction::Increment);
-
-            move || {
-                guard.dispatch(HelmetProviderGuardAction::Decrement);
-            }
-        },
-        root,
-    );
 
     use_effect_with_deps(
         move |(helmet_states, format_title, default_title)| {

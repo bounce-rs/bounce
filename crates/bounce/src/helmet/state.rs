@@ -138,6 +138,7 @@ pub(crate) fn append_to_head(element: &Element) {
 }
 
 // We override serializer and deserializer so we don't have to enable the rc feature on serde.
+// This makes it possible to send helmet tags between tags without having to deal with Rc and Arc.
 impl HelmetTag {
     fn serialize_str<S>(v: &str, ser: S) -> Result<S::Ok, S::Error>
     where
