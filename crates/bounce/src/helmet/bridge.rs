@@ -75,7 +75,7 @@ mod guard {
     }
 }
 
-/// Properties of the [HelmetProvider].
+/// Properties of the [HelmetBridge].
 #[derive(Properties, PartialEq, Clone)]
 pub struct HelmetBridgeProps {
     /// The default title to apply if no title is provided.
@@ -86,10 +86,6 @@ pub struct HelmetBridgeProps {
     #[prop_or_default]
     pub format_title: Option<FormatTitle>,
 
-    /// The children of the helmet provider.
-    #[prop_or_default]
-    pub children: Children,
-
     /// The StaticWriter to write to.
     #[cfg(feature = "ssr")]
     #[prop_or_default]
@@ -98,7 +94,7 @@ pub struct HelmetBridgeProps {
 
 impl fmt::Debug for HelmetBridgeProps {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HelmetProviderProps")
+        f.debug_struct("HelmetBridgeProps")
             .field("default_title", &self.default_title)
             .field(
                 "format_title",
@@ -108,7 +104,6 @@ impl fmt::Debug for HelmetBridgeProps {
                     &"None"
                 },
             )
-            .field("children", &self.children)
             .finish()
     }
 }
@@ -184,7 +179,7 @@ fn render_tags(
     rendered
 }
 
-/// The Helmet Provider.
+/// The Helmet Bridge.
 ///
 /// This component is responsible to reconclie all helmet tags to the real dom.
 ///
@@ -194,7 +189,7 @@ fn render_tags(
 ///
 /// # Panics
 ///
-/// You can only register 1 `HelmetProvider` per `BounceRoot`. Registering multiple `HelmetProvider`s
+/// You can only register 1 `HelmetBridge` per `BounceRoot`. Registering multiple `HelmetBridge`s
 /// will panic.
 ///
 /// # Example
@@ -203,15 +198,14 @@ fn render_tags(
 /// # use yew::prelude::*;
 /// # use bounce::prelude::*;
 /// # use bounce::BounceRoot;
-/// # use bounce::helmet::HelmetProvider;
+/// # use bounce::helmet::HelmetBridge;
 /// #
 /// # #[function_component(Comp)]
 /// # fn comp() -> Html {
 /// html! {
 ///     <BounceRoot>
-///         < default_title="default title">
-///             // other components.
-///         </HelmetProvider>
+///         <HelmetBridge default_title="default title" />
+///         // other components.
 ///     </BounceRoot>
 /// }
 /// # }
@@ -265,5 +259,5 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
         ),
     );
 
-    html! { <>{props.children.clone()}</> }
+    Html::default()
 }

@@ -20,7 +20,7 @@
 //! # use yew::prelude::*;
 //! # use bounce::BounceRoot;
 //! # use bounce::prelude::*;
-//! use bounce::helmet::{Helmet, HelmetProvider};
+//! use bounce::helmet::{Helmet, HelmetBridge};
 //!
 //! #[function_component(PageA)]
 //! fn page_a() -> Html {
