@@ -12,13 +12,13 @@ use super::state::{merge_helmet_states, HelmetState, HelmetTag};
 use super::FormatTitle;
 #[cfg(feature = "ssr")]
 use super::StaticWriter;
-use crate::root_state::BounceRootState;
 use crate::states::artifact::use_artifacts;
 
 #[cfg(debug_assertions)]
 mod guard {
     use super::*;
 
+    use crate::root_state::BounceRootState;
     use crate::states::slice::use_slice;
     use crate::Slice;
 
@@ -218,14 +218,15 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     }
 
     let helmet_states = use_artifacts::<HelmetState>();
-    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
     let rendered = use_mut_ref(|| -> Option<BTreeMap<Rc<HelmetTag>, Option<Element>>> { None });
 
     #[cfg(feature = "ssr")]
     {
+        use crate::root_state::BounceRootState;
         use yew::platform::spawn_local;
 
+        let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
         let writer = props.writer.clone();
         let states = root.states();
         let format_title = props.format_title.clone();
