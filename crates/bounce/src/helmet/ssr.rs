@@ -22,7 +22,7 @@ pub struct StaticWriterInner {
 
 /// The writer of [StaticRenderer].
 ///
-/// This writer is passed to a `<HelmetProvider />` for tags to be rendered with it.
+/// This writer is passed to a `<HelmetBridge />` for tags to be rendered with it.
 #[derive(Clone)]
 pub struct StaticWriter {
     inner: Rc<Cell<Option<StaticWriterInner>>>,

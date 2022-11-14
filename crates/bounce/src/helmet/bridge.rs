@@ -22,26 +22,26 @@ mod guard {
     use crate::states::slice::use_slice;
     use crate::Slice;
 
-    enum HelmetProviderGuardAction {
+    enum HelmetBridgeGuardAction {
         Increment,
         Decrement,
     }
 
-    /// A Guard to prevent multiple providers to be registered.
+    /// A Guard to prevent multiple bridges to be registered.
     #[derive(Default, PartialEq, Slice)]
-    struct HelmetProviderGuard {
+    struct HelmetBridgeGuard {
         inner: usize,
     }
 
-    impl Reducible for HelmetProviderGuard {
-        type Action = HelmetProviderGuardAction;
+    impl Reducible for HelmetBridgeGuard {
+        type Action = HelmetBridgeGuardAction;
 
         fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
             match action {
                 Self::Action::Increment => {
                     debug_assert_eq!(
                         self.inner, 0,
-                        "attempts to register more than 1 helmet provider."
+                        "attempts to register more than 1 helmet bridge."
                     );
 
                     Self {
@@ -59,15 +59,15 @@ mod guard {
 
     #[hook]
     pub(super) fn use_helmet_guard() {
-        let guard = use_slice::<HelmetProviderGuard>();
+        let guard = use_slice::<HelmetBridgeGuard>();
         let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
         use_effect_with_deps(
             move |_| {
-                guard.dispatch(HelmetProviderGuardAction::Increment);
+                guard.dispatch(HelmetBridgeGuardAction::Increment);
 
                 move || {
-                    guard.dispatch(HelmetProviderGuardAction::Decrement);
+                    guard.dispatch(HelmetBridgeGuardAction::Decrement);
                 }
             },
             root,
