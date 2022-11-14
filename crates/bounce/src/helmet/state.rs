@@ -138,7 +138,7 @@ pub(crate) fn append_to_head(element: &Element) {
 }
 
 // We override serializer and deserializer so we don't have to enable the rc feature on serde.
-// This makes it possible to send helmet tags between tags without having to deal with Rc and Arc.
+// This makes it possible to send helmet tags between thread without having to deal with Rc and Arc.
 impl HelmetTag {
     fn serialize_str<S>(v: &str, ser: S) -> Result<S::Ok, S::Error>
     where
@@ -191,10 +191,8 @@ impl HelmetTag {
         struct MapVisitor;
 
         impl<'de> Visitor<'de> for MapVisitor {
-            // The type that our Visitor is going to produce.
             type Value = BTreeMap<Rc<str>, Rc<str>>;
 
-            // Format a message stating what data this Visitor expects to receive.
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("an attribute map")
             }
