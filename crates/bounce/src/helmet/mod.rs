@@ -39,20 +39,19 @@
 //! fn app() -> Html {
 //!     html! {
 //!         <BounceRoot>
-//!             // A helmet provider is required to apply helmet elements to the head element.
-//!             // You only need 1 helmet provider per bounce root.
-//!             // The helmet provider is intended to live as long as the BounceRoot.
-//!             <HelmetProvider default_title="default title">
-//!                 <Helmet>
-//!                     // The title to apply.
-//!                     //
-//!                     // However, as <PageA /> also renders a title element, elements rendered later
-//!                     // will have a higher priority. Hence, "page a title" will become the document
-//!                     // title.
-//!                     <title>{"app title"}</title>
-//!                 </Helmet>
-//!                 <PageA />
-//!             </HelmetProvider>
+//!             // A helmet bridge is required to apply helmet elements to the head element.
+//!             // You only need 1 helmet bridge per bounce root.
+//!             // The helmet bridge is intended to live as long as the BounceRoot.
+//!             <HelmetBridge default_title="default title" />
+//!             <Helmet>
+//!                 // The title to apply.
+//!                 //
+//!                 // However, as <PageA /> also renders a title element, elements rendered later
+//!                 // will have a higher priority. Hence, "page a title" will become the document
+//!                 // title.
+//!                 <title>{"app title"}</title>
+//!             </Helmet>
+//!             <PageA />
 //!         </BounceRoot>
 //!     }
 //! }
