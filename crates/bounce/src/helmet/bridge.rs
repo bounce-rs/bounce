@@ -77,7 +77,7 @@ mod guard {
 
 /// Properties of the [HelmetProvider].
 #[derive(Properties, PartialEq, Clone)]
-pub struct HelmetProviderProps {
+pub struct HelmetBridgeProps {
     /// The default title to apply if no title is provided.
     #[prop_or_default]
     pub default_title: Option<AttrValue>,
@@ -96,7 +96,7 @@ pub struct HelmetProviderProps {
     pub writer: Option<StaticWriter>,
 }
 
-impl fmt::Debug for HelmetProviderProps {
+impl fmt::Debug for HelmetBridgeProps {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("HelmetProviderProps")
             .field("default_title", &self.default_title)
@@ -209,15 +209,15 @@ fn render_tags(
 /// # fn comp() -> Html {
 /// html! {
 ///     <BounceRoot>
-///         <HelmetProvider default_title="default title">
+///         < default_title="default title">
 ///             // other components.
 ///         </HelmetProvider>
 ///     </BounceRoot>
 /// }
 /// # }
 /// ```
-#[function_component(HelmetProvider)]
-pub fn helmet_provider(props: &HelmetProviderProps) -> Html {
+#[function_component(HelmetBridge)]
+pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     #[cfg(debug_assertions)]
     {
         guard::use_helmet_guard();

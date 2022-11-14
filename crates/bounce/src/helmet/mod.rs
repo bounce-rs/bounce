@@ -60,14 +60,14 @@
 
 use yew::prelude::*;
 
+mod bridge;
 mod comp;
-mod provider;
 #[cfg(feature = "ssr")]
 mod ssr;
 mod state;
 
+pub use bridge::{HelmetBridge, HelmetBridgeProps};
 pub use comp::{Helmet, HelmetProps};
-pub use provider::{HelmetProvider, HelmetProviderProps};
 #[cfg(feature = "ssr")]
 #[cfg_attr(documenting, doc(cfg(feature = "ssr")))]
 pub use ssr::{StaticRenderer, StaticWriter};

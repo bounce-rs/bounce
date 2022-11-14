@@ -1,4 +1,4 @@
-use bounce::helmet::{Helmet, HelmetProvider};
+use bounce::helmet::{Helmet, HelmetBridge};
 use bounce::BounceRoot;
 use log::Level;
 use yew::prelude::*;
@@ -80,7 +80,7 @@ fn format_title(s: AttrValue) -> AttrValue {
 fn app() -> Html {
     html! {
         <BounceRoot>
-            <HelmetProvider default_title="Example" format_title={format_title}>
+            <HelmetBridge default_title="Example" format_title={format_title}>
                 <Helmet>
                     <meta charset="utf-8" />
                     <meta name="description" content="default page" />
@@ -89,7 +89,7 @@ fn app() -> Html {
                     <Switch<Route> render={render_fn} />
                     <Links />
                 </BrowserRouter>
-            </HelmetProvider>
+            </HelmetBridge>
         </BounceRoot>
     }
 }
