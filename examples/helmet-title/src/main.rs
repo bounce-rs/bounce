@@ -80,16 +80,15 @@ fn format_title(s: AttrValue) -> AttrValue {
 fn app() -> Html {
     html! {
         <BounceRoot>
-            <HelmetBridge default_title="Example" format_title={format_title}>
-                <Helmet>
-                    <meta charset="utf-8" />
-                    <meta name="description" content="default page" />
-                </Helmet>
-                <BrowserRouter>
-                    <Switch<Route> render={render_fn} />
-                    <Links />
-                </BrowserRouter>
-            </HelmetBridge>
+            <HelmetBridge default_title="Example" format_title={format_title} />
+            <Helmet>
+                <meta charset="utf-8" />
+                <meta name="description" content="default page" />
+            </Helmet>
+            <BrowserRouter>
+                <Switch<Route> render={render_fn} />
+                <Links />
+            </BrowserRouter>
         </BounceRoot>
     }
 }
