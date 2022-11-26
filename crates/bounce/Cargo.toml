@@ -19,7 +19,7 @@ anymap2 = "0.13.0"
 once_cell = "1.12.0"
 wasm-bindgen = "0.2.80"
 wasm-bindgen-futures = "0.4.30"
-yew = { git = "https://github.com/yewstack/yew" }
+yew = "0.20"
 bounce-macros = { path = "../bounce-macros", version = "0.4.0" }
 futures = "0.3.21"
 
@@ -40,14 +40,13 @@ features = [
 ]
 
 [features]
-ssr = ["yew/ssr", "yew/tokio"]
 query = ["async-trait"]
 helmet = ["gloo", "web-sys"]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.30"
 gloo = { version = "0.8.0", features = ["futures"] }
-yew = { git = "https://github.com/yewstack/yew", features = ["csr", "ssr", "tokio"] }
+yew = { version = "0.20", features = ["csr", "ssr"] }
 
 [dev-dependencies.web-sys]
 version = "0.3.57"

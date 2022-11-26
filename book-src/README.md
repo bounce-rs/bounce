@@ -69,7 +69,7 @@ cargo add bounce
 You can also add it to the `Cargo.toml` of your project manually:
 
 ```toml
-bounce = "0.3"
+bounce = "0.4"
 ```
 
 ## Getting Started
