@@ -40,6 +40,7 @@ features = [
     "HtmlLinkElement",
     "HtmlMetaElement",
     "HtmlBaseElement",
+    "NodeList",
 ]
 
 [features]

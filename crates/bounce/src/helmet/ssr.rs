@@ -2,6 +2,7 @@ use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fmt::Write;
+use std::iter;
 use std::rc::Rc;
 
 // The static renderer can run outside of the Yew runtime.
@@ -112,9 +113,24 @@ impl StaticRenderer {
 }
 
 impl HelmetTag {
-    /// Writes the attributes of a tag into a `std::fmt::Write`.
-    pub fn write_attrs(w: &mut dyn Write, attrs: &BTreeMap<Rc<str>, Rc<str>>) -> fmt::Result {
-        for (index, (name, value)) in attrs.iter().enumerate() {
+    fn write_attrs_from(
+        w: &mut dyn Write,
+        attrs: &BTreeMap<Rc<str>, Rc<str>>,
+        write_data_attr: bool,
+    ) -> fmt::Result {
+        let mut data_tag_written = false;
+
+        for (index, (name, value)) in attrs
+            .iter()
+            .map(|(name, value)| (&**name, &**value))
+            .chain(iter::from_fn(|| {
+                (write_data_attr && !data_tag_written).then(|| {
+                    data_tag_written = true;
+                    ("data-bounce-helmet", "pre-render")
+                })
+            }))
+            .enumerate()
+        {
             if index > 0 {
                 write!(w, " ")?;
             }
@@ -130,11 +146,27 @@ impl HelmetTag {
         Ok(())
     }
 
+    /// Writes the attributes of the current tag into a `std::fmt::Write`.
+    ///
+    /// You can use this method to write attributes to the `<html></html>` or `<body></body>` tag.
+    pub fn write_attrs(&self, w: &mut dyn Write) -> fmt::Result {
+        match self {
+            Self::Title(_) => Ok(()),
+            Self::Body { attrs } | Self::Html { attrs } => Self::write_attrs_from(w, attrs, false),
+            Self::Meta { attrs }
+            | Self::Link { attrs }
+            | Self::Script { attrs, .. }
+            | Self::Style { attrs, .. }
+            | Self::Base { attrs } => Self::write_attrs_from(w, attrs, true),
+        }
+    }
+
     /// Writes the content of a tag into a `std::fmt::Write`.
     ///
-    /// `<html ...>` and `<body ...>` will not write their attributes.
+    /// `<html ...>` and `<body ...>` tags are not written.
     ///
-    /// You can use [`write_attrs`](Self::write_attrs) instead.
+    /// To write attributes for html and body tags,
+    /// you can use the [`write_attrs`](Self::write_attrs) method instead.
     pub fn write_static(&self, w: &mut dyn Write) -> fmt::Result {
         match self {
             Self::Title(m) => {
@@ -142,31 +174,29 @@ impl HelmetTag {
             }
             Self::Script { content, attrs, .. } => {
                 write!(w, "<script ")?;
-                Self::write_attrs(w, attrs)?;
-                write!(w, ">")?;
-                write!(w, "{}</script>", content)
+                Self::write_attrs_from(w, attrs, true)?;
+                write!(w, ">{}</script>", content)
             }
             Self::Style { content, attrs } => {
                 write!(w, "<style ")?;
-                Self::write_attrs(w, attrs)?;
-                write!(w, ">")?;
-                write!(w, "{}</style>", content)
+                Self::write_attrs_from(w, attrs, true)?;
+                write!(w, ">{}</style>", content)
             }
             Self::Body { .. } => Ok(()),
             Self::Html { .. } => Ok(()),
             Self::Base { attrs } => {
                 write!(w, "<base ")?;
-                Self::write_attrs(w, attrs)?;
+                Self::write_attrs_from(w, attrs, true)?;
                 write!(w, ">")
             }
             Self::Link { attrs } => {
                 write!(w, "<link ")?;
-                Self::write_attrs(w, attrs)?;
+                Self::write_attrs_from(w, attrs, true)?;
                 write!(w, ">")
             }
             Self::Meta { attrs } => {
                 write!(w, "<meta ")?;
-                Self::write_attrs(w, attrs)?;
+                Self::write_attrs_from(w, attrs, true)?;
                 write!(w, ">")
             }
         }

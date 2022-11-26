@@ -3,6 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::rc::Rc;
 
+use gloo::utils::document;
+use wasm_bindgen::UnwrapThrowExt;
 use web_sys::Element;
 use yew::prelude::*;
 use yew::virtual_dom::AttrValue;
@@ -20,7 +22,6 @@ mod guard {
     use crate::root_state::BounceRootState;
     use crate::states::slice::use_slice;
     use crate::Slice;
-    use wasm_bindgen::prelude::*;
 
     enum HelmetBridgeGuardAction {
         Increment,
@@ -243,6 +244,25 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
             }
         });
     }
+
+    // Remove pre-rendered tags.
+    use_effect_with_deps(
+        |_| {
+            let pre_rendered = document()
+                .head()
+                .and_then(|m| m.query_selector_all("[data-bounce-helmet=pre-render]").ok())
+                .expect_throw("failed to read pre rendered tags");
+
+            for i in 0..pre_rendered.length() {
+                if let Some(m) = pre_rendered.get(i) {
+                    if let Some(parent) = m.parent_node() {
+                        let _ = parent.remove_child(&m);
+                    }
+                }
+            }
+        },
+        (),
+    );
 
     use_effect_with_deps(
         move |(helmet_states, format_title, default_title)| {
