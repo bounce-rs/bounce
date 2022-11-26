@@ -30,12 +30,12 @@ async fn get_text_content<S: AsRef<str>>(selector: S) -> String {
 
 #[test]
 async fn test_query_requery_upon_state_change() {
-    #[derive(PartialEq, Default, Atom)]
+    #[derive(PartialEq, Eq, Default, Atom)]
     pub struct MyState {
         inner: usize,
     }
 
-    #[derive(PartialEq, Default)]
+    #[derive(PartialEq, Eq, Default)]
     pub struct MyQuery {
         inner: usize,
     }

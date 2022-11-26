@@ -15,7 +15,3 @@ members = [
     "examples/persist",
 ]
 resolver = "2"
-
-# We patch yew for examples until stylist catches up.
-[patch.crates-io]
-yew = { git = "https://github.com/yewstack/yew" }
