@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::rc::Rc;
 
-use gloo::utils::document;
+use gloo::utils::head;
 use wasm_bindgen::UnwrapThrowExt;
 use web_sys::Element;
 use yew::prelude::*;
@@ -248,9 +248,8 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     // Remove pre-rendered tags.
     use_effect_with_deps(
         |_| {
-            let pre_rendered = document()
-                .head()
-                .and_then(|m| m.query_selector_all("[data-bounce-helmet=pre-render]").ok())
+            let pre_rendered = head()
+                .query_selector_all("[data-bounce-helmet=pre-render]")
                 .expect_throw("failed to read pre rendered tags");
 
             for i in 0..pre_rendered.length() {

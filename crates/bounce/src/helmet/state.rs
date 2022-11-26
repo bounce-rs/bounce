@@ -3,7 +3,7 @@ use std::fmt;
 use std::rc::Rc;
 
 use super::FormatTitle;
-use gloo::utils::document;
+use gloo::utils::{body, document, document_element, head};
 use serde::de::{Deserializer, MapAccess, Visitor};
 use serde::ser::SerializeMap;
 use serde::ser::Serializer;
@@ -19,9 +19,9 @@ use yew::prelude::*;
 use crate::utils::Id;
 
 thread_local! {
-    static HEAD: HtmlHeadElement = document().head().unwrap_throw();
-    static HTML_TAG: Element = document().document_element().unwrap_throw();
-    static BODY_TAG: HtmlElement = document().body().unwrap_throw();
+    static HEAD: HtmlHeadElement = head();
+    static HTML_TAG: Element = document_element();
+    static BODY_TAG: HtmlElement = body();
 }
 
 #[derive(PartialEq)]

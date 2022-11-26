@@ -1,9 +1,9 @@
-use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fmt::Write;
 use std::iter;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 // The static renderer can run outside of the Yew runtime.
 // We use a send oneshot channel for this purpose.
@@ -26,14 +26,16 @@ pub struct StaticWriterInner {
 /// This writer is passed to a `<HelmetBridge />` for tags to be rendered with it.
 #[derive(Clone)]
 pub struct StaticWriter {
-    inner: Rc<Cell<Option<StaticWriterInner>>>,
+    inner: Arc<Mutex<Option<StaticWriterInner>>>,
 }
 
 impl PartialEq for StaticWriter {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.inner, &other.inner)
+        Arc::ptr_eq(&self.inner, &other.inner)
     }
 }
+
+impl Eq for StaticWriter {}
 
 impl fmt::Debug for StaticWriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -48,7 +50,7 @@ impl StaticWriter {
         format_title: Option<FormatTitle>,
         default_title: Option<AttrValue>,
     ) {
-        let StaticWriterInner { start_rx, tx } = match self.inner.take() {
+        let StaticWriterInner { start_rx, tx } = match self.inner.lock().unwrap().take() {
             Some(m) => m,
             None => return,
         };
@@ -93,7 +95,7 @@ impl StaticRenderer {
         (
             StaticRenderer { start_tx, rx },
             StaticWriter {
-                inner: Rc::new(Cell::new(Some(StaticWriterInner { start_rx, tx }))),
+                inner: Arc::new(Mutex::new(Some(StaticWriterInner { start_rx, tx }))),
             },
         )
     }

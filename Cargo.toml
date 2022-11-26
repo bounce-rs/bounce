@@ -12,6 +12,13 @@ members = [
     "examples/queries-mutations",
     "examples/title",
     "examples/helmet-title",
+    "examples/helmet-ssr",
     "examples/persist",
 ]
 resolver = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
