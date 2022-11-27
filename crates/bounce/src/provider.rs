@@ -55,6 +55,7 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
         let _root_state = root_state.clone();
         let _ = use_transitive_state!(
             move |_| -> () {
+                #[cfg(feature = "ssr")]
                 #[cfg(feature = "helmet")]
                 {
                     // Workaround to send helmet states back to static writer
