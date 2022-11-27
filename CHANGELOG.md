@@ -1,3 +1,9 @@
+## Release 0.5.0
+
+### Other Changes
+
+- Helmet API now supports SSR.
+
 ## Release 0.4.0
 
 ### Breaking Changes
