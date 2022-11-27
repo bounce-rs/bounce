@@ -138,3 +138,48 @@ mod feat_ssr {
 
 #[cfg(feature = "ssr")]
 pub use feat_ssr::*;
+
+#[cfg(test)]
+#[cfg(feature = "ssr")]
+mod ssr_tests {
+    use std::collections::BTreeMap;
+    use std::sync::Arc;
+
+    use super::*;
+    use bounce::helmet::{HelmetTag, StaticRenderer};
+
+    #[tokio::test]
+    async fn test_render() {
+        let (renderer, writer) = StaticRenderer::new();
+
+        yew::ServerRenderer::<ServerApp>::with_props(move || ServerAppProps {
+            url: "/".into(),
+            queries: Default::default(),
+            helmet_writer: writer,
+        })
+        .render()
+        .await;
+
+        let rendered: Vec<HelmetTag> = renderer.render().await;
+        let expected = vec![
+            HelmetTag::Title("Home Page - Example".into()),
+            HelmetTag::Meta {
+                attrs: {
+                    let mut map = BTreeMap::new();
+                    map.insert(Arc::from("charset"), Arc::from("utf-8"));
+                    map
+                },
+            },
+            HelmetTag::Meta {
+                attrs: {
+                    let mut map = BTreeMap::new();
+                    map.insert(Arc::from("content"), Arc::from("home page"));
+                    map.insert(Arc::from("name"), Arc::from("description"));
+                    map
+                },
+            },
+        ];
+
+        assert_eq!(rendered, expected);
+    }
+}
