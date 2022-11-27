@@ -1,58 +1,85 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
-use std::rc::Rc;
+use std::sync::Arc;
 
-use wasm_bindgen::prelude::*;
+use gloo::utils::head;
+use wasm_bindgen::UnwrapThrowExt;
 use web_sys::Element;
 use yew::prelude::*;
 use yew::virtual_dom::AttrValue;
 
-use super::state::{HelmetState, HelmetTag};
-use crate::root_state::BounceRootState;
+use super::state::{merge_helmet_states, HelmetState, HelmetTag};
+use super::FormatTitle;
+#[cfg(feature = "ssr")]
+use super::StaticWriter;
 use crate::states::artifact::use_artifacts;
-use crate::states::slice::use_slice;
-use crate::Slice;
 
-enum HelmetBridgeGuardAction {
-    Increment,
-    Decrement,
-}
+#[cfg(debug_assertions)]
+mod guard {
+    use super::*;
 
-/// A Guard to prevent multiple bridges to be registered.
-#[derive(Default, PartialEq, Slice)]
-struct HelmetBridgeGuard {
-    inner: usize,
-}
+    use std::rc::Rc;
 
-impl Reducible for HelmetBridgeGuard {
-    type Action = HelmetBridgeGuardAction;
+    use crate::root_state::BounceRootState;
+    use crate::states::slice::use_slice;
+    use crate::Slice;
 
-    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        match action {
-            Self::Action::Increment => {
-                debug_assert_eq!(
-                    self.inner, 0,
-                    "attempts to register more than 1 helmet bridge."
-                );
+    enum HelmetBridgeGuardAction {
+        Increment,
+        Decrement,
+    }
 
-                Self {
-                    inner: self.inner + 1,
+    /// A Guard to prevent multiple bridges to be registered.
+    #[derive(Default, PartialEq, Slice)]
+    struct HelmetBridgeGuard {
+        inner: usize,
+    }
+
+    impl Reducible for HelmetBridgeGuard {
+        type Action = HelmetBridgeGuardAction;
+
+        fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+            match action {
+                Self::Action::Increment => {
+                    debug_assert_eq!(
+                        self.inner, 0,
+                        "attempts to register more than 1 helmet bridge."
+                    );
+
+                    Self {
+                        inner: self.inner + 1,
+                    }
+                    .into()
                 }
-                .into()
+                Self::Action::Decrement => Self {
+                    inner: self.inner - 1,
+                }
+                .into(),
             }
-            Self::Action::Decrement => Self {
-                inner: self.inner - 1,
-            }
-            .into(),
         }
+    }
+
+    #[hook]
+    pub(super) fn use_helmet_guard() {
+        let guard = use_slice::<HelmetBridgeGuard>();
+        let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
+
+        use_effect_with_deps(
+            move |_| {
+                guard.dispatch(HelmetBridgeGuardAction::Increment);
+
+                move || {
+                    guard.dispatch(HelmetBridgeGuardAction::Decrement);
+                }
+            },
+            root,
+        );
     }
 }
 
-type FormatTitle = Rc<dyn Fn(&str) -> String>;
-
 /// Properties of the [HelmetBridge].
-#[derive(Properties, Clone)]
+#[derive(Properties, PartialEq, Clone)]
 pub struct HelmetBridgeProps {
     /// The default title to apply if no title is provided.
     #[prop_or_default]
@@ -61,6 +88,11 @@ pub struct HelmetBridgeProps {
     /// The function to format title.
     #[prop_or_default]
     pub format_title: Option<FormatTitle>,
+
+    /// The StaticWriter to write to.
+    #[cfg(feature = "ssr")]
+    #[prop_or_default]
+    pub writer: Option<StaticWriter>,
 }
 
 impl fmt::Debug for HelmetBridgeProps {
@@ -79,145 +111,11 @@ impl fmt::Debug for HelmetBridgeProps {
     }
 }
 
-#[allow(clippy::vtable_address_comparisons)]
-impl PartialEq for HelmetBridgeProps {
-    fn eq(&self, rhs: &Self) -> bool {
-        let format_title_eq = match (&self.format_title, &rhs.format_title) {
-            (Some(ref m), Some(ref n)) => Rc::ptr_eq(m, n),
-            (None, None) => true,
-            _ => false,
-        };
-
-        format_title_eq && self.default_title == rhs.default_title
-    }
-}
-
-/// Applies attributes on top of existing attributes.
-fn merge_attrs(
-    target: &mut BTreeMap<Rc<str>, Rc<str>>,
-    current_attrs: &BTreeMap<Rc<str>, Rc<str>>,
-) {
-    for (name, value) in current_attrs.iter() {
-        match name.as_ref() {
-            "class" => match target.get("class").cloned() {
-                Some(m) => {
-                    target.insert(name.clone(), Rc::<str>::from(format!("{} {}", value, m)));
-                }
-                None => {
-                    target.insert(name.clone(), value.clone());
-                }
-            },
-            _ => {
-                target.insert(name.clone(), value.clone());
-            }
-        }
-    }
-}
-
-/// Merges helmet states into a set of tags to be rendered.
-fn merge_helmet_states(
-    states: &[Rc<HelmetState>],
-    props: &HelmetBridgeProps,
-) -> BTreeSet<Rc<HelmetTag>> {
-    let mut tags = BTreeSet::new();
-
-    let mut title: Option<Rc<str>> = None;
-
-    let mut html_attrs = BTreeMap::new();
-    let mut body_attrs = BTreeMap::new();
-    let mut base_attrs = BTreeMap::new();
-
-    // BTreeMap<(rel, href), ..>
-    let mut link_tags = BTreeMap::new();
-    // BTreeMap<(name, http-equiv, scheme, charset), ..>
-    let mut meta_tags = BTreeMap::new();
-
-    for state in states {
-        for tag in state.tags.iter() {
-            match **tag {
-                HelmetTag::Title(ref m) => {
-                    title = Some(m.clone());
-                }
-
-                HelmetTag::Script { .. } => {
-                    tags.insert(tag.clone());
-                }
-
-                HelmetTag::Style { .. } => {
-                    tags.insert(tag.clone());
-                }
-
-                HelmetTag::Html { ref attrs } => {
-                    merge_attrs(&mut html_attrs, attrs);
-                }
-
-                HelmetTag::Body { ref attrs } => {
-                    merge_attrs(&mut body_attrs, attrs);
-                }
-
-                HelmetTag::Base { ref attrs } => {
-                    merge_attrs(&mut base_attrs, attrs);
-                }
-                HelmetTag::Link { ref attrs } => {
-                    link_tags.insert(
-                        (attrs.get("rel").cloned(), attrs.get("href").cloned()),
-                        tag.clone(),
-                    );
-                }
-                HelmetTag::Meta { ref attrs } => {
-                    meta_tags.insert(
-                        (
-                            attrs.get("name").cloned(),
-                            attrs.get("http-equiv").cloned(),
-                            attrs.get("scheme").cloned(),
-                            attrs.get("charset").cloned(),
-                        ),
-                        tag.clone(),
-                    );
-                }
-            }
-        }
-    }
-
-    // title.
-    if let Some(m) = title
-        .map(|m| {
-            props
-                .format_title
-                .as_ref()
-                .map(|fmt_fn| Rc::<str>::from(fmt_fn(&m)))
-                .unwrap_or(m)
-        })
-        .or_else(|| props.default_title.as_ref().map(|m| m.to_string().into()))
-    {
-        tags.insert(HelmetTag::Title(m).into());
-    }
-
-    // html element.
-    if !html_attrs.is_empty() {
-        tags.insert(HelmetTag::Html { attrs: html_attrs }.into());
-    }
-    // body element.
-    if !body_attrs.is_empty() {
-        tags.insert(HelmetTag::Body { attrs: body_attrs }.into());
-    }
-    // base element.
-    if !base_attrs.is_empty() {
-        tags.insert(HelmetTag::Base { attrs: base_attrs }.into());
-    }
-    // link elements.
-    tags.extend(link_tags.into_values());
-    // meta elements.
-    tags.extend(meta_tags.into_values());
-
-    tags
-}
-
 /// Renders tags
 fn render_tags(
-    to_render: BTreeSet<Rc<HelmetTag>>,
-    mut last_rendered: Option<BTreeMap<Rc<HelmetTag>, Option<Element>>>,
-) -> BTreeMap<Rc<HelmetTag>, Option<Element>> {
+    to_render: BTreeSet<Arc<HelmetTag>>,
+    mut last_rendered: Option<BTreeMap<Arc<HelmetTag>, Option<Element>>>,
+) -> BTreeMap<Arc<HelmetTag>, Option<Element>> {
     let mut rendered = BTreeMap::new();
 
     let mut next_last_rendered = None;
@@ -317,34 +215,68 @@ fn render_tags(
 /// ```
 #[function_component(HelmetBridge)]
 pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
+    #[cfg(debug_assertions)]
+    {
+        guard::use_helmet_guard();
+    }
+
     let helmet_states = use_artifacts::<HelmetState>();
-    let guard = use_slice::<HelmetBridgeGuard>();
-    let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
-    let rendered = use_mut_ref(|| -> Option<BTreeMap<Rc<HelmetTag>, Option<Element>>> { None });
+    let rendered = use_mut_ref(|| -> Option<BTreeMap<Arc<HelmetTag>, Option<Element>>> { None });
 
+    #[cfg(feature = "ssr")]
+    {
+        use super::ssr::StaticWriterState;
+        use crate::use_atom_setter;
+
+        let writer = props.writer.clone();
+        let format_title = props.format_title.clone();
+        let default_title = props.default_title.clone();
+        let set_static_writer_state = use_atom_setter::<StaticWriterState>();
+
+        use_state(move || {
+            set_static_writer_state(StaticWriterState {
+                format_title,
+                default_title,
+                writer,
+            })
+        });
+    }
+
+    // Remove pre-rendered tags.
     use_effect_with_deps(
-        move |_| {
-            guard.dispatch(HelmetBridgeGuardAction::Increment);
+        |_| {
+            let pre_rendered = head()
+                .query_selector_all("[data-bounce-helmet=pre-render]")
+                .expect_throw("failed to read pre rendered tags");
 
-            move || {
-                guard.dispatch(HelmetBridgeGuardAction::Decrement);
+            for i in 0..pre_rendered.length() {
+                if let Some(m) = pre_rendered.get(i) {
+                    if let Some(parent) = m.parent_node() {
+                        let _ = parent.remove_child(&m);
+                    }
+                }
             }
         },
-        root,
+        (),
     );
 
     use_effect_with_deps(
-        move |(helmet_states, props)| {
+        move |(helmet_states, format_title, default_title)| {
             // Calculate tags to render.
-            let to_render = merge_helmet_states(helmet_states, props);
+            let to_render =
+                merge_helmet_states(helmet_states, format_title.as_ref(), default_title.clone());
 
             let mut rendered = rendered.borrow_mut();
             *rendered = Some(render_tags(to_render, rendered.take()));
 
             || {}
         },
-        (helmet_states, props.clone()),
+        (
+            helmet_states,
+            props.format_title.clone(),
+            props.default_title.clone(),
+        ),
     );
 
     Html::default()

@@ -50,11 +50,34 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
         );
     }
 
-    // We drop the root state on SSR as well.
     #[allow(clippy::unused_unit)]
     {
         let _root_state = root_state.clone();
-        let _ = use_transitive_state!(move |_| -> () { _root_state.clear() }, ());
+        let _ = use_transitive_state!(
+            move |_| -> () {
+                #[cfg(feature = "ssr")]
+                #[cfg(feature = "helmet")]
+                {
+                    // Workaround to send helmet states back to static writer
+                    use crate::helmet::StaticWriterState;
+
+                    let states = _root_state.states();
+                    let writer_state = states.get_atom_value::<StaticWriterState>();
+
+                    if let Some(ref w) = writer_state.writer {
+                        w.send_helmet(
+                            states,
+                            writer_state.format_title.clone(),
+                            writer_state.default_title.clone(),
+                        );
+                    }
+                }
+
+                // We drop the root state on SSR as well.
+                _root_state.clear();
+            },
+            ()
+        );
     }
 
     html! {

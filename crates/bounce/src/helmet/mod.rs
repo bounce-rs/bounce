@@ -56,10 +56,24 @@
 //!     }
 //! }
 //! ```
+//!
+//! Bounce Helmet also supports [Server-side rendering](render_static).
+
+use yew::prelude::*;
 
 mod bridge;
 mod comp;
+#[cfg(feature = "ssr")]
+mod ssr;
 mod state;
 
 pub use bridge::{HelmetBridge, HelmetBridgeProps};
 pub use comp::{Helmet, HelmetProps};
+#[cfg(feature = "ssr")]
+pub(crate) use ssr::StaticWriterState;
+#[cfg(feature = "ssr")]
+#[cfg_attr(documenting, doc(cfg(feature = "ssr")))]
+pub use ssr::{render_static, StaticRenderer, StaticWriter};
+pub use state::HelmetTag;
+
+type FormatTitle = Callback<AttrValue, AttrValue>;

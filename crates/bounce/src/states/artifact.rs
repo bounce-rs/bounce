@@ -9,13 +9,13 @@ use crate::states::slice::{use_slice_dispatch, use_slice_value};
 use crate::utils::Id;
 use crate::Slice;
 
-enum ArtifactAction<T: PartialEq + 'static> {
+pub(crate) enum ArtifactAction<T: PartialEq + 'static> {
     Insert(Id, Rc<T>),
     Remove(Id),
 }
 
 #[derive(PartialEq, Slice)]
-struct ArtifactSlice<T>
+pub(crate) struct ArtifactSlice<T>
 where
     T: PartialEq + 'static,
 {
@@ -63,7 +63,7 @@ impl<T> ArtifactSlice<T>
 where
     T: PartialEq + 'static,
 {
-    fn get(&self) -> Vec<Rc<T>> {
+    pub(crate) fn get(&self) -> Vec<Rc<T>> {
         self.inner.values().cloned().collect()
     }
 }
@@ -175,6 +175,18 @@ where
                 || {}
             },
             (props.value.clone(), root.clone()),
+        );
+    }
+
+    #[allow(clippy::unused_unit)]
+    {
+        let _artifact_dispatch = artifact_dispatch.clone();
+        let _val = props.value.clone();
+        let _ = use_prepared_state!(
+            move |_| -> () {
+                _artifact_dispatch(ArtifactAction::Insert(id, _val));
+            },
+            ()
         );
     }
 
