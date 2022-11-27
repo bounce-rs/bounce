@@ -141,6 +141,7 @@ pub use feat_ssr::*;
 
 #[cfg(test)]
 #[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 mod ssr_tests {
     use std::collections::BTreeMap;
     use std::sync::Arc;
