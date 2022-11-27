@@ -17,7 +17,7 @@ struct Opt {
 }
 
 async fn render(script_content: String, url: String, queries: HashMap<String, String>) -> String {
-    let (_renderer, writer) = StaticRenderer::new();
+    let (renderer, writer) = StaticRenderer::new();
 
     let body_s = yew::ServerRenderer::<ServerApp>::with_props(move || ServerAppProps {
         url: url.into(),
@@ -32,8 +32,8 @@ async fn render(script_content: String, url: String, queries: HashMap<String, St
 
     let mut helmet_s = "".to_string();
 
-    let rendered: Vec<HelmetTag> = Vec::new();
-    let mut s = String::with_capacity(rendered.len());
+    let rendered: Vec<HelmetTag> = renderer.render().await;
+    let mut s = String::with_capacity(body_s.len());
 
     for tag in rendered {
         let _ = tag.write_static(&mut helmet_s);

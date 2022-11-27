@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 use futures::channel::oneshot as sync_oneshot;
 
 use crate::root_state::BounceStates;
+use crate::Atom;
 
 use super::state::{merge_helmet_states, HelmetState, HelmetTag};
 use super::FormatTitle;
@@ -16,7 +17,6 @@ use super::FormatTitle;
 use yew::prelude::*;
 
 pub struct StaticWriterInner {
-    start_rx: sync_oneshot::Receiver<()>,
     tx: sync_oneshot::Sender<Vec<HelmetTag>>,
 }
 
@@ -43,21 +43,16 @@ impl fmt::Debug for StaticWriter {
 }
 
 impl StaticWriter {
-    pub(crate) async fn send_helmet(
+    pub(crate) fn send_helmet(
         &self,
         states: BounceStates,
         format_title: Option<FormatTitle>,
         default_title: Option<AttrValue>,
     ) {
-        let StaticWriterInner { start_rx, tx } = match self.inner.lock().unwrap().take() {
+        let StaticWriterInner { tx } = match self.inner.lock().unwrap().take() {
             Some(m) => m,
             None => return,
         };
-
-        // The StaticRenderer is dropped, we don't render anything.
-        if start_rx.await.is_err() {
-            return;
-        }
 
         let helmet_states = states.get_artifacts::<HelmetState>();
         let tags = merge_helmet_states(&helmet_states, format_title.as_ref(), default_title);
@@ -77,20 +72,18 @@ impl StaticWriter {
 /// server-side rendered artifact.
 #[derive(Debug)]
 pub struct StaticRenderer {
-    start_tx: sync_oneshot::Sender<()>,
     rx: sync_oneshot::Receiver<Vec<HelmetTag>>,
 }
 
 impl StaticRenderer {
     /// Creates a new Static Renderer - Static Writer pair.
     pub fn new() -> (StaticRenderer, StaticWriter) {
-        let (start_tx, start_rx) = sync_oneshot::channel();
         let (tx, rx) = sync_oneshot::channel();
 
         (
-            StaticRenderer { start_tx, rx },
+            StaticRenderer { rx },
             StaticWriter {
-                inner: Arc::new(Mutex::new(Some(StaticWriterInner { start_rx, tx }))),
+                inner: Arc::new(Mutex::new(Some(StaticWriterInner { tx }))),
             },
         )
     }
@@ -102,7 +95,6 @@ impl StaticRenderer {
     /// For applications using streamed server-side rendering, the renderer will discard any tags
     /// rendered after this method is called.
     pub async fn render(self) -> Vec<HelmetTag> {
-        self.start_tx.send(()).expect("failed to start rendering.");
         self.rx.await.expect("failed to receive value.")
     }
 }
@@ -196,4 +188,11 @@ impl HelmetTag {
             }
         }
     }
+}
+
+#[derive(Atom, PartialEq, Default)]
+pub(crate) struct StaticWriterState {
+    pub writer: Option<StaticWriter>,
+    pub default_title: Option<AttrValue>,
+    pub format_title: Option<FormatTitle>,
 }

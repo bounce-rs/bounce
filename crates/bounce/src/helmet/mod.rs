@@ -68,6 +68,8 @@ mod state;
 pub use bridge::{HelmetBridge, HelmetBridgeProps};
 pub use comp::{Helmet, HelmetProps};
 #[cfg(feature = "ssr")]
+pub(crate) use ssr::StaticWriterState;
+#[cfg(feature = "ssr")]
 #[cfg_attr(documenting, doc(cfg(feature = "ssr")))]
 pub use ssr::{StaticRenderer, StaticWriter};
 pub use state::HelmetTag;

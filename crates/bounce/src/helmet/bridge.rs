@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use gloo::utils::head;
@@ -19,6 +18,8 @@ use crate::states::artifact::use_artifacts;
 #[cfg(debug_assertions)]
 mod guard {
     use super::*;
+
+    use std::rc::Rc;
 
     use crate::root_state::BounceRootState;
     use crate::states::slice::use_slice;
@@ -225,24 +226,20 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
     #[cfg(feature = "ssr")]
     {
-        use wasm_bindgen::prelude::*;
-        use yew::platform::spawn_local;
+        use super::ssr::StaticWriterState;
+        use crate::use_atom_setter;
 
-        use crate::root_state::BounceRootState;
-
-        let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
         let writer = props.writer.clone();
-        let states = root.states();
         let format_title = props.format_title.clone();
         let default_title = props.default_title.clone();
+        let set_static_writer_state = use_atom_setter::<StaticWriterState>();
+
         use_state(move || {
-            if let Some(writer) = writer {
-                spawn_local(async move {
-                    writer
-                        .send_helmet(states, format_title, default_title)
-                        .await;
-                });
-            }
+            set_static_writer_state(StaticWriterState {
+                format_title,
+                default_title,
+                writer,
+            })
         });
     }
 

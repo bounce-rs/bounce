@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-
-use bounce::helmet::{Helmet, HelmetBridge, StaticWriter};
+use bounce::helmet::{Helmet, HelmetBridge};
 use bounce::BounceRoot;
-use gloo::history::{AnyHistory, History, MemoryHistory};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -95,36 +92,49 @@ pub fn app() -> Html {
     }
 }
 
-#[derive(Properties, PartialEq, Eq, Debug)]
+#[cfg(feature = "ssr")]
+mod feat_ssr {
+    use super::*;
 
-pub struct ServerAppProps {
-    pub url: AttrValue,
-    pub queries: HashMap<String, String>,
-    pub helmet_writer: StaticWriter,
-}
+    use std::collections::HashMap;
 
-#[function_component]
-pub fn ServerApp(props: &ServerAppProps) -> Html {
-    let history = AnyHistory::from(MemoryHistory::new());
-    history
-        .push_with_query(&*props.url, &props.queries)
-        .unwrap();
+    use bounce::helmet::StaticWriter;
+    use yew_router::history::{AnyHistory, History, MemoryHistory};
 
-    html! {
-        <BounceRoot>
-            <HelmetBridge
-                default_title="Example"
-                {format_title}
-                writer={props.helmet_writer.clone()}
-            />
-            <Helmet>
-                <meta charset="utf-8" />
-                <meta name="description" content="default page" />
-            </Helmet>
-            <Router {history}>
-                <Switch<Route> render={render_fn} />
-                <Links />
-            </Router>
-        </BounceRoot>
+    #[derive(Properties, PartialEq, Eq, Debug)]
+
+    pub struct ServerAppProps {
+        pub url: AttrValue,
+        pub queries: HashMap<String, String>,
+        pub helmet_writer: StaticWriter,
+    }
+
+    #[function_component]
+    pub fn ServerApp(props: &ServerAppProps) -> Html {
+        let history = AnyHistory::from(MemoryHistory::new());
+        history
+            .push_with_query(&*props.url, &props.queries)
+            .unwrap();
+
+        html! {
+            <BounceRoot>
+                <HelmetBridge
+                    default_title="Example"
+                    {format_title}
+                    writer={props.helmet_writer.clone()}
+                />
+                <Helmet>
+                    <meta charset="utf-8" />
+                    <meta name="description" content="default page" />
+                </Helmet>
+                <Router {history}>
+                    <Switch<Route> render={render_fn} />
+                    <Links />
+                </Router>
+            </BounceRoot>
+        }
     }
 }
+
+#[cfg(feature = "ssr")]
+pub use feat_ssr::*;

@@ -178,6 +178,18 @@ where
         );
     }
 
+    #[allow(clippy::unused_unit)]
+    {
+        let _artifact_dispatch = artifact_dispatch.clone();
+        let _val = props.value.clone();
+        let _ = use_prepared_state!(
+            move |_| -> () {
+                _artifact_dispatch(ArtifactAction::Insert(id, _val));
+            },
+            ()
+        );
+    }
+
     use_effect_with_deps(
         move |_| {
             move || {
