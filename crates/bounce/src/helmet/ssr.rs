@@ -76,18 +76,6 @@ pub struct StaticRenderer {
 }
 
 impl StaticRenderer {
-    /// Creates a new Static Renderer - Static Writer pair.
-    pub fn new() -> (StaticRenderer, StaticWriter) {
-        let (tx, rx) = sync_oneshot::channel();
-
-        (
-            StaticRenderer { rx },
-            StaticWriter {
-                inner: Arc::new(Mutex::new(Some(StaticWriterInner { tx }))),
-            },
-        )
-    }
-
     /// Renders the helmet tags collected in the current renderer.
     ///
     /// # Notes
@@ -195,4 +183,16 @@ pub(crate) struct StaticWriterState {
     pub writer: Option<StaticWriter>,
     pub default_title: Option<AttrValue>,
     pub format_title: Option<FormatTitle>,
+}
+
+/// Creates a new Static Renderer - Static Writer pair.
+pub fn render_static() -> (StaticRenderer, StaticWriter) {
+    let (tx, rx) = sync_oneshot::channel();
+
+    (
+        StaticRenderer { rx },
+        StaticWriter {
+            inner: Arc::new(Mutex::new(Some(StaticWriterInner { tx }))),
+        },
+    )
 }

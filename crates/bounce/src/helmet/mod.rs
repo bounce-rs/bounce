@@ -71,7 +71,7 @@ pub use comp::{Helmet, HelmetProps};
 pub(crate) use ssr::StaticWriterState;
 #[cfg(feature = "ssr")]
 #[cfg_attr(documenting, doc(cfg(feature = "ssr")))]
-pub use ssr::{StaticRenderer, StaticWriter};
+pub use ssr::{render_static, StaticRenderer, StaticWriter};
 pub use state::HelmetTag;
 
 type FormatTitle = Callback<AttrValue, AttrValue>;

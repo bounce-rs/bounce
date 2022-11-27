@@ -4,7 +4,7 @@ mod target_non_wasm32 {
     use std::fmt::Write;
     use std::path::PathBuf;
 
-    use bounce::helmet::{HelmetTag, StaticRenderer};
+    use bounce::helmet::{self, HelmetTag};
     use clap::Parser;
     use helmet_ssr::{ServerApp, ServerAppProps};
     use warp::path::FullPath;
@@ -23,7 +23,7 @@ mod target_non_wasm32 {
         url: String,
         queries: HashMap<String, String>,
     ) -> String {
-        let (renderer, writer) = StaticRenderer::new();
+        let (renderer, writer) = helmet::render_static();
 
         let body_s = yew::ServerRenderer::<ServerApp>::with_props(move || ServerAppProps {
             url: url.into(),

@@ -147,11 +147,11 @@ mod ssr_tests {
     use std::sync::Arc;
 
     use super::*;
-    use bounce::helmet::{HelmetTag, StaticRenderer};
+    use bounce::helmet::{self, HelmetTag};
 
     #[tokio::test]
     async fn test_render() {
-        let (renderer, writer) = StaticRenderer::new();
+        let (renderer, writer) = helmet::render_static();
 
         yew::ServerRenderer::<ServerApp>::with_props(move || ServerAppProps {
             url: "/".into(),
