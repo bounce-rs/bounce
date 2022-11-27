@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::fmt::Write;
 use std::iter;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 // The static renderer can run outside of the Yew runtime.
@@ -18,7 +17,7 @@ use yew::prelude::*;
 
 pub struct StaticWriterInner {
     start_rx: sync_oneshot::Receiver<()>,
-    tx: sync_oneshot::Sender<Vec<u8>>,
+    tx: sync_oneshot::Sender<Vec<HelmetTag>>,
 }
 
 /// The writer of [StaticRenderer].
@@ -65,13 +64,9 @@ impl StaticWriter {
 
         // We ignore cases where the StaticRenderer is dropped.
         let _ = tx.send(
-            bincode::serialize(
-                &tags
-                    .into_iter()
-                    .map(|m| Rc::try_unwrap(m).unwrap_or_else(|e| (*e).clone()))
-                    .collect::<Vec<_>>(),
-            )
-            .expect("failed to serialize helmet tags"),
+            tags.into_iter()
+                .map(|m| Arc::try_unwrap(m).unwrap_or_else(|e| (*e).clone()))
+                .collect::<Vec<_>>(),
         );
     }
 }
@@ -83,7 +78,7 @@ impl StaticWriter {
 #[derive(Debug)]
 pub struct StaticRenderer {
     start_tx: sync_oneshot::Sender<()>,
-    rx: sync_oneshot::Receiver<Vec<u8>>,
+    rx: sync_oneshot::Receiver<Vec<HelmetTag>>,
 }
 
 impl StaticRenderer {
@@ -108,16 +103,14 @@ impl StaticRenderer {
     /// rendered after this method is called.
     pub async fn render(self) -> Vec<HelmetTag> {
         self.start_tx.send(()).expect("failed to start rendering.");
-        let helmet_buf = self.rx.await.expect("failed to receive value.");
-
-        bincode::deserialize(&helmet_buf).expect("failed to deserialize helmet tags")
+        self.rx.await.expect("failed to receive value.")
     }
 }
 
 impl HelmetTag {
     fn write_attrs_from(
         w: &mut dyn Write,
-        attrs: &BTreeMap<Rc<str>, Rc<str>>,
+        attrs: &BTreeMap<Arc<str>, Arc<str>>,
         write_data_attr: bool,
     ) -> fmt::Result {
         let mut data_tag_written = false;

@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use gloo::utils::head;
 use wasm_bindgen::UnwrapThrowExt;
@@ -111,9 +112,9 @@ impl fmt::Debug for HelmetBridgeProps {
 
 /// Renders tags
 fn render_tags(
-    to_render: BTreeSet<Rc<HelmetTag>>,
-    mut last_rendered: Option<BTreeMap<Rc<HelmetTag>, Option<Element>>>,
-) -> BTreeMap<Rc<HelmetTag>, Option<Element>> {
+    to_render: BTreeSet<Arc<HelmetTag>>,
+    mut last_rendered: Option<BTreeMap<Arc<HelmetTag>, Option<Element>>>,
+) -> BTreeMap<Arc<HelmetTag>, Option<Element>> {
     let mut rendered = BTreeMap::new();
 
     let mut next_last_rendered = None;
@@ -220,7 +221,7 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
     let helmet_states = use_artifacts::<HelmetState>();
 
-    let rendered = use_mut_ref(|| -> Option<BTreeMap<Rc<HelmetTag>, Option<Element>>> { None });
+    let rendered = use_mut_ref(|| -> Option<BTreeMap<Arc<HelmetTag>, Option<Element>>> { None });
 
     #[cfg(feature = "ssr")]
     {

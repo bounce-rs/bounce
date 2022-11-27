@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use wasm_bindgen::throw_str;
 use yew::prelude::*;
@@ -44,7 +45,7 @@ fn collect_text_content(tag: &VTag) -> String {
     collect_str_in_children(&tag.children().clone().into())
 }
 
-fn collect_attributes(tag: &VTag) -> BTreeMap<Rc<str>, Rc<str>> {
+fn collect_attributes(tag: &VTag) -> BTreeMap<Arc<str>, Arc<str>> {
     let mut map = BTreeMap::new();
 
     for (k, v) in tag.attributes.iter() {
@@ -76,8 +77,8 @@ fn assert_empty_children(tag: &VTag) {
 
 #[derive(Properties, PartialEq, Clone)]
 struct ScriptHelmetProps {
-    attrs: BTreeMap<Rc<str>, Rc<str>>,
-    content: Rc<str>,
+    attrs: BTreeMap<Arc<str>, Arc<str>>,
+    content: Arc<str>,
 }
 
 // A special component to render the script tag with a unique id.
@@ -86,7 +87,7 @@ fn script_helmet(props: &ScriptHelmetProps) -> Html {
     let id = *use_state(Id::new);
     let ScriptHelmetProps { attrs, content } = props.clone();
 
-    let tags = vec![Rc::new(HelmetTag::Script {
+    let tags = vec![Arc::new(HelmetTag::Script {
         attrs,
         content,
         _id: id,
@@ -134,7 +135,7 @@ pub fn helmet(props: &HelmetProps) -> Html {
 
                 "script" => {
                     let attrs = collect_attributes(&m);
-                    let content: Rc<str> = collect_text_content(&m).into();
+                    let content: Arc<str> = collect_text_content(&m).into();
 
                     script_helmets.push(html! { <ScriptHelmet {attrs} {content} /> });
 
@@ -142,7 +143,7 @@ pub fn helmet(props: &HelmetProps) -> Html {
                 }
                 "style" => {
                     let attrs = collect_attributes(&m);
-                    let content: Rc<str> = collect_text_content(&m).into();
+                    let content: Arc<str> = collect_text_content(&m).into();
 
                     Some(HelmetTag::Style { attrs, content }.into())
                 }
@@ -182,7 +183,7 @@ pub fn helmet(props: &HelmetProps) -> Html {
             },
             _ => throw_str("unsupported helmet node type, expect a supported helmet tag."),
         })
-        .collect::<Vec<Rc<HelmetTag>>>();
+        .collect::<Vec<Arc<HelmetTag>>>();
 
     let state = Rc::new(HelmetState { tags });
 
