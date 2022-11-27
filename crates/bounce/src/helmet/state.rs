@@ -29,7 +29,7 @@ pub(crate) struct HelmetState {
 
 /// An element supported by `<Helmet />` with its attributes and content.
 ///
-/// You can use [`write_static`](Self::write_static) to write the content into a [`Write`](fmt::Write).
+/// You can use [`write_static`](Self::write_static) to write the content into a [`Write`](std::fmt::Write).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HelmetTag {
     /// `<title>...</title>`

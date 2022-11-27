@@ -56,6 +56,8 @@
 //!     }
 //! }
 //! ```
+//!
+//! Bounce Helmet also supports [Server-side rendering](render_static).
 
 use yew::prelude::*;
 

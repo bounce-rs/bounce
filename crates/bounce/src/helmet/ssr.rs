@@ -186,6 +186,55 @@ pub(crate) struct StaticWriterState {
 }
 
 /// Creates a new Static Renderer - Static Writer pair.
+///
+/// This function creates a `StaticRenderer` and a `StaticWriter`.
+/// You can pass the `StaticWriter` to the `writer` props of a `HelmetBridge`.
+/// After the body is rendered, helmet tags can be read by calling `StaticRenderer.render()`.
+///
+/// # Example
+///
+/// ```
+/// # use yew::prelude::*;
+/// # use bounce::BounceRoot;
+/// # use bounce::helmet::{StaticWriter, HelmetBridge, Helmet, render_static};
+/// #[derive(Properties, PartialEq, Eq)]
+/// pub struct ServerAppProps {
+///     pub helmet_writer: StaticWriter,
+/// }
+///
+/// #[function_component]
+/// pub fn ServerApp(props: &ServerAppProps) -> Html {
+///     html! {
+///         <BounceRoot>
+///             <HelmetBridge
+///                 default_title="Example"
+///                 writer={props.helmet_writer.clone()}
+///             />
+///             <Helmet>
+///                 <meta charset="utf-8" />
+///             </Helmet>
+///         </BounceRoot>
+///     }
+/// }
+///
+/// # async fn function() {
+/// let (helmet_renderer, helmet_writer) = render_static();
+/// let rendered_body = yew::ServerRenderer::<ServerApp>::with_props(
+///     move || ServerAppProps { helmet_writer }
+/// )
+///     .render().await;
+/// let rendered_helmet_tags = helmet_renderer.render().await;
+/// let mut rendered_head = String::new();
+/// for t in rendered_helmet_tags {
+///     t.write_static(&mut rendered_head).unwrap();
+/// }
+///
+/// assert_eq!(
+///     rendered_head,
+///     r#"<meta charset="utf-8" data-bounce-helmet="pre-render" />"#
+/// );
+/// # }
+/// ```
 pub fn render_static() -> (StaticRenderer, StaticWriter) {
     let (tx, rx) = sync_oneshot::channel();
 
