@@ -36,4 +36,4 @@ wasm-bindgen-test = "0.3.30"
 
 [features]
 csr = ["yew/csr", "yew/hydration"]
-ssr = ["yew/ssr"]
+ssr = ["yew/ssr", "bounce/ssr"]
