@@ -373,11 +373,11 @@ pub struct UseQueryHandle<T>
 where
     T: Query + 'static,
 {
-    input: Rc<T::Input>,
-    state_id: Id,
-    result: QueryResult<T>,
-    run_query: Rc<dyn Fn(RunQueryInput<T>)>,
-    dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
+    pub(super) input: Rc<T::Input>,
+    pub(super) state_id: Id,
+    pub(super) result: QueryResult<T>,
+    pub(super) run_query: Rc<dyn Fn(RunQueryInput<T>)>,
+    pub(super) dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
 }
 
 impl<T> UseQueryHandle<T>
@@ -520,17 +520,14 @@ where
     {
         let input = input.clone();
         let run_query = run_query.clone();
-        let value_state = value_state.clone();
 
         use_memo(
             move |_| {
-                if matches!(value_state.value, Some(QueryStateValue::Outdated(_))) {
-                    run_query(RunQueryInput {
-                        id,
-                        input: input.clone(),
-                        sender: Rc::default(),
-                    });
-                }
+                run_query(RunQueryInput {
+                    id,
+                    input: input.clone(),
+                    sender: Rc::default(),
+                });
             },
             (),
         );

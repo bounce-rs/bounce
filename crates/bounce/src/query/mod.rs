@@ -17,11 +17,13 @@
 //! If your backend is GraphQL, you can use graphql-client in conjunction with reqwest.
 
 mod mutation;
+mod prepared_query;
 mod query_;
 mod query_value;
 mod status;
 
 pub use mutation::{use_mutation_value, Mutation, MutationResult, UseMutationValueHandle};
+pub use prepared_query::use_prepared_query;
 pub use query_::{use_query, Query, QueryResult, UseQueryHandle};
 pub use query_value::{use_query_value, UseQueryValueHandle};
 pub use status::QueryStatus;
