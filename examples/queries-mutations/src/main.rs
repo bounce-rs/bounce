@@ -3,7 +3,8 @@ use std::rc::Rc;
 use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{
-    use_mutation_value, use_query_value, Mutation, MutationResult, Query, QueryResult, QueryStatus,
+    use_mutation_value, use_query, use_query_value, Mutation, MutationResult, Query, QueryResult,
+    QueryStatus,
 };
 use bounce::BounceRoot;
 use log::Level;
@@ -90,6 +91,22 @@ fn content(props: &ContentProps) -> Html {
     }
 }
 
+#[function_component(SuspendContent)]
+fn suspend_content(props: &ContentProps) -> HtmlResult {
+    let uuid_state = use_query::<UuidQuery>(().into())?;
+
+    let text = match uuid_state.as_deref() {
+        Ok(m) => format!("Random UUID: {}", m.uuid),
+        Err(_) => unreachable!(),
+    };
+
+    Ok(html! {
+        <>
+            <div id={format!("query-content-{}", props.ord)}>{text}</div>
+        </>
+    })
+}
+
 #[function_component(Refresher)]
 fn refresher() -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
@@ -158,15 +175,20 @@ fn echo() -> Html {
 
 #[function_component(App)]
 fn app() -> Html {
-    let contents = (0..2)
-        .map(|m| html! { <Content ord={m} /> })
-        .collect::<Vec<_>>();
+    let fallback = html! {
+        <>
+            <div id={"query-content-0"}>{"Loading UUID, Please wait..."}</div>
+        </>
+    };
 
     html! {
         <BounceRoot>
             <h1>{"Query"}</h1>
             <div>{"When content is loading, only 1 request will be sent for the same input."}</div>
-            {contents}
+            <Suspense {fallback}>
+                <Content ord={0} />
+            </Suspense>
+            <Content ord={1} />
             <Refresher />
             <h1>{"Mutation"}</h1>
             <Echo />

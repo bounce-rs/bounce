@@ -18,8 +18,10 @@
 
 mod mutation;
 mod query_;
+mod query_value;
 mod status;
 
 pub use mutation::{use_mutation_value, Mutation, MutationResult, UseMutationValueHandle};
-pub use query_::{use_query_value, Query, QueryResult, UseQueryValueHandle};
+pub use query_::{use_query, Query, QueryResult, UseQueryHandle};
+pub use query_value::{use_query_value, UseQueryValueHandle};
 pub use status::QueryStatus;

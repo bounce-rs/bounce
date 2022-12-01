@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use std::fmt;
 use std::hash::Hash;
 use std::marker::PhantomData;
+use std::ops::Deref;
 use std::rc::Rc;
 
 use async_trait::async_trait;
 use futures::channel::oneshot;
 use yew::prelude::*;
+use yew::suspense::{Suspension, SuspensionResult};
 
-use super::status::QueryStatus;
 use crate::future_notion;
 use crate::root_state::BounceStates;
 use crate::states::future_notion::{use_future_notion_runner, Deferred};
@@ -91,13 +92,13 @@ pub trait Query: PartialEq {
 
 type RunQuerySender<T> = Rc<RefCell<Option<oneshot::Sender<QueryResult<T>>>>>;
 
-struct RunQueryInput<T>
+pub(super) struct RunQueryInput<T>
 where
     T: Query + 'static,
 {
-    id: Id,
-    input: Rc<T::Input>,
-    sender: RunQuerySender<T>,
+    pub id: Id,
+    pub input: Rc<T::Input>,
+    pub sender: RunQuerySender<T>,
 }
 
 impl<T> Clone for RunQueryInput<T>
@@ -114,7 +115,7 @@ where
 }
 
 #[derive(PartialEq)]
-struct IsCurrentQuery<T>
+pub(super) struct IsCurrentQuery<T>
 where
     T: Query + 'static,
 {
@@ -154,7 +155,10 @@ where
 }
 
 #[future_notion(RunQuery)]
-async fn run_query<T>(states: &BounceStates, input: &RunQueryInput<T>) -> Option<QueryResult<T>>
+pub(super) async fn run_query<T>(
+    states: &BounceStates,
+    input: &RunQueryInput<T>,
+) -> Option<QueryResult<T>>
 where
     T: Query + 'static,
 {
@@ -188,7 +192,7 @@ impl<T> QueryStateValue<T>
 where
     T: Query + 'static,
 {
-    fn id(&self) -> Id {
+    pub(crate) fn id(&self) -> Id {
         match self {
             Self::Loading(ref id) => *id,
             Self::Completed(ref m) => m.0,
@@ -210,7 +214,7 @@ where
     }
 }
 
-enum QueryStateAction<T>
+pub(super) enum QueryStateAction<T>
 where
     T: Query + 'static,
 {
@@ -219,7 +223,7 @@ where
 
 #[derive(Slice)]
 #[bounce(with_notion(Deferred<RunQuery<T>>))]
-struct QueryState<T>
+pub(super) struct QueryState<T>
 where
     T: Query + 'static,
 {
@@ -340,11 +344,11 @@ where
 }
 
 #[derive(PartialEq)]
-struct QuerySelector<T>
+pub(super) struct QuerySelector<T>
 where
     T: Query + 'static,
 {
-    value: Option<QueryStateValue<T>>,
+    pub value: Option<QueryStateValue<T>>,
 }
 
 impl<T> InputSelector for QuerySelector<T>
@@ -364,55 +368,29 @@ where
     }
 }
 
-/// A handle returned by [`use_query_value`].
-pub struct UseQueryValueHandle<T>
+/// A handle returned by [`use_query`].
+pub struct UseQueryHandle<T>
 where
     T: Query + 'static,
 {
     input: Rc<T::Input>,
-    value: Option<QueryStateValue<T>>,
+    state_id: Id,
+    result: QueryResult<T>,
     run_query: Rc<dyn Fn(RunQueryInput<T>)>,
     dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
 }
 
-impl<T> UseQueryValueHandle<T>
+impl<T> UseQueryHandle<T>
 where
     T: Query + 'static,
 {
-    /// Returns the status of current query.
-    pub fn status(&self) -> QueryStatus {
-        match self.value {
-            Some(QueryStateValue::Completed((_, Ok(_))))
-            | Some(QueryStateValue::Outdated((_, Ok(_)))) => QueryStatus::Ok,
-            Some(QueryStateValue::Completed((_, Err(_))))
-            | Some(QueryStateValue::Outdated((_, Err(_)))) => QueryStatus::Err,
-            Some(QueryStateValue::Loading(_)) => QueryStatus::Loading,
-            None => QueryStatus::Idle,
-        }
-    }
-
-    /// Returns the result of current query (if any).
-    ///
-    /// - `None` indicates that the query is currently loading.
-    /// - `Some(Ok(m))` indicates that the query is successful and the content is stored in `m`.
-    /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
-    pub fn result(&self) -> Option<QueryResult<T>> {
-        match self.value {
-            Some(QueryStateValue::Completed((_, ref m)))
-            | Some(QueryStateValue::Outdated((_, ref m))) => Some(m.clone()),
-            _ => None,
-        }
-    }
-
     /// Refreshes the query.
     ///
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
-        if let Some(ref m) = self.value {
-            (self.dispatch_state)(QueryStateAction::Refresh(
-                (m.id(), self.input.clone()).into(),
-            ));
-        }
+        (self.dispatch_state)(QueryStateAction::Refresh(
+            (self.state_id, self.input.clone()).into(),
+        ));
 
         let id = Id::new();
 
@@ -428,34 +406,46 @@ where
     }
 }
 
-impl<T> Clone for UseQueryValueHandle<T>
+impl<T> Clone for UseQueryHandle<T>
 where
     T: Query + 'static,
 {
     fn clone(&self) -> Self {
         Self {
             input: self.input.clone(),
-            value: self.value.clone(),
+            result: self.result.clone(),
+            state_id: self.state_id,
             run_query: self.run_query.clone(),
             dispatch_state: self.dispatch_state.clone(),
         }
     }
 }
 
-impl<T> fmt::Debug for UseQueryValueHandle<T>
+impl<T> Deref for UseQueryHandle<T>
+where
+    T: Query + 'static,
+{
+    type Target = QueryResult<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.result
+    }
+}
+
+impl<T> fmt::Debug for UseQueryHandle<T>
 where
     T: Query + fmt::Debug + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("UseQueryValueHandle")
-            .field("value", &self.value)
+        f.debug_struct("UseQueryHandle")
+            .field("value", &self.result)
             .finish()
     }
 }
 
-/// A hook to run a query and subscribes to its result.
+/// A hook to run a query and subscribes to its result, suspending while fetching.
 ///
-/// A query is a state that cached by an Input and queried automatically upon initialisation of the
+/// A query is a state that is cached by an Input and queried automatically upon initialisation of the
 /// state and re-queried when the input changes.
 ///
 /// Queries are usually tied to idempotent methods like `GET`, which means that they should be side-effect
@@ -469,7 +459,7 @@ where
 /// use std::rc::Rc;
 /// use std::convert::Infallible;
 /// use bounce::prelude::*;
-/// use bounce::query::{Query, QueryResult, use_query_value};
+/// use bounce::query::{Query, QueryResult, use_query};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
 ///
@@ -497,35 +487,62 @@ where
 /// }
 ///
 /// #[function_component(Comp)]
-/// fn comp() -> Html {
-///     let user = use_query_value::<UserQuery>(0.into());
+/// fn comp() -> HtmlResult {
+///     let user = use_query::<UserQuery>(0.into())?;
 ///
-///     match user.result() {
-///         // The result is None if the query is currently loading.
-///         None => html! {<div>{"loading..."}</div>},
+///     match user.as_ref() {
 ///         // The result is Some(Ok(_)) if the query has loaded successfully.
-///         Some(Ok(m)) => html! {<div>{"User's name is "}{m.value.name.to_string()}</div>},
+///         Ok(m) => Ok(html! {<div>{"User's name is "}{m.value.name.to_string()}</div>}),
 ///         // The result is Some(Err(_)) if an error is returned during fetching.
-///         Some(Err(e)) => html! {<div>{"Oops, something went wrong."}</div>},
+///         Err(_e) => Ok(html! {<div>{"Oops, something went wrong."}</div>}),
 ///     }
 /// }
 /// ```
 #[hook]
-pub fn use_query_value<T>(input: Rc<T::Input>) -> UseQueryValueHandle<T>
+pub fn use_query<T>(input: Rc<T::Input>) -> SuspensionResult<UseQueryHandle<T>>
 where
     T: Query + 'static,
 {
     let id = *use_memo(|_| Id::new(), ());
-    let value = use_input_selector_value::<QuerySelector<T>>(input.clone());
+    let value_state = use_input_selector_value::<QuerySelector<T>>(input.clone());
     let dispatch_state = use_slice_dispatch::<QueryState<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
+
+    let value = use_memo(
+        |v| match v.value {
+            Some(QueryStateValue::Loading(_)) | None => Err(Suspension::new()),
+            Some(QueryStateValue::Completed((id, ref m)))
+            | Some(QueryStateValue::Outdated((id, ref m))) => Ok((id, m.clone())),
+        },
+        value_state.clone(),
+    );
 
     {
         let input = input.clone();
         let run_query = run_query.clone();
+        let value_state = value_state.clone();
+
+        use_memo(
+            move |_| {
+                if matches!(value_state.value, Some(QueryStateValue::Outdated(_))) {
+                    run_query(RunQueryInput {
+                        id,
+                        input: input.clone(),
+                        sender: Rc::default(),
+                    });
+                }
+            },
+            (),
+        );
+    }
+
+    {
+        let input = input.clone();
+        let run_query = run_query.clone();
+
         use_effect_with_deps(
-            move |(id, input, value)| {
-                if value.is_none() || matches!(value, Some(QueryStateValue::Outdated(_))) {
+            move |(id, input, value_state)| {
+                if matches!(value_state.value, Some(QueryStateValue::Outdated(_))) {
                     run_query(RunQueryInput {
                         id: *id,
                         input: input.clone(),
@@ -535,14 +552,19 @@ where
 
                 || {}
             },
-            (id, input, value.value.clone()),
+            (id, input, value_state),
         );
     }
 
-    UseQueryValueHandle {
-        input,
-        dispatch_state,
-        run_query,
-        value: value.value.clone(),
-    }
+    value
+        .as_ref()
+        .as_ref()
+        .map(|(id, value)| UseQueryHandle {
+            state_id: *id,
+            input,
+            dispatch_state,
+            run_query,
+            result: value.clone(),
+        })
+        .map_err(|(s, _)| s.clone())
 }
