@@ -22,7 +22,7 @@ jobs:
           profile: minimal
 
       - name: Restore Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Setup Rust wasm
         uses: actions-rs/toolchain@v1
@@ -55,7 +55,7 @@ jobs:
           profile: minimal
 
       - name: Restore Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Setup Rust wasm
         uses: actions-rs/toolchain@v1
@@ -94,7 +94,7 @@ jobs:
           profile: minimal
 
       - name: Restore Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Setup Rust wasm
         uses: actions-rs/toolchain@v1
@@ -135,7 +135,7 @@ jobs:
           profile: minimal
 
       - name: Restore Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Run cargo publish --dry-run for bounce-macros
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'

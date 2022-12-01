@@ -22,7 +22,7 @@ jobs:
           profile: minimal
 
       - name: Restore Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Install mdbook
         uses: actions-rs/cargo@v1
