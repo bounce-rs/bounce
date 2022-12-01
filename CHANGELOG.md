@@ -3,6 +3,7 @@
 ### Other Changes
 
 - Helmet API now supports SSR.
+- Added `use_query` which fetches data via Suspense.
 
 ## Release 0.4.0
 
