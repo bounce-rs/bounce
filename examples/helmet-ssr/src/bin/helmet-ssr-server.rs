@@ -14,7 +14,7 @@ mod target_non_wasm32 {
     #[derive(Parser, Debug)]
     struct Opt {
         /// the "dist" created by trunk directory to be served for hydration.
-        #[clap(short, long, parse(from_os_str))]
+        #[clap(short, long)]
         dir: PathBuf,
     }
 
