@@ -63,7 +63,7 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 /// }
 /// ```
 ///
-/// See: [`use_query_value`]
+/// See: [`use_query`] and [`use_query_value`](super::use_query_value)
 #[async_trait(?Send)]
 pub trait Query: PartialEq {
     /// The Input type of a query.
