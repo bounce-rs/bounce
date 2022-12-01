@@ -7,7 +7,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use async_trait::async_trait;
-use futures::channel::oneshot;
+use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 

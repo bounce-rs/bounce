@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-use futures::channel::oneshot;
+use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
 use super::query_::{
