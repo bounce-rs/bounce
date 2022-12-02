@@ -110,7 +110,7 @@ where
 {
     Loading(Id),
     Completed { id: Id, result: QueryResult<T> },
-    Outdated((Id, QueryResult<T>)),
+    Outdated { id: Id, result: QueryResult<T> },
 }
 
 impl<T> QueryStateValue<T>
@@ -121,7 +121,7 @@ where
         match self {
             Self::Loading(ref id) => *id,
             Self::Completed { ref id, .. } => *id,
-            Self::Outdated(ref m) => m.0,
+            Self::Outdated { ref id, .. } => *id,
         }
     }
 }
@@ -137,7 +137,10 @@ where
                 id: *id,
                 result: result.clone(),
             },
-            Self::Outdated(ref m) => Self::Outdated(m.clone()),
+            Self::Outdated { id, ref result } => Self::Outdated {
+                id: *id,
+                result: result.clone(),
+            },
         }
     }
 }
@@ -241,7 +244,7 @@ where
             Deferred::Pending { ref input } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
                 if let Some(m) = self.queries.get(&input) {
-                    if !matches!(m, QueryStateValue::Outdated(_)) {
+                    if !matches!(m, QueryStateValue::Outdated { .. }) {
                         return self;
                     }
                 }
@@ -290,7 +293,10 @@ where
                         let mut queries = self.queries.clone();
                         queries.insert(
                             input.clone(),
-                            QueryStateValue::Outdated((id, current_result.clone())),
+                            QueryStateValue::Outdated {
+                                id,
+                                result: current_result.clone(),
+                            },
                         );
 
                         return Self {

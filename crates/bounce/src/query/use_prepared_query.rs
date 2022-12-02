@@ -119,7 +119,7 @@ where
         |v| match v.value {
             Some(QueryStateValue::Loading(_)) | None => Err(Suspension::new()),
             Some(QueryStateValue::Completed { id, result: ref m })
-            | Some(QueryStateValue::Outdated((id, ref m))) => Ok((id, m.clone())),
+            | Some(QueryStateValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
         },
         value_state.clone(),
     );
@@ -152,7 +152,7 @@ where
 
         use_effect_with_deps(
             move |(id, input, value_state)| {
-                if matches!(value_state.value, Some(QueryStateValue::Outdated(_))) {
+                if matches!(value_state.value, Some(QueryStateValue::Outdated { .. })) {
                     run_query(RunQueryInput {
                         id: *id,
                         input: input.clone(),
