@@ -106,7 +106,7 @@ where
 /// use bounce::query::{Mutation, MutationResult, use_mutation_value, QueryStatus};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
-/// use wasm_bindgen_futures::spawn_local;
+/// use yew::platform::spawn_local;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct User {
