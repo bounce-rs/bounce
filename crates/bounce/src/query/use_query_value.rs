@@ -5,7 +5,7 @@ use std::rc::Rc;
 use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
-use super::use_query::{
+use super::query_states::{
     QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
 };
 

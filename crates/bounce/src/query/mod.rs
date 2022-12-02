@@ -17,6 +17,7 @@
 //! If your backend is GraphQL, you can use graphql-client in conjunction with reqwest.
 
 mod mutation_states;
+mod query_states;
 mod status;
 mod traits;
 mod use_mutation_value;

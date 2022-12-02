@@ -5,11 +5,11 @@ use serde::ser::Serialize;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 
-use super::traits::Query;
-use super::use_query::{
+use super::query_states::{
     QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
-    UseQueryHandle,
 };
+use super::traits::Query;
+use super::use_query::UseQueryHandle;
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
