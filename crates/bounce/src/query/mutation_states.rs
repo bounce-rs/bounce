@@ -3,7 +3,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use futures::channel::oneshot;
+use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
 use super::traits::{Mutation, MutationResult};

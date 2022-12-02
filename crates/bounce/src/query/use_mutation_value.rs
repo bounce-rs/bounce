@@ -2,7 +2,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use futures::channel::oneshot;
+use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
 use super::status::QueryStatus;
