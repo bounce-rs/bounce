@@ -87,16 +87,21 @@ pub(super) async fn run_query<T>(
 where
     T: Query + 'static,
 {
-    let is_current_query = states
-        .get_input_selector_value::<IsCurrentQuery<T>>((input.id, input.input.clone()).into());
+    let RunQueryInput { id, input, sender } = input.clone();
+
+    let is_current_query =
+        states.get_input_selector_value::<IsCurrentQuery<T>>((id, input.clone()).into());
 
     if !is_current_query.inner {
+        // We drop the channel.
+        sender.borrow_mut().take();
+
         return None;
     }
 
-    let result = T::query(states, input.input.clone()).await;
+    let result = T::query(states, input.clone()).await;
 
-    if let Some(m) = input.sender.borrow_mut().take() {
+    if let Some(m) = sender.borrow_mut().take() {
         let _result = m.send(result.clone());
     }
 
@@ -239,7 +244,7 @@ impl<T> WithNotion<Deferred<RunQuery<T>>> for QueryState<T>
 where
     T: Query + 'static,
 {
-    fn apply(self: Rc<Self>, notion: Rc<Deferred<RunQuery<T>>>) -> Rc<Self> {
+    fn apply(mut self: Rc<Self>, notion: Rc<Deferred<RunQuery<T>>>) -> Rc<Self> {
         match *notion {
             Deferred::Pending { ref input } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
@@ -249,14 +254,10 @@ where
                     }
                 }
 
-                let mut queries = self.queries.clone();
-                queries.insert(input, QueryStateValue::Loading { id });
+                let this = Rc::make_mut(&mut self);
+                this.ctr += 1;
 
-                Self {
-                    ctr: self.ctr + 1,
-                    queries,
-                }
-                .into()
+                this.queries.insert(input, QueryStateValue::Loading { id });
             }
             Deferred::Completed {
                 ref input,
@@ -264,52 +265,42 @@ where
             } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
                 if let Some(ref output) = **output {
-                    let mut queries = self.queries.clone();
-                    queries.insert(
+                    let this = Rc::make_mut(&mut self);
+                    this.ctr += 1;
+
+                    this.queries.insert(
                         input,
                         QueryStateValue::Completed {
                             id,
                             result: (*output).clone(),
                         },
                     );
-
-                    Self {
-                        ctr: self.ctr + 1,
-                        queries,
-                    }
-                    .into()
-                } else {
-                    self
                 }
             }
             Deferred::Outdated { ref input } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
                 if let Some(QueryStateValue::Completed {
-                    id: ref current_id,
+                    id: current_id,
                     result: current_result,
-                }) = self.queries.get(&input)
+                }) = self.queries.get(&input).cloned()
                 {
-                    if *current_id == id {
-                        let mut queries = self.queries.clone();
-                        queries.insert(
+                    if current_id == id {
+                        let this = Rc::make_mut(&mut self);
+                        this.ctr += 1;
+
+                        this.queries.insert(
                             input.clone(),
                             QueryStateValue::Outdated {
                                 id,
-                                result: current_result.clone(),
+                                result: current_result,
                             },
                         );
-
-                        return Self {
-                            ctr: self.ctr + 1,
-                            queries,
-                        }
-                        .into();
                     }
                 }
-
-                self
             }
         }
+
+        self
     }
 }
 

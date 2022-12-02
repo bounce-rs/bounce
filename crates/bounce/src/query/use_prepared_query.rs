@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use serde::de::Deserialize;
 use serde::ser::Serialize;
+use wasm_bindgen::UnwrapThrowExt;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 
@@ -10,6 +11,7 @@ use super::query_states::{
 };
 use super::traits::Query;
 use super::use_query::UseQueryHandle;
+use crate::root_state::BounceRootState;
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
@@ -86,14 +88,15 @@ where
 
     let prepared_value = {
         let _run_query = run_query.clone();
+        let _root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
         let prepared_value = use_prepared_state!(
             async move |input| -> std::result::Result<T, T::Error> {
                 use std::cell::RefCell;
+                use std::time::Duration;
 
                 use yew::platform::pinned::oneshot;
-
-                let id = Id::new();
+                use yew::platform::time::sleep;
 
                 let (sender, receiver) = oneshot::channel();
 
@@ -103,7 +106,39 @@ where
                     sender: Rc::new(RefCell::new(Some(sender))),
                 });
 
-                receiver.await.unwrap().map(|m| (*m).clone())
+                if let Ok(m) = receiver.await {
+                    return m.map(|m| (*m).clone());
+                }
+
+                loop {
+                    let states = _root.states();
+                    let value_state =
+                        states.get_input_selector_value::<QuerySelector<T>>(input.clone());
+
+                    match value_state.value {
+                        Some(QueryStateValue::Completed { result: ref m, .. })
+                        | Some(QueryStateValue::Outdated { result: ref m, .. }) => {
+                            return m.clone().map(|m| (*m).clone());
+                        }
+                        None | Some(QueryStateValue::Loading { .. }) => {
+                            let (sender, receiver) = oneshot::channel::<()>();
+                            let sender = Rc::new(RefCell::new(Some(sender)));
+
+                            states.add_listener_callback(Rc::new(Callback::from(move |_| {
+                                if let Some(m) = sender.borrow_mut().take() {
+                                    let _ = m.send(());
+                                }
+                            })));
+                            // We subscribe to the selector again.
+                            states.get_input_selector_value::<QuerySelector<T>>(input.clone());
+
+                            // We yield to event loop so state updates can be applied.
+                            sleep(Duration::ZERO).await;
+
+                            receiver.await.unwrap();
+                        }
+                    }
+                }
             },
             (*input).clone()
         )?;

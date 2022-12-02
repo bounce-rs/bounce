@@ -7,6 +7,7 @@ use bounce::BounceRoot;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Eq, Clone)]
@@ -54,11 +55,35 @@ fn suspend_content(props: &ContentProps) -> HtmlResult {
     })
 }
 
+#[function_component(Refresher)]
+fn refresher() -> HtmlResult {
+    let uuid_state = use_prepared_query::<UuidQuery>(().into())?;
+
+    let on_fetch_clicked = Callback::from(move |_| {
+        let uuid_state = uuid_state.clone();
+        spawn_local(async move {
+            let _ignore = uuid_state.refresh().await;
+        });
+    });
+
+    Ok(html! {
+        <>
+            <button onclick={on_fetch_clicked}>{"Fetch"}</button>
+        </>
+    })
+}
+
 #[function_component(App)]
 pub fn app() -> Html {
     let fallback = html! {
         <>
             <div id={"query-content-0"}>{"Loading UUID, Please wait..."}</div>
+        </>
+    };
+
+    let fallback_refresh = html! {
+        <>
+            <button disabled={true}>{"Fetch"}</button>
         </>
     };
 
@@ -68,6 +93,9 @@ pub fn app() -> Html {
             <div>{"This UUID is fetched at the server-side."}</div>
             <Suspense {fallback}>
                 <SuspendContent ord={0} />
+            </Suspense>
+            <Suspense fallback={fallback_refresh}>
+                <Refresher />
             </Suspense>
         </BounceRoot>
     }
