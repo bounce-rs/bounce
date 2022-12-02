@@ -5,11 +5,12 @@ use std::rc::Rc;
 use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
-use super::query_::{
-    Query, QueryResult, QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery,
-    RunQueryInput,
+use super::query_states::{
+    QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
 };
+
 use super::status::QueryStatus;
+use super::traits::{Query, QueryResult};
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
@@ -33,11 +34,11 @@ where
     /// Returns the status of current query.
     pub fn status(&self) -> QueryStatus {
         match self.value {
-            Some(QueryStateValue::Completed((_, Ok(_))))
-            | Some(QueryStateValue::Outdated((_, Ok(_)))) => QueryStatus::Ok,
-            Some(QueryStateValue::Completed((_, Err(_))))
-            | Some(QueryStateValue::Outdated((_, Err(_)))) => QueryStatus::Err,
-            Some(QueryStateValue::Loading(_)) => QueryStatus::Loading,
+            Some(QueryStateValue::Completed { result: Ok(_), .. })
+            | Some(QueryStateValue::Outdated { result: Ok(_), .. }) => QueryStatus::Ok,
+            Some(QueryStateValue::Completed { result: Err(_), .. })
+            | Some(QueryStateValue::Outdated { result: Err(_), .. }) => QueryStatus::Err,
+            Some(QueryStateValue::Loading { .. }) => QueryStatus::Loading,
             None => QueryStatus::Idle,
         }
     }
@@ -48,9 +49,9 @@ where
     /// - `Some(Ok(m))` indicates that the query is successful and the content is stored in `m`.
     /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<QueryResult<T>> {
-        match self.value {
-            Some(QueryStateValue::Completed((_, ref m)))
-            | Some(QueryStateValue::Outdated((_, ref m))) => Some(m.clone()),
+        match self.value.clone() {
+            Some(QueryStateValue::Completed { result, .. })
+            | Some(QueryStateValue::Outdated { result, .. }) => Some(result),
             _ => None,
         }
     }
@@ -60,9 +61,10 @@ where
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
         if let Some(ref m) = self.value {
-            (self.dispatch_state)(QueryStateAction::Refresh(
-                (m.id(), self.input.clone()).into(),
-            ));
+            (self.dispatch_state)(QueryStateAction::Refresh {
+                id: m.id(),
+                input: self.input.clone(),
+            });
         }
 
         let id = Id::new();
@@ -176,7 +178,7 @@ where
         let run_query = run_query.clone();
         use_effect_with_deps(
             move |(id, input, value)| {
-                if value.is_none() || matches!(value, Some(QueryStateValue::Outdated(_))) {
+                if value.is_none() || matches!(value, Some(QueryStateValue::Outdated { .. })) {
                     run_query(RunQueryInput {
                         id: *id,
                         input: input.clone(),

@@ -261,7 +261,7 @@ where
     {
         let val = val.clone();
         let root = root.clone();
-        use_effect_with_deps(
+        use_memo(
             move |root| {
                 let state = root.get_state::<SliceState<T>>();
 
@@ -269,13 +269,9 @@ where
                 // initial render and the listener is registered.
                 val.set(state.get());
 
-                let listener = state.listen(Rc::new(Callback::from(move |m| {
+                state.listen(Rc::new(Callback::from(move |m| {
                     val.set(m);
-                })));
-
-                move || {
-                    std::mem::drop(listener);
-                }
+                })))
             },
             root,
         );

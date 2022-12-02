@@ -11,8 +11,8 @@ use log::Level;
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use uuid::Uuid;
-use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::TargetCast;
 
@@ -186,7 +186,7 @@ fn app() -> Html {
             <h1>{"Query"}</h1>
             <div>{"When content is loading, only 1 request will be sent for the same input."}</div>
             <Suspense {fallback}>
-                <Content ord={0} />
+                <SuspendContent ord={0} />
             </Suspense>
             <Content ord={1} />
             <Refresher />

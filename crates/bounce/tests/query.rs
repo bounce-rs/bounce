@@ -14,7 +14,7 @@ use bounce::query::{use_query_value, Query, QueryResult};
 use bounce::BounceRoot;
 use gloo::timers::future::sleep;
 use gloo::utils::document;
-use wasm_bindgen_futures::spawn_local;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 
 async fn get_text_content<S: AsRef<str>>(selector: S) -> String {
