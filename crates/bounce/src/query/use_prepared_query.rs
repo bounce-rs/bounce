@@ -37,14 +37,20 @@ use crate::utils::Id;
 /// use bounce::query::{Query, QueryResult, use_prepared_query};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
+/// use serde::{Serialize, Deserialize};
+/// use thiserror::Error;
 ///
-/// #[derive(Debug, PartialEq)]
+/// #[derive(Error, Debug, PartialEq, Serialize, Deserialize, Clone)]
+/// #[error("Something that will never happen")]
+/// struct Never {}
+///
+/// #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 /// struct User {
 ///     id: u64,
 ///     name: String,
 /// }
 ///
-/// #[derive(Debug, PartialEq)]
+/// #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 /// struct UserQuery {
 ///     value: User
 /// }
@@ -52,7 +58,7 @@ use crate::utils::Id;
 /// #[async_trait(?Send)]
 /// impl Query for UserQuery {
 ///     type Input = u64;
-///     type Error = Infallible;
+///     type Error = Never;
 ///
 ///     async fn query(_states: &BounceStates, input: Rc<u64>) -> QueryResult<Self> {
 ///         // fetch user

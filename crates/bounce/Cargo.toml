@@ -50,6 +50,7 @@ helmet = ["gloo", "web-sys"]
 wasm-bindgen-test = "0.3.33"
 gloo = { version = "0.8.0", features = ["futures"] }
 yew = { version = "0.20", features = ["csr", "ssr"] }
+thiserror = "1"
 
 [dev-dependencies.web-sys]
 version = "0.3.60"
