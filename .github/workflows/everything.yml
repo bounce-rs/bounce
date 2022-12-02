@@ -14,22 +14,13 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
+          targets: wasm32-unknown-unknown 
           components: rustfmt, clippy
-          profile: minimal
 
       - name: Restore Rust Cache
         uses: Swatinem/rust-cache@v2
-
-      - name: Setup Rust wasm
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          profile: minimal
 
       - name: Install cargo-make
         uses: davidB/rust-cargo-make@v1
@@ -47,22 +38,13 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
+          targets: wasm32-unknown-unknown 
           components: rustfmt, clippy
-          profile: minimal
 
       - name: Restore Rust Cache
         uses: Swatinem/rust-cache@v2
-
-      - name: Setup Rust wasm
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          profile: minimal
 
       - name: Setup trunk
         uses: jetli/trunk-action@v0.2.0
@@ -86,22 +68,13 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
+          targets: wasm32-unknown-unknown 
           components: rustfmt, clippy
-          profile: minimal
 
       - name: Restore Rust Cache
         uses: Swatinem/rust-cache@v2
-
-      - name: Setup Rust wasm
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          profile: minimal
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -127,31 +100,23 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
+          targets: wasm32-unknown-unknown 
           components: rustfmt, clippy
-          profile: minimal
-
+          
       - name: Restore Rust Cache
         uses: Swatinem/rust-cache@v2
 
       - name: Run cargo publish --dry-run for bounce-macros
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --dry-run --manifest-path crates/bounce-macros/Cargo.toml
+        run: cargo publish --dry-run --manifest-path crates/bounce-macros/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
 
       - name: Run cargo publish for bounce-macros
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce-macros/Cargo.toml
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce-macros/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
 
@@ -163,18 +128,12 @@ jobs:
       # See: https://github.com/rust-lang/cargo/issues/1169
       # - name: Run cargo publish --dry-run for bounce
       #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     command: publish
-      #     args: --dry-run --manifest-path crates/bounce/Cargo.toml
+      #   run: cargo publish --dry-run --manifest-path crates/bounce/Cargo.toml
       #   env:
       #     RUSTFLAGS: "--cfg releasing"
 
       - name: Run cargo publish for bounce
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce/Cargo.toml
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
