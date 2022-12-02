@@ -90,7 +90,7 @@ pub fn app() -> Html {
     html! {
         <BounceRoot>
             <h1>{"Query"}</h1>
-            <div>{"This UUID is fetched at the server-side."}</div>
+            <div>{"This UUID is fetched at the server-side. If you click fetch, it will be refreshed on the client side."}</div>
             <Suspense {fallback}>
                 <SuspendContent ord={0} />
             </Suspense>
