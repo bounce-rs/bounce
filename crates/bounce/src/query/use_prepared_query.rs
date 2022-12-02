@@ -17,9 +17,8 @@ use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
 use crate::utils::Id;
 
-/// A hook to run a query and subscribes to its result, suspending while fetching.
-///
-/// This will also transfer value fetched during server-side rendering.
+/// A hook to run a query and subscribes to its result, suspending while fetching
+/// if server-side rendered values are not available.
 ///
 /// A query is a state that is cached by an Input and queried automatically upon initialisation of the
 /// state and re-queried when the input changes.
@@ -64,7 +63,7 @@ use crate::utils::Id;
 ///
 /// #[function_component(Comp)]
 /// fn comp() -> HtmlResult {
-///     let user = use_query::<UserQuery>(0.into())?;
+///     let user = use_prepared_query::<UserQuery>(0.into())?;
 ///
 ///     match user.as_ref() {
 ///         // The result is Some(Ok(_)) if the query has loaded successfully.
