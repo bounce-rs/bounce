@@ -149,7 +149,10 @@ pub(super) enum QueryStateAction<T>
 where
     T: Query + 'static,
 {
-    Refresh(Rc<(Id, Rc<T::Input>)>),
+    Refresh {
+        id: Id,
+        input: Rc<T::Input>,
+    },
     LoadPrepared {
         id: Id,
         input: Rc<T::Input>,
@@ -175,17 +178,13 @@ where
 
     fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
-            Self::Action::Refresh(input) => {
-                let (id, input) = (*input).clone();
-
+            Self::Action::Refresh { id, input } => {
                 if self.queries.get(&input).map(|m| m.id()) == Some(id) {
                     let this = Rc::make_mut(&mut self);
                     this.ctr += 1;
 
                     this.queries.remove(&input);
                 }
-
-                self
             }
 
             Self::Action::LoadPrepared { id, input, result } => {
@@ -196,9 +195,10 @@ where
                     this.queries
                         .insert(input, QueryStateValue::Completed { id, result });
                 }
-                self
             }
         }
+
+        self
     }
 }
 

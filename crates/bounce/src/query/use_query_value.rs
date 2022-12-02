@@ -61,9 +61,10 @@ where
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
         if let Some(ref m) = self.value {
-            (self.dispatch_state)(QueryStateAction::Refresh(
-                (m.id(), self.input.clone()).into(),
-            ));
+            (self.dispatch_state)(QueryStateAction::Refresh {
+                id: m.id(),
+                input: self.input.clone(),
+            });
         }
 
         let id = Id::new();
