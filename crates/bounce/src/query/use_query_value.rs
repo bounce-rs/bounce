@@ -38,7 +38,7 @@ where
             | Some(QueryStateValue::Outdated { result: Ok(_), .. }) => QueryStatus::Ok,
             Some(QueryStateValue::Completed { result: Err(_), .. })
             | Some(QueryStateValue::Outdated { result: Err(_), .. }) => QueryStatus::Err,
-            Some(QueryStateValue::Loading(_)) => QueryStatus::Loading,
+            Some(QueryStateValue::Loading { .. }) => QueryStatus::Loading,
             None => QueryStatus::Idle,
         }
     }

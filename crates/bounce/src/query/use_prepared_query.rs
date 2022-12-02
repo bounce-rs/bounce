@@ -117,7 +117,7 @@ where
 
     let value = use_memo(
         |v| match v.value {
-            Some(QueryStateValue::Loading(_)) | None => Err(Suspension::new()),
+            Some(QueryStateValue::Loading { .. }) | None => Err(Suspension::new()),
             Some(QueryStateValue::Completed { id, result: ref m })
             | Some(QueryStateValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
         },

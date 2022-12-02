@@ -108,7 +108,7 @@ pub enum QueryStateValue<T>
 where
     T: Query + 'static,
 {
-    Loading(Id),
+    Loading { id: Id },
     Completed { id: Id, result: QueryResult<T> },
     Outdated { id: Id, result: QueryResult<T> },
 }
@@ -119,9 +119,9 @@ where
 {
     pub(crate) fn id(&self) -> Id {
         match self {
-            Self::Loading(ref id) => *id,
-            Self::Completed { ref id, .. } => *id,
-            Self::Outdated { ref id, .. } => *id,
+            Self::Loading { ref id }
+            | Self::Completed { ref id, .. }
+            | Self::Outdated { ref id, .. } => *id,
         }
     }
 }
@@ -132,7 +132,7 @@ where
 {
     fn clone(&self) -> Self {
         match self {
-            Self::Loading(ref id) => Self::Loading(*id),
+            Self::Loading { id } => Self::Loading { id: *id },
             Self::Completed { id, ref result } => Self::Completed {
                 id: *id,
                 result: result.clone(),
@@ -250,7 +250,7 @@ where
                 }
 
                 let mut queries = self.queries.clone();
-                queries.insert(input, QueryStateValue::Loading(id));
+                queries.insert(input, QueryStateValue::Loading { id });
 
                 Self {
                     ctr: self.ctr + 1,
