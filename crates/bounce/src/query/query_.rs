@@ -1,16 +1,15 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
-use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::rc::Rc;
 
-use async_trait::async_trait;
 use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 
+use super::traits::{Query, QueryResult};
 use crate::future_notion;
 use crate::root_state::BounceStates;
 use crate::states::future_notion::{use_future_notion_runner, Deferred};
@@ -18,77 +17,6 @@ use crate::states::input_selector::{use_input_selector_value, InputSelector};
 use crate::states::notion::WithNotion;
 use crate::states::slice::{use_slice_dispatch, Slice};
 use crate::utils::Id;
-
-/// A Result returned by queries.
-pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
-
-/// A trait to be implemented on queries.
-///
-/// # Note
-///
-/// This trait is implemented with [async_trait](macro@async_trait), you should apply an `#[async_trait(?Send)]`
-/// attribute to your implementation of this trait.
-///
-/// # Example
-///
-/// ```
-/// use std::rc::Rc;
-/// use std::convert::Infallible;
-/// use bounce::prelude::*;
-/// use bounce::query::{Query, QueryResult};
-/// use yew::prelude::*;
-/// use async_trait::async_trait;
-///
-/// #[derive(Debug, PartialEq)]
-/// struct User {
-///     id: u64,
-///     name: String,
-/// }
-///
-/// #[derive(Debug, PartialEq)]
-/// struct UserQuery {
-///     value: User
-/// }
-///
-/// #[async_trait(?Send)]
-/// impl Query for UserQuery {
-///     type Input = u64;
-///     type Error = Infallible;
-///
-///     async fn query(_states: &BounceStates, input: Rc<u64>) -> QueryResult<Self> {
-///         // fetch user
-///
-///         Ok(UserQuery{ value: User { id: *input, name: "John Smith".into() } }.into())
-///     }
-/// }
-/// ```
-///
-/// See: [`use_query`] and [`use_query_value`](super::use_query_value)
-#[async_trait(?Send)]
-pub trait Query: PartialEq {
-    /// The Input type of a query.
-    ///
-    /// The input type must implement Hash and Eq as it is used as the key of results in a
-    /// HashMap.
-    type Input: Hash + Eq + 'static;
-
-    /// The Error type of a query.
-    type Error: 'static + std::error::Error + PartialEq + Clone;
-
-    /// Runs a query.
-    ///
-    /// This method will only be called when the result is not already cached.
-    ///
-    /// # Note
-    ///
-    /// When implementing this method with async_trait, you can use the following function
-    /// signature:
-    ///
-    /// ```ignore
-    /// async fn query(states: &BounceStates, input: Rc<Self::Input>) -> QueryResult<Self>
-    /// ```
-    async fn query(states: &BounceStates, input: Rc<Self::Input>) -> QueryResult<Self>;
-}
 
 type RunQuerySender<T> = Rc<RefCell<Option<oneshot::Sender<QueryResult<T>>>>>;
 

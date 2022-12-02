@@ -5,11 +5,11 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use async_trait::async_trait;
 use futures::channel::oneshot;
 use yew::prelude::*;
 
 use super::status::QueryStatus;
+use super::traits::{Mutation, MutationResult};
 use crate::future_notion;
 use crate::root_state::BounceStates;
 use crate::states::future_notion::{use_future_notion_runner, Deferred, FutureNotion};
@@ -17,71 +17,6 @@ use crate::states::input_selector::{use_input_selector_value, InputSelector};
 use crate::states::notion::WithNotion;
 use crate::states::slice::{use_slice_dispatch, Slice};
 use crate::utils::Id;
-
-/// A Result returned by mutations.
-pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
-
-/// A trait to be implemented on mutations.
-///
-/// # Note
-///
-/// This trait is implemented with [async_trait](macro@async_trait), you should apply an `#[async_trait(?Send)]`
-/// attribute to your implementation of this trait.
-///
-/// # Example
-///
-/// ```
-/// use std::rc::Rc;
-/// use std::convert::Infallible;
-/// use bounce::prelude::*;
-/// use bounce::query::{Mutation, MutationResult};
-/// use yew::prelude::*;
-/// use async_trait::async_trait;
-///
-/// #[derive(Debug, PartialEq)]
-/// struct User {
-///     id: u64,
-///     name: String,
-/// }
-///
-/// #[derive(Debug, PartialEq)]
-/// struct UpdateUserMutation {
-/// }
-///
-/// #[async_trait(?Send)]
-/// impl Mutation for UpdateUserMutation {
-///     type Input = User;
-///     type Error = Infallible;
-///
-///     async fn run(_states: &BounceStates, _input: Rc<User>) -> MutationResult<Self> {
-///         // updates the user information.
-///
-///         Ok(UpdateUserMutation {}.into())
-///     }
-/// }
-/// ```
-///
-/// See: [`use_mutation_value`]
-#[async_trait(?Send)]
-pub trait Mutation: PartialEq {
-    /// The Input type.
-    type Input: 'static;
-
-    /// The Error type.
-    type Error: 'static + std::error::Error + PartialEq + Clone;
-
-    /// Runs a mutation.
-    ///
-    /// # Note
-    ///
-    /// When implementing this method with async_trait, you can use the following function
-    /// signature:
-    ///
-    /// ```ignore
-    /// async fn run(states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self>
-    /// ```
-    async fn run(states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self>;
-}
 
 // We create 2 ID types to better distinguish them in code.
 #[derive(Default, PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy)]

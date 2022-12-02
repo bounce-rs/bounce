@@ -6,10 +6,11 @@ use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
 use super::query_::{
-    Query, QueryResult, QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery,
-    RunQueryInput,
+    QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
 };
+
 use super::status::QueryStatus;
+use super::traits::{Query, QueryResult};
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
