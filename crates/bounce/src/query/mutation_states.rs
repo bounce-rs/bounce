@@ -136,6 +136,8 @@ where
                 ref output,
             } => {
                 let this = Rc::make_mut(&mut self);
+                this.ctr += 1;
+
                 match this.mutations.entry(input.handle_id) {
                     Entry::Vacant(_m) => {
                         return self; // The handle has been destroyed so there's no need to track it any more.
