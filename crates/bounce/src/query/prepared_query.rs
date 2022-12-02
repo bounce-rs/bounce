@@ -1,14 +1,13 @@
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde::de::Deserialize;
 use serde::ser::Serialize;
-use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 
 use super::query_::{
-    Query, QuerySelector, QueryState, QueryStateValue, RunQuery, RunQueryInput, UseQueryHandle,
+    Query, QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
+    UseQueryHandle,
 };
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
@@ -85,15 +84,19 @@ where
     let run_query = use_future_notion_runner::<RunQuery<T>>();
 
     let prepared_value = {
-        let run_query = run_query.clone();
+        let _run_query = run_query.clone();
 
         let prepared_value = use_prepared_state!(
             async move |input| -> std::result::Result<T, T::Error> {
+                use std::cell::RefCell;
+
+                use yew::platform::pinned::oneshot;
+
                 let id = Id::new();
 
                 let (sender, receiver) = oneshot::channel();
 
-                (run_query)(RunQueryInput {
+                _run_query(RunQueryInput {
                     id,
                     input: input.clone(),
                     sender: Rc::new(RefCell::new(Some(sender))),
@@ -123,17 +126,20 @@ where
     {
         let input = input.clone();
         let run_query = run_query.clone();
-        let has_prepared = prepared_value.is_some();
+        let dispatch_state = dispatch_state.clone();
 
         use_memo(
-            move |_| {
-                if !has_prepared {
-                    run_query(RunQueryInput {
-                        id,
-                        input: input.clone(),
-                        sender: Rc::default(),
-                    });
-                }
+            move |_| match prepared_value {
+                Some(m) => dispatch_state(QueryStateAction::LoadPrepared {
+                    id,
+                    input,
+                    value: m,
+                }),
+                None => run_query(RunQueryInput {
+                    id,
+                    input: input.clone(),
+                    sender: Rc::default(),
+                }),
             },
             (),
         );
@@ -145,9 +151,7 @@ where
 
         use_effect_with_deps(
             move |(id, input, value_state)| {
-                if value_state.value.is_none()
-                    || matches!(value_state.value, Some(QueryStateValue::Outdated(_)))
-                {
+                if matches!(value_state.value, Some(QueryStateValue::Outdated(_))) {
                     run_query(RunQueryInput {
                         id: *id,
                         input: input.clone(),
@@ -169,15 +173,6 @@ where
             run_query,
             result,
         }),
-        Err((s, _)) => match prepared_value {
-            Some(result) => Ok(UseQueryHandle {
-                state_id: id,
-                input,
-                dispatch_state,
-                run_query,
-                result,
-            }),
-            None => Err(s.clone()),
-        },
+        Err((s, _)) => Err(s.clone()),
     }
 }

@@ -219,6 +219,11 @@ where
     T: Query + 'static,
 {
     Refresh(Rc<(Id, Rc<T::Input>)>),
+    LoadPrepared {
+        id: Id,
+        input: Rc<T::Input>,
+        value: QueryResult<T>,
+    },
 }
 
 #[derive(Slice)]
@@ -237,23 +242,29 @@ where
 {
     type Action = QueryStateAction<T>;
 
-    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+    fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
             Self::Action::Refresh(input) => {
                 let (id, input) = (*input).clone();
 
                 if self.queries.get(&input).map(|m| m.id()) == Some(id) {
-                    let mut queries = self.queries.clone();
+                    let this = Rc::make_mut(&mut self);
+                    this.ctr += 1;
 
-                    queries.remove(&input);
-
-                    return Self {
-                        ctr: self.ctr + 1,
-                        queries,
-                    }
-                    .into();
+                    this.queries.remove(&input);
                 }
 
+                self
+            }
+
+            Self::Action::LoadPrepared { id, input, value } => {
+                if self.queries.get(&input).is_none() {
+                    let this = Rc::make_mut(&mut self);
+                    this.ctr += 1;
+
+                    this.queries
+                        .insert(input, QueryStateValue::Completed((id, value)));
+                }
                 self
             }
         }
@@ -278,6 +289,18 @@ where
 {
     fn eq(&self, rhs: &Self) -> bool {
         self.ctr == rhs.ctr
+    }
+}
+
+impl<T> Clone for QueryState<T>
+where
+    T: Query + 'static,
+{
+    fn clone(&self) -> Self {
+        Self {
+            ctr: self.ctr,
+            queries: self.queries.clone(),
+        }
     }
 }
 

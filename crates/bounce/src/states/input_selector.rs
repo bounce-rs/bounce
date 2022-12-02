@@ -275,7 +275,7 @@ where
     {
         let val = val.clone();
         let root = root;
-        use_effect_with_deps(
+        use_memo(
             move |(root, input)| {
                 let state = root
                     .get_state::<InputSelectorsState<T>>()
@@ -285,13 +285,9 @@ where
                 // initial render and the listener is registered.
                 val.set(state.get(root.states()));
 
-                let listener = state.listen(Rc::new(Callback::from(move |m| {
+                state.listen(Rc::new(Callback::from(move |m| {
                     val.set(m);
-                })));
-
-                move || {
-                    std::mem::drop(listener);
-                }
+                })))
             },
             (root, input),
         );

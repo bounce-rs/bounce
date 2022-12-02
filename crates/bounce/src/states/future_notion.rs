@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use futures::future::LocalBoxFuture;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::spawn_local;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 
 use crate::root_state::{BounceRootState, BounceStates};

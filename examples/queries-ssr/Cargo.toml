@@ -1,14 +1,22 @@
 [package]
-name = "queries-mutations"
+name = "queries-ssr"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "queries-ssr-client"
+required-features = ["csr"]
+
+[[bin]]
+name = "queries-ssr-server"
+required-features = ["ssr"]
+
 [dependencies]
 bounce = { path = "../../crates/bounce", features = ["query"] }
-yew = { version = "0.20", features = ["csr"] }
+yew = { version = "0.20" }
 log = "0.4.17"
 console_log = { version = "0.2.0", features = ["color"] }
 reqwest = { version = "0.11.13", features = ["json"] }
@@ -16,6 +24,7 @@ serde = { version = "1.0.148", features = ["derive"] }
 uuid = { version = "1.2.2", features = ["serde"] }
 async-trait = "0.1.59"
 wasm-bindgen = "0.2.83"
+thiserror = "1.0.37"
 
 [dependencies.web-sys]
 version = "0.3.60"
@@ -23,6 +32,18 @@ features = [
     "HtmlInputElement",
 ]
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.22.0", features = ["full"] }
+env_logger = "0.10"
+clap = { version = "4.0.29", features = ["derive"] }
+warp = "0.3"
+futures = "0.3"
+html_parser = "0.6.3"
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3.33"
 gloo = { version = "0.8.0", features = ["futures"] }
+
+[features]
+csr = ["yew/csr", "yew/hydration"]
+ssr = ["yew/ssr", "bounce/ssr"]
