@@ -109,7 +109,7 @@ where
     T: Query + 'static,
 {
     Loading(Id),
-    Completed((Id, QueryResult<T>)),
+    Completed { id: Id, result: QueryResult<T> },
     Outdated((Id, QueryResult<T>)),
 }
 
@@ -120,7 +120,7 @@ where
     pub(crate) fn id(&self) -> Id {
         match self {
             Self::Loading(ref id) => *id,
-            Self::Completed(ref m) => m.0,
+            Self::Completed { ref id, .. } => *id,
             Self::Outdated(ref m) => m.0,
         }
     }
@@ -133,7 +133,10 @@ where
     fn clone(&self) -> Self {
         match self {
             Self::Loading(ref id) => Self::Loading(*id),
-            Self::Completed(ref m) => Self::Completed(m.clone()),
+            Self::Completed { id, ref result } => Self::Completed {
+                id: *id,
+                result: result.clone(),
+            },
             Self::Outdated(ref m) => Self::Outdated(m.clone()),
         }
     }
@@ -147,7 +150,7 @@ where
     LoadPrepared {
         id: Id,
         input: Rc<T::Input>,
-        value: QueryResult<T>,
+        result: QueryResult<T>,
     },
 }
 
@@ -182,13 +185,13 @@ where
                 self
             }
 
-            Self::Action::LoadPrepared { id, input, value } => {
+            Self::Action::LoadPrepared { id, input, result } => {
                 if self.queries.get(&input).is_none() {
                     let this = Rc::make_mut(&mut self);
                     this.ctr += 1;
 
                     this.queries
-                        .insert(input, QueryStateValue::Completed((id, value)));
+                        .insert(input, QueryStateValue::Completed { id, result });
                 }
                 self
             }
@@ -259,7 +262,13 @@ where
                 let RunQueryInput { input, id, .. } = (**input).clone();
                 if let Some(ref output) = **output {
                     let mut queries = self.queries.clone();
-                    queries.insert(input, QueryStateValue::Completed((id, (*output).clone())));
+                    queries.insert(
+                        input,
+                        QueryStateValue::Completed {
+                            id,
+                            result: (*output).clone(),
+                        },
+                    );
 
                     Self {
                         ctr: self.ctr + 1,
@@ -272,10 +281,17 @@ where
             }
             Deferred::Outdated { ref input } => {
                 let RunQueryInput { input, id, .. } = (**input).clone();
-                if let Some(QueryStateValue::Completed(ref val)) = self.queries.get(&input) {
-                    if val.0 == id {
+                if let Some(QueryStateValue::Completed {
+                    id: ref current_id,
+                    result: current_result,
+                }) = self.queries.get(&input)
+                {
+                    if *current_id == id {
                         let mut queries = self.queries.clone();
-                        queries.insert(input.clone(), QueryStateValue::Outdated(val.clone()));
+                        queries.insert(
+                            input.clone(),
+                            QueryStateValue::Outdated((id, current_result.clone())),
+                        );
 
                         return Self {
                             ctr: self.ctr + 1,

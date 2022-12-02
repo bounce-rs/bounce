@@ -34,9 +34,9 @@ where
     /// Returns the status of current query.
     pub fn status(&self) -> QueryStatus {
         match self.value {
-            Some(QueryStateValue::Completed((_, Ok(_))))
+            Some(QueryStateValue::Completed { result: Ok(_), .. })
             | Some(QueryStateValue::Outdated((_, Ok(_)))) => QueryStatus::Ok,
-            Some(QueryStateValue::Completed((_, Err(_))))
+            Some(QueryStateValue::Completed { result: Err(_), .. })
             | Some(QueryStateValue::Outdated((_, Err(_)))) => QueryStatus::Err,
             Some(QueryStateValue::Loading(_)) => QueryStatus::Loading,
             None => QueryStatus::Idle,
@@ -50,7 +50,7 @@ where
     /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<QueryResult<T>> {
         match self.value {
-            Some(QueryStateValue::Completed((_, ref m)))
+            Some(QueryStateValue::Completed { result: ref m, .. })
             | Some(QueryStateValue::Outdated((_, ref m))) => Some(m.clone()),
             _ => None,
         }

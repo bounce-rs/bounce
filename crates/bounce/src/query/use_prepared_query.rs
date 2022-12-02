@@ -118,7 +118,7 @@ where
     let value = use_memo(
         |v| match v.value {
             Some(QueryStateValue::Loading(_)) | None => Err(Suspension::new()),
-            Some(QueryStateValue::Completed((id, ref m)))
+            Some(QueryStateValue::Completed { id, result: ref m })
             | Some(QueryStateValue::Outdated((id, ref m))) => Ok((id, m.clone())),
         },
         value_state.clone(),
@@ -134,7 +134,7 @@ where
                 Some(m) => dispatch_state(QueryStateAction::LoadPrepared {
                     id,
                     input,
-                    value: m,
+                    result: m,
                 }),
                 None => run_query(RunQueryInput {
                     id,
