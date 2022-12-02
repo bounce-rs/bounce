@@ -34,7 +34,7 @@ use crate::utils::Id;
 /// use std::rc::Rc;
 /// use std::convert::Infallible;
 /// use bounce::prelude::*;
-/// use bounce::query::{Query, QueryResult, use_query};
+/// use bounce::query::{Query, QueryResult, use_prepared_query};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
 ///
