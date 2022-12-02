@@ -87,38 +87,41 @@ where
     }
 }
 
+impl<T> Clone for MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    fn clone(&self) -> Self {
+        Self {
+            ctr: self.ctr,
+            mutations: self.mutations.clone(),
+        }
+    }
+}
+
 impl<T> Reducible for MutationState<T>
 where
     T: Mutation + 'static,
 {
     type Action = MutationStateAction;
 
-    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        match action {
-            Self::Action::Create(id) => {
-                let mut mutations = self.mutations.clone();
-                mutations.insert(id, None);
+    fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        {
+            let this = Rc::make_mut(&mut self);
+            // we don't increase the counter here as there's nothing to update.
 
-                Self {
-                    // we don't increase the counter here as there's nothing to update.
-                    ctr: self.ctr,
-                    mutations,
+            match action {
+                Self::Action::Create(id) => {
+                    this.mutations.insert(id, None);
                 }
-                .into()
-            }
 
-            Self::Action::Destroy(id) => {
-                let mut mutations = self.mutations.clone();
-                mutations.remove(&id);
-
-                Self {
-                    // we don't increase the counter here as there's nothing to update.
-                    ctr: self.ctr,
-                    mutations,
+                Self::Action::Destroy(id) => {
+                    this.mutations.remove(&id);
                 }
-                .into()
             }
         }
+
+        self
     }
 }
 
@@ -126,14 +129,14 @@ impl<T> WithNotion<Deferred<RunMutation<T>>> for MutationState<T>
 where
     T: Mutation + 'static,
 {
-    fn apply(self: Rc<Self>, notion: Rc<Deferred<RunMutation<T>>>) -> Rc<Self> {
+    fn apply(mut self: Rc<Self>, notion: Rc<Deferred<RunMutation<T>>>) -> Rc<Self> {
         match *notion {
             Deferred::Completed {
                 ref input,
                 ref output,
             } => {
-                let mut mutations = self.mutations.clone();
-                match mutations.entry(input.handle_id) {
+                let this = Rc::make_mut(&mut self);
+                match this.mutations.entry(input.handle_id) {
                     Entry::Vacant(_m) => {
                         return self; // The handle has been destroyed so there's no need to track it any more.
                     }
@@ -152,16 +155,11 @@ where
                         }
                     }
                 }
-
-                Self {
-                    ctr: self.ctr + 1,
-                    mutations,
-                }
-                .into()
             }
-            Deferred::Pending { .. } => self,
-            Deferred::Outdated { .. } => self,
+            Deferred::Pending { .. } | Deferred::Outdated { .. } => {}
         }
+
+        self
     }
 }
 
