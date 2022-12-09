@@ -26,6 +26,7 @@ async-trait = { version = "0.1.59", optional = true }
 gloo = { version = "0.8.0", features = ["futures"], optional = true }
 html-escape = { version = "0.2.12", optional = true }
 serde = { version = "1.0.148", features = ["derive"] }
+tracing = "0.1"
 
 [dependencies.web-sys]
 version = "0.3.60"

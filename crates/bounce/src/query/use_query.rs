@@ -37,7 +37,6 @@ where
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
         (self.dispatch_state)(QueryStateAction::Refresh {
-            id: self.state_id,
             input: self.input.clone(),
         });
 
@@ -49,6 +48,7 @@ where
             id,
             input: self.input.clone(),
             sender: Rc::new(RefCell::new(Some(sender))),
+            is_refresh: true,
         });
 
         receiver.await.unwrap()
@@ -176,6 +176,7 @@ where
                     id,
                     input: input.clone(),
                     sender: Rc::default(),
+                    is_refresh: false,
                 });
             },
             (),
@@ -193,6 +194,7 @@ where
                         id: *id,
                         input: input.clone(),
                         sender: Rc::default(),
+                        is_refresh: false,
                     });
                 }
 
