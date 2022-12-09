@@ -1,3 +1,10 @@
+## Release 0.5.1
+
+### Other Changes
+
+- Fixed query hooks wrongly fallback when refreshing.
+- Fixed query hooks panicking when already fetching.
+
 ## Release 0.5.0
 
 ### Other Changes
