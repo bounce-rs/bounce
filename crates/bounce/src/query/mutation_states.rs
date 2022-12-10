@@ -130,7 +130,7 @@ where
     T: Mutation + 'static,
 {
     fn apply(mut self: Rc<Self>, notion: Rc<Deferred<RunMutation<T>>>) -> Rc<Self> {
-        match *notion {
+        match notion.as_ref() {
             Deferred::Completed {
                 ref input,
                 ref output,
@@ -148,11 +148,11 @@ where
                             Some(ref n) => {
                                 // only replace if new id is higher.
                                 if n.0 <= input.mutation_id {
-                                    *m = Some((input.mutation_id, (**output).clone()));
+                                    *m = Some((input.mutation_id, output.as_ref().clone()));
                                 }
                             }
                             None => {
-                                *m = Some((input.mutation_id, (**output).clone()));
+                                *m = Some((input.mutation_id, output.as_ref().clone()));
                             }
                         }
                     }

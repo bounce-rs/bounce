@@ -58,7 +58,7 @@ where
     type Input = (Id, Rc<T::Input>);
 
     fn select(states: &BounceStates, input: Rc<(Id, Rc<T::Input>)>) -> Rc<Self> {
-        let (id, input) = (*input).clone();
+        let (id, input) = input.as_ref().clone();
 
         if let Some(m) = states
             .get_slice_value::<QueryState<T>>()
@@ -258,7 +258,7 @@ where
     fn apply(mut self: Rc<Self>, notion: Rc<Deferred<RunQuery<T>>>) -> Rc<Self> {
         match *notion {
             Deferred::Pending { ref input } => {
-                let RunQueryInput { input, id, .. } = (**input).clone();
+                let RunQueryInput { input, id, .. } = input.as_ref().clone();
                 if let Some(m) = self.queries.get(&input) {
                     if !matches!(m, QueryStateValue::Outdated { .. }) {
                         return self;
@@ -274,8 +274,8 @@ where
                 ref input,
                 ref output,
             } => {
-                let RunQueryInput { input, id, .. } = (**input).clone();
-                if let Some(ref output) = **output {
+                let RunQueryInput { input, id, .. } = input.as_ref().clone();
+                if let Some(ref output) = output.as_ref() {
                     let this = Rc::make_mut(&mut self);
                     this.ctr += 1;
 
@@ -283,12 +283,32 @@ where
                         input,
                         QueryStateValue::Completed {
                             id,
-                            result: (*output).clone(),
+                            result: output.clone(),
                         },
                     );
                 }
             }
-            Deferred::Outdated { .. } => {}
+            Deferred::Outdated { ref input } => {
+                let RunQueryInput { input, id, .. } = input.as_ref().clone();
+                if let Some(QueryStateValue::Completed {
+                    id: current_id,
+                    result: current_result,
+                }) = self.queries.get(&input).cloned()
+                {
+                    if current_id == id {
+                        let this = Rc::make_mut(&mut self);
+                        this.ctr += 1;
+
+                        this.queries.insert(
+                            input.clone(),
+                            QueryStateValue::Outdated {
+                                id,
+                                result: current_result,
+                            },
+                        );
+                    }
+                }
+            }
         }
 
         self
