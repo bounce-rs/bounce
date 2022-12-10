@@ -21,7 +21,7 @@ If your endpoint modifies data, you need to use a [mutation](#mutation).
 
 API Reference:
 
-- [`use_query_value`](https://docs.rs/bounce/0.2.0/bounce/query/fn.use_query_value.html)
+- [`use_query_value`](https://docs.rs/bounce/latest/bounce/query/fn.use_query_value.html)
 
 ### Mutation
 
@@ -32,4 +32,4 @@ Mutations are usually used to modify data on the server.
 
 API Reference:
 
-- [`use_mutation_value`](https://docs.rs/bounce/0.2.0/bounce/query/fn.use_mutation_value.html)
+- [`use_mutation`](https://docs.rs/bounce/latest/bounce/query/fn.use_mutation.html)

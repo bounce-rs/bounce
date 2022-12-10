@@ -1,4 +1,9 @@
-## Release 0.5.1
+## Release 0.6.0
+
+### Breaking Changes
+
+- `use_mutation_value` is renamed to `use_mutation`.
+- `.result()` on now returns `Option<&...>`.
 
 ### Other Changes
 

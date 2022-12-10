@@ -3,7 +3,7 @@ use std::rc::Rc;
 use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{
-    use_mutation_value, use_query, use_query_value, Mutation, MutationResult, Query, QueryResult,
+    use_mutation, use_query, use_query_value, Mutation, MutationResult, Query, QueryResult,
     QueryStatus,
 };
 use bounce::BounceRoot;
@@ -129,7 +129,7 @@ fn refresher() -> Html {
 
 #[function_component(Echo)]
 fn echo() -> Html {
-    let echo_state = use_mutation_value::<EchoMutation>();
+    let echo_state = use_mutation::<EchoMutation>();
     let value = use_state_eq(|| "".to_string());
 
     let disabled = echo_state.status() == QueryStatus::Loading;

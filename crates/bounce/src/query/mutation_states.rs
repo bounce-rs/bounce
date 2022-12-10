@@ -24,7 +24,7 @@ pub(super) struct MutationId(Id);
 
 pub(super) struct RunMutationInput<T>
 where
-    T: Mutation + 'static,
+    T: Mutation,
 {
     pub handle_id: HandleId,
     pub mutation_id: MutationId,

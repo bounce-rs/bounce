@@ -16,8 +16,8 @@ use super::mutation_states::{
     RunMutationInput,
 };
 
-/// A handle returned by [`use_mutation_value`].
-pub struct UseMutationValueHandle<T>
+/// A handle returned by [`use_mutation`].
+pub struct UseMutationHandle<T>
 where
     T: Mutation + 'static,
 {
@@ -27,7 +27,7 @@ where
     _marker: PhantomData<T>,
 }
 
-impl<T> UseMutationValueHandle<T>
+impl<T> UseMutationHandle<T>
 where
     T: Mutation + 'static,
 {
@@ -46,8 +46,8 @@ where
     /// - `None` indicates that a mutation is currently loading or has yet to start(idling).
     /// - `Some(Ok(m))` indicates that the last mutation is successful and the content is stored in `m`.
     /// - `Some(Err(e))` indicates that the last mutation has failed and the error is stored in `e`.
-    pub fn result(&self) -> Option<MutationResult<T>> {
-        self.state.value.clone().flatten()
+    pub fn result(&self) -> Option<&MutationResult<T>> {
+        self.state.value.as_ref().and_then(|m| m.as_ref())
     }
 
     /// Runs a mutation with input.
@@ -67,18 +67,18 @@ where
     }
 }
 
-impl<T> fmt::Debug for UseMutationValueHandle<T>
+impl<T> fmt::Debug for UseMutationHandle<T>
 where
     T: Mutation + fmt::Debug + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("UseMutationValueHandle")
+        f.debug_struct("UseMutationHandle")
             .field("state", &self.state.value)
             .finish()
     }
 }
 
-impl<T> Clone for UseMutationValueHandle<T>
+impl<T> Clone for UseMutationHandle<T>
 where
     T: Mutation + 'static,
 {
@@ -103,7 +103,7 @@ where
 /// use std::rc::Rc;
 /// use std::convert::Infallible;
 /// use bounce::prelude::*;
-/// use bounce::query::{Mutation, MutationResult, use_mutation_value, QueryStatus};
+/// use bounce::query::{Mutation, MutationResult, use_mutation, QueryStatus};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
 /// use yew::platform::spawn_local;
@@ -132,7 +132,7 @@ where
 ///
 /// #[function_component(Comp)]
 /// fn comp() -> Html {
-///     let update_user = use_mutation_value::<UpdateUserMutation>();
+///     let update_user = use_mutation::<UpdateUserMutation>();
 ///
 ///     let on_click_update_user = {
 ///         let update_user = update_user.clone();
@@ -163,7 +163,7 @@ where
 /// }
 /// ```
 #[hook]
-pub fn use_mutation_value<T>() -> UseMutationValueHandle<T>
+pub fn use_mutation<T>() -> UseMutationHandle<T>
 where
     T: Mutation + 'static,
 {
@@ -186,7 +186,7 @@ where
         );
     }
 
-    UseMutationValueHandle {
+    UseMutationHandle {
         id,
         state,
         run_mutation,

@@ -48,8 +48,8 @@ where
     /// - `None` indicates that the query is currently loading.
     /// - `Some(Ok(m))` indicates that the query is successful and the content is stored in `m`.
     /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
-    pub fn result(&self) -> Option<QueryResult<T>> {
-        match self.value.clone() {
+    pub fn result(&self) -> Option<&QueryResult<T>> {
+        match self.value.as_ref() {
             Some(QueryStateValue::Completed { result, .. })
             | Some(QueryStateValue::Outdated { result, .. }) => Some(result),
             _ => None,
