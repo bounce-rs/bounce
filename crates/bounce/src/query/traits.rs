@@ -48,7 +48,7 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 /// }
 /// ```
 ///
-/// See: [`use_query`] and [`use_query_value`](super::use_query_value)
+/// See: [`use_query`](super::use_query()) and [`use_query_value`](super::use_query_value())
 #[async_trait(?Send)]
 pub trait Query: PartialEq {
     /// The Input type of a query.
@@ -118,7 +118,7 @@ pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
 /// }
 /// ```
 ///
-/// See: [`use_mutation_value`]
+/// See: [`use_mutation`](super::use_mutation())
 #[async_trait(?Send)]
 pub trait Mutation: PartialEq {
     /// The Input type.
