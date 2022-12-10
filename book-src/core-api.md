@@ -60,10 +60,10 @@ to create a read-only or write-only connection.
 
 **API Reference:**
 
-- [`use_atom`](https://docs.rs/bounce/0.3.0/bounce/fn.use_atom.html)
-- [`use_atom_value`](https://docs.rs/bounce/0.3.0/bounce/fn.use_atom_value.html)
-- [`use_atom_setter`](https://docs.rs/bounce/0.3.0/bounce/fn.use_atom_setter.html)
-- [`#[derive(Atom)]`](https://docs.rs/bounce/0.3.0/bounce/derive.Atom.html)
+- [`use_atom`](https://docs.rs/bounce/latest/bounce/fn.use_atom.html)
+- [`use_atom_value`](https://docs.rs/bounce/latest/bounce/fn.use_atom_value.html)
+- [`use_atom_setter`](https://docs.rs/bounce/latest/bounce/fn.use_atom_setter.html)
+- [`#[derive(Atom)]`](https://docs.rs/bounce/latest/bounce/derive.Atom.html)
 
 
 ### Slice
@@ -143,10 +143,10 @@ html! {
 
 **API Reference:**
 
-- [`use_slice`](https://docs.rs/bounce/0.3.0/bounce/fn.use_slice.html)
-- [`use_slice_value`](https://docs.rs/bounce/0.3.0/bounce/fn.use_slice_value.html)
-- [`use_slice_dispatch`](https://docs.rs/bounce/0.3.0/bounce/fn.use_slice_dispatch.html)
-- [`#[derive(Slice)]`](https://docs.rs/bounce/0.3.0/bounce/derive.Slice.html)
+- [`use_slice`](https://docs.rs/bounce/latest/bounce/fn.use_slice.html)
+- [`use_slice_value`](https://docs.rs/bounce/latest/bounce/fn.use_slice_value.html)
+- [`use_slice_dispatch`](https://docs.rs/bounce/latest/bounce/fn.use_slice_dispatch.html)
+- [`#[derive(Slice)]`](https://docs.rs/bounce/latest/bounce/derive.Slice.html)
 
 ### Selector
 
@@ -184,8 +184,8 @@ impl Selector for IsEven {
 
 API Reference:
 
-- [`Selector`](https://docs.rs/bounce/0.3.0/bounce/trait.Selector.html)
-- [`use_selector_value`](https://docs.rs/bounce/0.3.0/bounce/fn.use_selector_value.html)
+- [`Selector`](https://docs.rs/bounce/latest/bounce/trait.Selector.html)
+- [`use_selector_value`](https://docs.rs/bounce/latest/bounce/fn.use_selector_value.html)
 
 ### Input Selector
 
@@ -196,8 +196,8 @@ An input selector will refresh its value upon either the input or the selected s
 
 API Reference:
 
-- [`InputSelector`](https://docs.rs/bounce/0.3.0/bounce/trait.InputSelector.html)
-- [`use_input_selector_value`](https://docs.rs/bounce/0.3.0/bounce/fn.use_input_selector_value.html)
+- [`InputSelector`](https://docs.rs/bounce/latest/bounce/trait.InputSelector.html)
+- [`use_input_selector_value`](https://docs.rs/bounce/latest/bounce/fn.use_input_selector_value.html)
 
 ### Notion
 
@@ -258,8 +258,8 @@ reset_everything(Reset);
 
 API Reference:
 
-- [`WithNotion`](https://docs.rs/bounce/0.3.0/bounce/trait.WithNotion.html)
-- [`use_notion_applier`](https://docs.rs/bounce/0.3.0/bounce/fn.use_notion_applier.html)
+- [`WithNotion`](https://docs.rs/bounce/latest/bounce/trait.WithNotion.html)
+- [`use_notion_applier`](https://docs.rs/bounce/latest/bounce/fn.use_notion_applier.html)
 
 ### Future Notion
 
@@ -312,9 +312,9 @@ load_user(1);
 
 API Reference:
 
-- [`#[future_notion]`](https://docs.rs/bounce/0.3.0/bounce/attr.future_notion.html)
-- [`Deferred`](https://docs.rs/bounce/0.3.0/bounce/enum.Deferred.html)
-- [`use_future_notion_runner`](https://docs.rs/bounce/0.3.0/bounce/fn.use_future_notion_runner.html)
+- [`#[future_notion]`](https://docs.rs/bounce/latest/bounce/attr.future_notion.html)
+- [`Deferred`](https://docs.rs/bounce/latest/bounce/enum.Deferred.html)
+- [`use_future_notion_runner`](https://docs.rs/bounce/latest/bounce/fn.use_future_notion_runner.html)
 
 #### Note
 
@@ -334,8 +334,8 @@ This API is useful when declaring global side effects (e.g.: document title).
 
 API Reference:
 
-- [`Artifact`](https://docs.rs/bounce/0.3.0/bounce/type.Artifact.html)
-- [`use_artifacts`](https://docs.rs/bounce/0.3.0/bounce/fn.use_artifacts.html)
+- [`Artifact`](https://docs.rs/bounce/latest/bounce/type.Artifact.html)
+- [`use_artifacts`](https://docs.rs/bounce/latest/bounce/fn.use_artifacts.html)
 
 #### Note
 

@@ -58,9 +58,7 @@ be notified.
 
 ## Installation
 
-If you have [`cargo-edit`](https://github.com/killercup/cargo-edit)
-installed,
-you can add it to your project with the following command:
+You can add it to your project with the following command:
 
 ```shell
 cargo add bounce
@@ -69,7 +67,7 @@ cargo add bounce
 You can also add it to the `Cargo.toml` of your project manually:
 
 ```toml
-bounce = "0.4"
+bounce = "0.6"
 ```
 
 ## Getting Started

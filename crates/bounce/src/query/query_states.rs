@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::rc::Rc;
@@ -24,6 +25,7 @@ where
     pub id: Id,
     pub input: Rc<T::Input>,
     pub sender: RunQuerySender<T>,
+    pub is_refresh: bool,
 }
 
 impl<T> Clone for RunQueryInput<T>
@@ -35,6 +37,7 @@ where
             id: self.id,
             input: self.input.clone(),
             sender: self.sender.clone(),
+            is_refresh: self.is_refresh,
         }
     }
 }
@@ -55,7 +58,7 @@ where
     type Input = (Id, Rc<T::Input>);
 
     fn select(states: &BounceStates, input: Rc<(Id, Rc<T::Input>)>) -> Rc<Self> {
-        let (id, input) = (*input).clone();
+        let (id, input) = input.as_ref().clone();
 
         if let Some(m) = states
             .get_slice_value::<QueryState<T>>()
@@ -87,12 +90,17 @@ pub(super) async fn run_query<T>(
 where
     T: Query + 'static,
 {
-    let RunQueryInput { id, input, sender } = input.clone();
+    let RunQueryInput {
+        id,
+        input,
+        sender,
+        is_refresh,
+    } = input.clone();
 
     let is_current_query =
         states.get_input_selector_value::<IsCurrentQuery<T>>((id, input.clone()).into());
 
-    if !is_current_query.inner {
+    if !is_current_query.inner && !is_refresh {
         // We drop the channel.
         sender.borrow_mut().take();
 
@@ -155,7 +163,6 @@ where
     T: Query + 'static,
 {
     Refresh {
-        id: Id,
         input: Rc<T::Input>,
     },
     LoadPrepared {
@@ -183,12 +190,15 @@ where
 
     fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
-            Self::Action::Refresh { id, input } => {
-                if self.queries.get(&input).map(|m| m.id()) == Some(id) {
-                    let this = Rc::make_mut(&mut self);
-                    this.ctr += 1;
+            Self::Action::Refresh { input, .. } => {
+                let this = Rc::make_mut(&mut self);
+                this.ctr += 1;
 
-                    this.queries.remove(&input);
+                // Make the query as outdated.
+                if let Some(m) = this.queries.get_mut(&input) {
+                    if let QueryStateValue::Completed { id, result } = m.clone() {
+                        *m = QueryStateValue::Outdated { id, result }
+                    }
                 }
             }
 
@@ -197,8 +207,9 @@ where
                     let this = Rc::make_mut(&mut self);
                     this.ctr += 1;
 
-                    this.queries
-                        .insert(input, QueryStateValue::Completed { id, result });
+                    if let Entry::Vacant(m) = this.queries.entry(input) {
+                        m.insert(QueryStateValue::Completed { id, result });
+                    }
                 }
             }
         }
@@ -247,7 +258,7 @@ where
     fn apply(mut self: Rc<Self>, notion: Rc<Deferred<RunQuery<T>>>) -> Rc<Self> {
         match *notion {
             Deferred::Pending { ref input } => {
-                let RunQueryInput { input, id, .. } = (**input).clone();
+                let RunQueryInput { input, id, .. } = input.as_ref().clone();
                 if let Some(m) = self.queries.get(&input) {
                     if !matches!(m, QueryStateValue::Outdated { .. }) {
                         return self;
@@ -263,8 +274,8 @@ where
                 ref input,
                 ref output,
             } => {
-                let RunQueryInput { input, id, .. } = (**input).clone();
-                if let Some(ref output) = **output {
+                let RunQueryInput { input, id, .. } = input.as_ref().clone();
+                if let Some(ref output) = output.as_ref() {
                     let this = Rc::make_mut(&mut self);
                     this.ctr += 1;
 
@@ -272,13 +283,13 @@ where
                         input,
                         QueryStateValue::Completed {
                             id,
-                            result: (*output).clone(),
+                            result: output.clone(),
                         },
                     );
                 }
             }
             Deferred::Outdated { ref input } => {
-                let RunQueryInput { input, id, .. } = (**input).clone();
+                let RunQueryInput { input, id, .. } = input.as_ref().clone();
                 if let Some(QueryStateValue::Completed {
                     id: current_id,
                     result: current_result,

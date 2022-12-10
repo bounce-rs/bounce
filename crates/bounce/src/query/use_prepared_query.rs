@@ -109,6 +109,7 @@ where
                     id,
                     input: input.clone(),
                     sender: Rc::new(RefCell::new(Some(sender))),
+                    is_refresh: false,
                 });
 
                 if let Ok(m) = receiver.await {
@@ -180,6 +181,7 @@ where
                     id,
                     input: input.clone(),
                     sender: Rc::default(),
+                    is_refresh: false,
                 }),
             },
             (),
@@ -197,6 +199,7 @@ where
                         id: *id,
                         input: input.clone(),
                         sender: Rc::default(),
+                        is_refresh: false,
                     });
                 }
 

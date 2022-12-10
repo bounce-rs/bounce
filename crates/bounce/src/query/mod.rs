@@ -20,14 +20,14 @@ mod mutation_states;
 mod query_states;
 mod status;
 mod traits;
-mod use_mutation_value;
+mod use_mutation;
 mod use_prepared_query;
 mod use_query;
 mod use_query_value;
 
 pub use status::QueryStatus;
 pub use traits::{Mutation, MutationResult, Query, QueryResult};
-pub use use_mutation_value::{use_mutation_value, UseMutationValueHandle};
+pub use use_mutation::{use_mutation, UseMutationHandle};
 pub use use_prepared_query::use_prepared_query;
 pub use use_query::{use_query, UseQueryHandle};
 pub use use_query_value::{use_query_value, UseQueryValueHandle};

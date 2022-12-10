@@ -1,3 +1,15 @@
+## Release 0.6.0
+
+### Breaking Changes
+
+- `use_mutation_value` is renamed to `use_mutation`.
+- `.result()` on now returns `Option<&...>`.
+
+### Other Changes
+
+- Fixed query hooks wrongly fallback when refreshing.
+- Fixed query hooks panicking when already fetching.
+
 ## Release 0.5.0
 
 ### Other Changes

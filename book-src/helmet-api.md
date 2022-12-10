@@ -48,4 +48,4 @@ the title before it is passed to the document.
 
 ### API Reference:
 
-- [`Helmet API`](https://docs.rs/bounce/0.3.0/bounce/helmet/index.html)
+- [`Helmet API`](https://docs.rs/bounce/latest/bounce/helmet/index.html)
