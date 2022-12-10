@@ -5,8 +5,8 @@
 //!
 //! This module is inspired by [RTK Query](https://redux-toolkit.js.org/rtk-query/overview).
 //!
-//! There are two methods to interact with APIs: [Query](use_query_value) and
-//! [Mutation](use_mutation_value)
+//! There are two methods to interact with APIs: [Query](use_query()) and
+//! [Mutation](use_mutation())
 //!
 //! # Note
 //!
