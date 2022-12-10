@@ -16,6 +16,16 @@ use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::TargetCast;
 
+#[cfg(not(test))]
+static UUID_PATH: &str = "https://httpbin.org/uuid";
+#[cfg(not(test))]
+static ECHO_PATH: &str = "https://httpbin.org/anything";
+
+#[cfg(test)]
+static UUID_PATH: &str = "http://localhost:8080/uuid";
+#[cfg(test)]
+static ECHO_PATH: &str = "http://localhost:8080/anything";
+
 #[derive(PartialEq, Debug, Serialize, Deserialize, Eq)]
 struct EchoInput {
     content: String,
@@ -39,7 +49,7 @@ impl Mutation for EchoMutation {
     async fn run(_states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self> {
         // errors should be handled properly in actual application.
         let resp = reqwest::Client::new()
-            .post("https://httpbin.org/anything")
+            .post(ECHO_PATH)
             .json(&*input)
             .send()
             .await
@@ -62,7 +72,7 @@ impl Query for UuidQuery {
 
     async fn query(_states: &BounceStates, _input: Rc<()>) -> QueryResult<Self> {
         // errors should be handled properly in actual application.
-        let resp = reqwest::get("https://httpbin.org/uuid").await.unwrap();
+        let resp = reqwest::get(UUID_PATH).await.unwrap();
         let uuid_resp = resp.json::<UuidQuery>().await.unwrap();
 
         Ok(uuid_resp.into())
@@ -250,7 +260,7 @@ mod tests {
         );
 
         let mut found = false;
-        for _i in 0..20 {
+        for _i in 0..100 {
             sleep(Duration::from_millis(100)).await;
 
             if get_text_content_by_id("query-content-0")
@@ -294,7 +304,7 @@ mod tests {
         click_by_id("mut-submit").await;
 
         let mut found = false;
-        for _i in 0..20 {
+        for _i in 0..100 {
             sleep(Duration::from_millis(100)).await;
 
             if get_text_content_by_id("mut-resp")
