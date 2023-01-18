@@ -1,3 +1,9 @@
+## Release 0.6.1
+
+### Other Changes
+
+- Added 'property' to the deduplication logic for `<meta>` tags
+
 ## Release 0.6.0
 
 ### Breaking Changes
