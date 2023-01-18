@@ -416,6 +416,7 @@ pub(super) fn merge_helmet_states(
                             attrs.get("http-equiv").cloned(),
                             attrs.get("scheme").cloned(),
                             attrs.get("charset").cloned(),
+                            attrs.get("property").cloned(),
                         ),
                         tag.clone(),
                     );
