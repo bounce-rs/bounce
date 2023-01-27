@@ -4,6 +4,7 @@ use std::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
 
+use anymap2::AnyMap;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
@@ -37,6 +38,14 @@ pub trait Slice: PartialEq + Default {
 
     /// Notifies a slice that it has changed.
     fn changed(self: Rc<Self>) {}
+
+    /// Creates a new Slice with its initial value.
+    fn create(init_states: &mut AnyMap) -> Self
+    where
+        Self: 'static + Sized,
+    {
+        init_states.remove().unwrap_or_default()
+    }
 }
 
 /// A trait to provide cloning on slices.
@@ -136,6 +145,16 @@ where
 
     fn notion_ids(&self) -> Vec<TypeId> {
         self.value.borrow().notion_ids()
+    }
+
+    fn create(init_states: &mut AnyMap) -> Self
+    where
+        Self: Sized,
+    {
+        Self {
+            value: Rc::new(RefCell::new(T::create(init_states).into())),
+            listeners: Rc::default(),
+        }
     }
 }
 

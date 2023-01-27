@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::rc::Rc;
 
+use anymap2::AnyMap;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
@@ -136,13 +137,6 @@ where
 pub(crate) type InputSelectorMap<T> =
     HashMap<Rc<<T as InputSelector>::Input>, InputSelectorState<T>>;
 
-impl<T> AnyState for InputSelectorState<T>
-where
-    T: InputSelector + 'static,
-{
-    fn apply(&self, _notion: Rc<dyn Any>) {}
-}
-
 pub(crate) struct InputSelectorsState<T>
 where
     T: InputSelector + 'static,
@@ -195,6 +189,13 @@ where
     T: InputSelector + 'static,
 {
     fn apply(&self, _notion: Rc<dyn Any>) {}
+
+    fn create(_init_states: &mut AnyMap) -> Self
+    where
+        Self: Sized,
+    {
+        Self::default()
+    }
 }
 
 /// A hook to connect to an [`InputSelector`].
