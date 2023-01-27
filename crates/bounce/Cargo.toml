@@ -1,6 +1,6 @@
 [package]
 name = "bounce"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 repository = "https://github.com/bounce-rs/bounce"
 authors = [
@@ -19,7 +19,7 @@ anymap2 = "0.13.0"
 once_cell = "1.16.0"
 wasm-bindgen = "0.2.83"
 yew = "0.20"
-bounce-macros = { path = "../bounce-macros", version = "0.6.0" }
+bounce-macros = { path = "../bounce-macros", version = "0.6.1" }
 futures = "0.3.25"
 
 async-trait = { version = "0.1.59", optional = true }
