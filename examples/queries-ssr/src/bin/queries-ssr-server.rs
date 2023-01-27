@@ -24,7 +24,7 @@ mod target_non_wasm32 {
         let _ = writeln!(s, "<html>");
         let _ = writeln!(s, "<head>");
 
-        let _ = writeln!(s, r#"<script type="module">{}</script>"#, script_content);
+        let _ = writeln!(s, r#"<script type="module">{script_content}</script>"#);
         let _ = writeln!(s, "</head>");
 
         let _ = writeln!(s, "<body>");

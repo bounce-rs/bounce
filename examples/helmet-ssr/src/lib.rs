@@ -72,7 +72,7 @@ fn render_fn(route: Route) -> Html {
 }
 
 fn format_title(s: AttrValue) -> AttrValue {
-    format!("{} - Example", s).into()
+    format!("{s} - Example").into()
 }
 
 #[function_component(App)]
