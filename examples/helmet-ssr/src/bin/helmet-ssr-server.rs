@@ -63,12 +63,12 @@ mod target_non_wasm32 {
             if html_s.is_empty() {
                 let _ = writeln!(s, "<html>");
             } else {
-                let _ = writeln!(s, "<html {}>", html_s);
+                let _ = writeln!(s, "<html {html_s}>");
             }
         }
         let _ = writeln!(s, "<head>");
         s.push_str(&helmet_s);
-        let _ = writeln!(s, r#"<script type="module">{}</script>"#, script_content);
+        let _ = writeln!(s, r#"<script type="module">{script_content}</script>"#);
         let _ = writeln!(s, "</head>");
 
         {
@@ -78,7 +78,7 @@ mod target_non_wasm32 {
             if body_s.is_empty() {
                 let _ = writeln!(s, "<body>");
             } else {
-                let _ = writeln!(s, "<body {}>", body_s);
+                let _ = writeln!(s, "<body {body_s}>");
             }
         }
         s.push_str(&body_s);

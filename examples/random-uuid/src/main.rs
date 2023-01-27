@@ -56,7 +56,7 @@ fn reader() -> Html {
             "Please click on Fetch to fetch a random UUID from remote.".to_string()
         }
         UuidState::Pending => "Loading UUID, Please wait...".to_string(),
-        UuidState::Complete(ref m) => format!("Random UUID: {}", m),
+        UuidState::Complete(ref m) => format!("Random UUID: {m}"),
     };
 
     html! { <div>{text}</div> }

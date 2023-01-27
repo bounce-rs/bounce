@@ -118,7 +118,7 @@ fn comp_a() -> Html {
     html! {
         <div>
             <p id="val-a-a">{"Slice A: "}{a.0}</p>
-            <p id="val-a-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-a-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }
@@ -140,7 +140,7 @@ fn comp_b() -> Html {
     html! {
         <div>
             <p id="val-b-b">{"Slice B: "}{b.0}</p>
-            <p id="val-b-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-b-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }
@@ -162,7 +162,7 @@ fn comp_c() -> Html {
     html! {
         <div>
             <p id="val-c-c">{"Slice C: "}{c.0}</p>
-            <p id="val-c-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-c-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }
@@ -186,7 +186,7 @@ fn comp_ab() -> Html {
         <div>
             <p id="val-ab-a">{"Slice A: "}{a.0}</p>
             <p id="val-ab-b">{"Slice B: "}{b.0}</p>
-            <p id="val-ab-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-ab-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }
@@ -210,7 +210,7 @@ fn comp_ac() -> Html {
         <div>
             <p id="val-ac-a">{"Slice A: "}{a.0}</p>
             <p id="val-ac-c">{"Slice C: "}{c.0}</p>
-            <p id="val-ac-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-ac-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }
@@ -234,7 +234,7 @@ fn comp_bc() -> Html {
         <div>
             <p id="val-bc-b">{"Slice B: "}{b.0}</p>
             <p id="val-bc-c">{"Slice C: "}{c.0}</p>
-            <p id="val-bc-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-bc-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }
@@ -263,7 +263,7 @@ fn comp_abc() -> Html {
             <p id="val-abc-a">{"Slice A: "}{a.0}</p>
             <p id="val-abc-b">{"Slice B: "}{b.0}</p>
             <p id="val-abc-c">{"Slice C: "}{c.0}</p>
-            <p id="val-abc-render-ctr">{format!("Rendered: {} Time(s)", ctr)}</p>
+            <p id="val-abc-render-ctr">{format!("Rendered: {ctr} Time(s)")}</p>
         </div>
     }
 }

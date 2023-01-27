@@ -345,7 +345,7 @@ fn merge_attrs(
         match name.as_ref() {
             "class" => match target.get("class").cloned() {
                 Some(m) => {
-                    target.insert(name.clone(), Arc::<str>::from(format!("{} {}", value, m)));
+                    target.insert(name.clone(), Arc::<str>::from(format!("{value} {m}")));
                 }
                 None => {
                     target.insert(name.clone(), value.clone());

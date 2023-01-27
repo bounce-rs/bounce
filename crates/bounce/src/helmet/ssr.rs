@@ -145,17 +145,17 @@ impl HelmetTag {
     pub fn write_static(&self, w: &mut dyn Write) -> fmt::Result {
         match self {
             Self::Title(m) => {
-                write!(w, "<title>{}</title>", m)
+                write!(w, "<title>{m}</title>")
             }
             Self::Script { content, attrs, .. } => {
                 write!(w, "<script ")?;
                 Self::write_attrs_from(w, attrs, true)?;
-                write!(w, ">{}</script>", content)
+                write!(w, ">{content}</script>")
             }
             Self::Style { content, attrs } => {
                 write!(w, "<style ")?;
                 Self::write_attrs_from(w, attrs, true)?;
-                write!(w, ">{}</style>", content)
+                write!(w, ">{content}</style>")
             }
             Self::Body { .. } => Ok(()),
             Self::Html { .. } => Ok(()),
