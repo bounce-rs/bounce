@@ -1,3 +1,9 @@
+## Release 0.7.0
+
+### Other Changes
+
+- Added `get_init_states` to `BounceRoot` that can be used to provide initial state values other than using `Default`.
+
 ## Release 0.6.1
 
 ### Other Changes
@@ -82,7 +88,6 @@
 ### Other Changes:
 
 - Update Readme & Cargo.toml
-
 
 ## Release 0.1.0
 
