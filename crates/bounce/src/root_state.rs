@@ -24,24 +24,26 @@ type AnyStateMap = HashMap<TypeId, Vec<Rc<dyn AnyState>>>;
 #[derive(Clone)]
 pub(crate) struct BounceRootState {
     id: Id,
+    init_states: Rc<RefCell<AnyMap>>,
     states: Rc<RefCell<StateMap>>,
     notion_states: Rc<RefCell<AnyStateMap>>,
 }
 
 impl Default for BounceRootState {
     fn default() -> Self {
-        Self {
-            id: Id::new(),
-            states: Rc::default(),
-            notion_states: Rc::default(),
-        }
+        Self::new(AnyMap::new())
     }
 }
 
 impl BounceRootState {
     #[inline]
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(init_states: AnyMap) -> Self {
+        Self {
+            id: Id::new(),
+            init_states: Rc::new(RefCell::new(init_states)),
+            states: Rc::default(),
+            notion_states: Rc::default(),
+        }
     }
 
     pub fn get_state<T>(&self) -> T
@@ -49,12 +51,14 @@ impl BounceRootState {
         T: AnyState + Clone + Default + 'static,
     {
         let mut states = self.states.borrow_mut();
-        let mut init_states = AnyMap::new();
 
         match states.entry::<T>() {
             Entry::Occupied(m) => m.get().clone(),
             Entry::Vacant(m) => {
-                let state = T::create(&mut init_states);
+                let state = {
+                    let mut init_states = self.init_states.borrow_mut();
+                    T::create(&mut init_states)
+                };
                 m.insert(state.clone());
 
                 let mut notion_states = self.notion_states.borrow_mut();
