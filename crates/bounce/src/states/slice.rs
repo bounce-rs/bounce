@@ -39,7 +39,7 @@ pub trait Slice: PartialEq + Default {
     /// Notifies a slice that it has changed.
     fn changed(self: Rc<Self>) {}
 
-    /// Creates a new Slice with its initial value.
+    /// Creates a new slice with its initial value.
     fn create(init_states: &mut AnyMap) -> Self
     where
         Self: 'static + Sized,

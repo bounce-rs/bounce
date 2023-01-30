@@ -5,19 +5,34 @@ use std::rc::Rc;
 
 use super::slice::{use_slice, use_slice_dispatch, use_slice_value, Slice, UseSliceHandle};
 
+use anymap2::AnyMap;
 pub use bounce_macros::Atom;
 use yew::prelude::*;
 
 #[doc(hidden)]
 pub trait Atom: PartialEq + Default {
+    /// Applies a notion.
+    ///
+    /// This always yields a new instance of [`Rc<Self>`] so it can be compared with the previous
+    /// atom using [`PartialEq`].
     #[allow(unused_variables)]
     fn apply(self: Rc<Self>, notion: Rc<dyn Any>) -> Rc<Self> {
         self
     }
 
+    /// Returns a list of notion ids that this atom accepts.
     fn notion_ids(&self) -> Vec<TypeId>;
 
+    /// Notifies an atom that its value has changed.
     fn changed(self: Rc<Self>) {}
+
+    /// Creates a new atom with its initial value.
+    fn create(init_states: &mut AnyMap) -> Self
+    where
+        Self: 'static + Sized,
+    {
+        init_states.remove().unwrap_or_default()
+    }
 }
 
 /// A trait to provide cloning on atoms.
@@ -68,6 +83,15 @@ where
 
     fn changed(self: Rc<Self>) {
         self.inner.clone().changed();
+    }
+
+    fn create(init_states: &mut AnyMap) -> Self
+    where
+        Self: 'static + Sized,
+    {
+        Self {
+            inner: T::create(init_states).into(),
+        }
     }
 }
 
