@@ -16,7 +16,7 @@ required-features = ["ssr"]
 bounce = { path = "../../crates/bounce", features = ["helmet"] }
 yew = { version = "0.20" }
 log = "0.4.17"
-console_log = { version = "0.2.0", features = ["color"] }
+console_log = { version = "1.0.0", features = ["color"] }
 wasm-bindgen = "0.2.83"
 yew-router = "0.17"
 gloo = { version = "0.8.0", features = ["futures"] }
