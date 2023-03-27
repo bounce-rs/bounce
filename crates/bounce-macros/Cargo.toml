@@ -20,4 +20,4 @@ proc-macro = true
 proc-macro-error = "1.0.4"
 proc-macro2 = "1.0.47"
 quote = "1.0.21"
-syn = { version = "1.0.105", features = ["full", "extra-traits"] }
+syn = { version = "2.0.10", features = ["full", "extra-traits"] }
