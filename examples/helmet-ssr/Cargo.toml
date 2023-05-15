@@ -29,7 +29,7 @@ env_logger = "0.10"
 clap = { version = "4.2.1", features = ["derive"] }
 warp = "0.3"
 futures = "0.3"
-html_parser = "0.6.3"
+html_parser = "0.7.0"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
