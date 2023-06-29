@@ -16,20 +16,20 @@ rust-version = "1.60.0"
 
 [dependencies]
 anymap2 = "0.13.0"
-once_cell = "1.16.0"
-wasm-bindgen = "0.2.83"
+once_cell = "1.17.1"
+wasm-bindgen = "0.2.84"
 yew = "0.20"
 bounce-macros = { path = "../bounce-macros", version = "0.6.1" }
-futures = "0.3.25"
+futures = "0.3.28"
 
-async-trait = { version = "0.1.59", optional = true }
+async-trait = { version = "0.1.68", optional = true }
 gloo = { version = "0.8.0", features = ["futures"], optional = true }
-html-escape = { version = "0.2.12", optional = true }
-serde = { version = "1.0.148", features = ["derive"] }
+html-escape = { version = "0.2.13", optional = true }
+serde = { version = "1.0.159", features = ["derive"] }
 tracing = "0.1"
 
 [dependencies.web-sys]
-version = "0.3.60"
+version = "0.3.61"
 optional = true
 features = [
     "Document",
@@ -48,13 +48,13 @@ query = ["async-trait"]
 helmet = ["gloo", "web-sys"]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.33"
+wasm-bindgen-test = "0.3.34"
 gloo = { version = "0.8.0", features = ["futures"] }
 yew = { version = "0.20", features = ["csr", "ssr"] }
 thiserror = "1"
 
 [dev-dependencies.web-sys]
-version = "0.3.60"
+version = "0.3.61"
 features = [
     "HtmlInputElement",
 ]

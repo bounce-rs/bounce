@@ -111,7 +111,7 @@ impl Parse for BounceAttrs {
 
 impl BounceAttrs {
     pub fn parse_one(&mut self, attr: &Attribute) -> syn::Result<()> {
-        if !attr.path.is_ident("bounce") {
+        if !attr.path().is_ident("bounce") {
             return Ok(());
         }
 

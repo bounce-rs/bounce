@@ -18,6 +18,6 @@ proc-macro = true
 
 [dependencies]
 proc-macro-error = "1.0.4"
-proc-macro2 = "1.0.47"
-quote = "1.0.21"
-syn = { version = "1.0.105", features = ["full", "extra-traits"] }
+proc-macro2 = "1.0.55"
+quote = "1.0.26"
+syn = { version = "2.0.13", features = ["full", "extra-traits"] }

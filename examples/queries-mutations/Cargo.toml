@@ -10,19 +10,19 @@ publish = false
 bounce = { path = "../../crates/bounce", features = ["query"] }
 yew = { version = "0.20", features = ["csr"] }
 log = "0.4.17"
-console_log = { version = "0.2.0", features = ["color"] }
-reqwest = { version = "0.11.13", features = ["json"] }
-serde = { version = "1.0.148", features = ["derive"] }
-uuid = { version = "1.2.2", features = ["serde"] }
-async-trait = "0.1.59"
-wasm-bindgen = "0.2.83"
+console_log = { version = "1.0.0", features = ["color"] }
+reqwest = { version = "0.11.16", features = ["json"] }
+serde = { version = "1.0.159", features = ["derive"] }
+uuid = { version = "1.3.0", features = ["serde"] }
+async-trait = "0.1.68"
+wasm-bindgen = "0.2.84"
 
 [dependencies.web-sys]
-version = "0.3.60"
+version = "0.3.61"
 features = [
     "HtmlInputElement",
 ]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.33"
+wasm-bindgen-test = "0.3.34"
 gloo = { version = "0.8.0", features = ["futures"] }
