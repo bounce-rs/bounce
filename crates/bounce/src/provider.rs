@@ -1,13 +1,22 @@
+use anymap2::AnyMap;
 use yew::prelude::*;
 
 use crate::root_state::BounceRootState;
 
 /// Properties for [`BounceRoot`].
-#[derive(Properties, Debug, PartialEq)]
+#[derive(Properties, Debug, PartialEq, Clone)]
 pub struct BounceRootProps {
     /// Children of a Bounce Root.
     #[prop_or_default]
     pub children: Children,
+
+    /// A callback that retrieves an `AnyMap` that contains initial states.
+    ///
+    /// States not provided will use `Default`.
+    ///
+    /// This only affects [`Atom`](macro@crate::Atom) and [`Slice`](macro@crate::Slice).
+    #[prop_or_default]
+    pub get_init_states: Option<Callback<(), AnyMap>>,
 }
 
 /// A `<BounceRoot />`.
@@ -33,10 +42,18 @@ pub struct BounceRootProps {
 /// ```
 #[function_component(BounceRoot)]
 pub fn bounce_root(props: &BounceRootProps) -> Html {
-    let children = props.children.clone();
+    let BounceRootProps {
+        children,
+        get_init_states,
+    } = props.clone();
 
-    let root_state = (*use_state(BounceRootState::new)).clone();
+    let root_state = (*use_state(move || {
+        let init_states = get_init_states.map(|m| m.emit(())).unwrap_or_default();
+        BounceRootState::new(init_states)
+    }))
+    .clone();
 
+    #[allow(clippy::redundant_clone)]
     {
         let root_state = root_state.clone();
         use_effect_with_deps(
@@ -50,7 +67,7 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
         );
     }
 
-    #[allow(clippy::unused_unit)]
+    #[allow(clippy::unused_unit, clippy::redundant_clone)]
     {
         let _root_state = root_state.clone();
         let _ = use_transitive_state!(
