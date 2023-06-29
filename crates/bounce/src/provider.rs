@@ -66,7 +66,7 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
         );
     }
 
-    #[allow(clippy::unused_unit)]
+    #[allow(clippy::unused_unit, clippy::redundant_clone)]
     {
         let _root_state = root_state.clone();
         let _ = use_transitive_state!(
