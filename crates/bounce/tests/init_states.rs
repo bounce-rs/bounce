@@ -23,8 +23,7 @@ async fn get_text_content<S: AsRef<str>>(selector: S) -> String {
 }
 
 #[derive(Atom, PartialEq, Default)]
-struct State
-{
+struct State {
     inner: u32,
 }
 
@@ -63,7 +62,7 @@ async fn test_with_init_states() {
     fn root() -> Html {
         fn get_init_states(_: ()) -> AnyMap {
             let mut map = AnyMap::new();
-            map.insert(State{ inner: 1 });
+            map.insert(State { inner: 1 });
 
             map
         }
