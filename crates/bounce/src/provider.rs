@@ -53,6 +53,7 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
     }))
     .clone();
 
+    #[allow(clippy::redundant_clone)]
     {
         let root_state = root_state.clone();
         use_effect_with_deps(
