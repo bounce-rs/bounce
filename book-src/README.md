@@ -29,32 +29,32 @@ some (or all) of the following limitations:
 
 - Too much boilerplate.
 
-   Users either have to manually control whether to notify
-   subscribers or have to manually define contexts.
+  Users either have to manually control whether to notify
+  subscribers or have to manually define contexts.
 
 - State change notifies all.
 
-   State changes will notify all subscribers.
+  State changes will notify all subscribers.
 
 - Needless clones.
 
-   A clone of the state will be produced for all subscribers whenever
-there's a change.
+  A clone of the state will be produced for all subscribers whenever
+  there's a change.
 
 Bounce wants to be a state management library that:
 
 - Has minimal boilerplate.
 
-   Changes are automatically detected via `PartialEq`.
+  Changes are automatically detected via `PartialEq`.
 
 - Only notifies relevant subscribers.
 
-   When a state changes, only hooks that subscribe to that state will
-be notified.
+  When a state changes, only hooks that subscribe to that state will
+  be notified.
 
 - Reduces Cloning.
 
-   States are `Rc`'ed.
+  States are `Rc`'ed.
 
 ## Installation
 
@@ -67,7 +67,7 @@ cargo add bounce
 You can also add it to the `Cargo.toml` of your project manually:
 
 ```toml
-bounce = "0.6"
+bounce = "0.7"
 ```
 
 ## Getting Started
