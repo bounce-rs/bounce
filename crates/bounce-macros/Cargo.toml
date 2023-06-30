@@ -1,6 +1,6 @@
 [package]
 name = "bounce-macros"
-version = "0.6.1"
+version = "0.7.0"
 edition = "2021"
 repository = "https://github.com/bounce-rs/bounce"
 authors = [
@@ -18,6 +18,6 @@ proc-macro = true
 
 [dependencies]
 proc-macro-error = "1.0.4"
-proc-macro2 = "1.0.55"
-quote = "1.0.26"
-syn = { version = "2.0.13", features = ["full", "extra-traits"] }
+proc-macro2 = "1.0.63"
+quote = "1.0.29"
+syn = { version = "2.0.22", features = ["full", "extra-traits"] }

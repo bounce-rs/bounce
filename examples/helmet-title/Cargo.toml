@@ -9,12 +9,12 @@ publish = false
 [dependencies]
 bounce = { path = "../../crates/bounce", features = ["helmet"] }
 yew = { version = "0.20", features = ["csr"] }
-log = "0.4.17"
+log = "0.4.19"
 console_log = { version = "1.0.0", features = ["color"] }
-wasm-bindgen = "0.2.84"
+wasm-bindgen = "0.2.87"
 yew-router = "0.17"
-gloo = { version = "0.8.0", features = ["futures"] }
-web-sys= "0.3.61"
+gloo = { version = "0.8.1", features = ["futures"] }
+web-sys= "0.3.64"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.34"
+wasm-bindgen-test = "0.3.37"
