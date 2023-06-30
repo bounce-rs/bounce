@@ -16,7 +16,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown 
+          targets: wasm32-unknown-unknown
           components: rustfmt, clippy
 
       - name: Restore Rust Cache
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown 
+          targets: wasm32-unknown-unknown
           components: rustfmt, clippy
 
       - name: Restore Rust Cache
@@ -75,7 +75,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown 
+          targets: wasm32-unknown-unknown
           components: rustfmt, clippy
 
       - name: Restore Rust Cache
@@ -107,9 +107,9 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown 
+          targets: wasm32-unknown-unknown
           components: rustfmt, clippy
-          
+
       - name: Restore Rust Cache
         uses: Swatinem/rust-cache@v2
 
@@ -124,10 +124,6 @@ jobs:
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} --manifest-path crates/bounce-macros/Cargo.toml
         env:
           RUSTFLAGS: "--cfg releasing"
-
-      - name: Wait crates.io to Refresh
-        run: sleep 30s
-        shell: bash
 
       # Not possible if bounce-macros does not have a compatible version on crates.io
       # See: https://github.com/rust-lang/cargo/issues/1169
