@@ -19,7 +19,7 @@ log = "0.4.19"
 console_log = { version = "1.0.0", features = ["color"] }
 wasm-bindgen = "0.2.87"
 yew-router = "0.17"
-gloo = { version = "0.8.1", features = ["futures"] }
+gloo = { version = "0.9.0", features = ["futures"] }
 web-sys= "0.3.64"
 bytes = "1.4.0"
 
