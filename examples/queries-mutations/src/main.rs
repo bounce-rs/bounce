@@ -288,33 +288,16 @@ mod tests {
         let uuid_found = get_text_content_by_id("query-content-0").await;
         click_by_id("query-refresh").await;
 
-        let mut found = false;
-        for _i in 0..1000 {
-            sleep(Duration::from_millis(10)).await;
+        // Make sure it now changes to refreshing and uuid hasn't changed.
+        assert_eq!(
+            format!("Refreshing... Last {}", uuid_found),
+            get_text_content_by_id("query-content-0").await
+        );
 
-            if get_text_content_by_id("query-content-0")
-                .await
-                .starts_with("Refreshing...")
-            {
-                // make sure uuid hasn't changed.
-                assert_eq!(
-                    format!("Refreshing... Last {}", uuid_found),
-                    get_text_content_by_id("query-content-0").await
-                );
-
-                // ensure only 1 request is sent.
-                assert_eq!(
-                    get_text_content_by_id("query-content-0").await,
-                    get_text_content_by_id("query-content-1").await
-                );
-
-                found = true;
-
-                break;
-            }
-        }
-
-        assert!(found, "request didn't show as refetching!");
+        assert_eq!(
+            get_text_content_by_id("query-content-0").await,
+            get_text_content_by_id("query-content-1").await
+        );
 
         let mut found = false;
         for _i in 0..1000 {
