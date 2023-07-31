@@ -1,3 +1,7 @@
+## Release 0.7.1
+
+- Break loop by returning the inner value.
+
 ## Release 0.7.0
 
 ### Other Changes
