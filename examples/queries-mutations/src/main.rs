@@ -71,6 +71,10 @@ impl Query for UuidQuery {
     type Error = Infallible;
 
     async fn query(_states: &BounceStates, _input: Rc<()>) -> QueryResult<Self> {
+        // We manually delay this for testing.
+        #[cfg(test)]
+        yew::platform::time::sleep(std::time::Duration::from_secs(1)).await;
+
         // errors should be handled properly in actual application.
         let resp = reqwest::get(UUID_PATH).await.unwrap();
         let uuid_resp = resp.json::<UuidQuery>().await.unwrap();
