@@ -55,7 +55,7 @@ where
     T: Query + 'static,
 {
     fn eq(&self, _other: &Self) -> bool {
-        // We do not want to subscribe to this state, so we report this as forever true.
+        // We do not want to subscribe to this state, so we always return true for partial equality.
         true
     }
 }
