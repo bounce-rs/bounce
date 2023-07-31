@@ -71,6 +71,10 @@ impl Query for UuidQuery {
     type Error = Infallible;
 
     async fn query(_states: &BounceStates, _input: Rc<()>) -> QueryResult<Self> {
+        // We manually delay this for testing.
+        #[cfg(test)]
+        yew::platform::time::sleep(std::time::Duration::from_secs(1)).await;
+
         // errors should be handled properly in actual application.
         let resp = reqwest::get(UUID_PATH).await.unwrap();
         let uuid_resp = resp.json::<UuidQuery>().await.unwrap();
@@ -88,10 +92,13 @@ struct ContentProps {
 fn content(props: &ContentProps) -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
-    let text = match uuid_state.result() {
-        Some(Ok(m)) => format!("Random UUID: {}", m.uuid),
-        Some(Err(_)) => unreachable!(),
-        None => "Loading UUID, Please wait...".to_string(),
+    let text = match (uuid_state.result(), uuid_state.status()) {
+        (Some(Ok(m)), QueryStatus::Refreshing) => {
+            format!("Refreshing... Last Random UUID: {}", m.uuid)
+        }
+        (Some(Ok(m)), _) => format!("Random UUID: {}", m.uuid),
+        (Some(Err(_)), _) => unreachable!(),
+        (None, _) => "Loading UUID, Please wait...".to_string(),
     };
 
     html! {
@@ -105,9 +112,10 @@ fn content(props: &ContentProps) -> Html {
 fn suspend_content(props: &ContentProps) -> HtmlResult {
     let uuid_state = use_query::<UuidQuery>(().into())?;
 
-    let text = match uuid_state.as_deref() {
-        Ok(m) => format!("Random UUID: {}", m.uuid),
-        Err(_) => unreachable!(),
+    let text = match (uuid_state.as_deref(), uuid_state.status()) {
+        (Ok(m), QueryStatus::Refreshing) => format!("Refreshing... Last Random UUID: {}", m.uuid),
+        (Ok(m), _) => format!("Random UUID: {}", m.uuid),
+        (Err(_), _) => unreachable!(),
     };
 
     Ok(html! {
@@ -132,7 +140,7 @@ fn refresher() -> Html {
 
     html! {
         <>
-            <button {disabled} onclick={on_fetch_clicked}>{"Fetch"}</button>
+            <button {disabled} onclick={on_fetch_clicked} id="query-refresh">{"Fetch"}</button>
         </>
     }
 }
@@ -260,13 +268,52 @@ mod tests {
         );
 
         let mut found = false;
-        for _i in 0..100 {
+        for _i in 0..1000 {
             sleep(Duration::from_millis(100)).await;
 
             if get_text_content_by_id("query-content-0")
                 .await
                 .starts_with("Random UUID: ")
             {
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("query-content-0").await,
+                    get_text_content_by_id("query-content-1").await
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "request didn't finish in time!");
+
+        let uuid_found = get_text_content_by_id("query-content-0").await;
+        click_by_id("query-refresh").await;
+
+        // Make sure it now changes to refreshing and uuid hasn't changed.
+        assert_eq!(
+            format!("Refreshing... Last {}", uuid_found),
+            get_text_content_by_id("query-content-0").await
+        );
+
+        assert_eq!(
+            get_text_content_by_id("query-content-0").await,
+            get_text_content_by_id("query-content-1").await
+        );
+
+        let mut found = false;
+        for _i in 0..1000 {
+            sleep(Duration::from_millis(100)).await;
+
+            if get_text_content_by_id("query-content-0")
+                .await
+                .starts_with("Random UUID: ")
+            {
+                // assert uuid changed.
+                assert_ne!(uuid_found, get_text_content_by_id("query-content-0").await);
+
                 // ensure only 1 request is sent.
                 assert_eq!(
                     get_text_content_by_id("query-content-0").await,

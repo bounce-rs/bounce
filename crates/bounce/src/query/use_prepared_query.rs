@@ -205,7 +205,7 @@ where
 
                 || {}
             },
-            (id, input, value_state),
+            (id, input, value_state.clone()),
         );
     }
 
@@ -213,6 +213,7 @@ where
         Ok((state_id, result)) => Ok(UseQueryHandle {
             state_id,
             input,
+            value: value_state.value.clone(),
             dispatch_state,
             run_query,
             result,

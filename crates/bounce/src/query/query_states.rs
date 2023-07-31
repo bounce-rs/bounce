@@ -42,13 +42,22 @@ where
     }
 }
 
-#[derive(PartialEq)]
 pub(super) struct IsCurrentQuery<T>
 where
     T: Query + 'static,
 {
     _marker: PhantomData<T>,
     inner: bool,
+}
+
+impl<T> PartialEq for IsCurrentQuery<T>
+where
+    T: Query + 'static,
+{
+    fn eq(&self, _other: &Self) -> bool {
+        // We do not want to subscribe to this state, so we always return true for partial equality.
+        true
+    }
 }
 
 impl<T> InputSelector for IsCurrentQuery<T>
@@ -163,6 +172,7 @@ where
     T: Query + 'static,
 {
     Refresh {
+        id: Id,
         input: Rc<T::Input>,
     },
     LoadPrepared {
@@ -190,13 +200,13 @@ where
 
     fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
-            Self::Action::Refresh { input, .. } => {
+            Self::Action::Refresh { input, id } => {
                 let this = Rc::make_mut(&mut self);
                 this.ctr += 1;
 
                 // Make the query as outdated.
                 if let Some(m) = this.queries.get_mut(&input) {
-                    if let QueryStateValue::Completed { id, result } = m.clone() {
+                    if let QueryStateValue::Completed { result, .. } = m.clone() {
                         *m = QueryStateValue::Outdated { id, result }
                     }
                 }
@@ -258,11 +268,32 @@ where
     fn apply(mut self: Rc<Self>, notion: Rc<Deferred<RunQuery<T>>>) -> Rc<Self> {
         match *notion {
             Deferred::Pending { ref input } => {
-                let RunQueryInput { input, id, .. } = input.as_ref().clone();
-                if let Some(m) = self.queries.get(&input) {
-                    if !matches!(m, QueryStateValue::Outdated { .. }) {
-                        return self;
+                let RunQueryInput {
+                    input,
+                    id,
+                    is_refresh,
+                    ..
+                } = input.as_ref().clone();
+
+                if let Some(m) = self.clone().queries.get(&input) {
+                    // Only mark refresh requests as outdated as other requests are marked in different places.
+                    if is_refresh {
+                        // If previous state is completed, we mark current request as outdated.
+                        if let QueryStateValue::Completed { result, .. } = m {
+                            let this = Rc::make_mut(&mut self);
+                            this.ctr += 1;
+
+                            this.queries.insert(
+                                input,
+                                QueryStateValue::Outdated {
+                                    id,
+                                    result: result.clone(),
+                                },
+                            );
+                        }
                     }
+
+                    return self;
                 }
 
                 let this = Rc::make_mut(&mut self);

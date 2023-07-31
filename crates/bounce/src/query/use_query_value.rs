@@ -34,10 +34,10 @@ where
     /// Returns the status of current query.
     pub fn status(&self) -> QueryStatus {
         match self.value {
-            Some(QueryStateValue::Completed { result: Ok(_), .. })
-            | Some(QueryStateValue::Outdated { result: Ok(_), .. }) => QueryStatus::Ok,
-            Some(QueryStateValue::Completed { result: Err(_), .. })
-            | Some(QueryStateValue::Outdated { result: Err(_), .. }) => QueryStatus::Err,
+            Some(QueryStateValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
+            Some(QueryStateValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
+            Some(QueryStateValue::Outdated { result: Ok(_), .. })
+            | Some(QueryStateValue::Outdated { result: Err(_), .. }) => QueryStatus::Refreshing,
             Some(QueryStateValue::Loading { .. }) => QueryStatus::Loading,
             None => QueryStatus::Idle,
         }
@@ -60,11 +60,11 @@ where
     ///
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
+        let id = Id::new();
         (self.dispatch_state)(QueryStateAction::Refresh {
+            id,
             input: self.input.clone(),
         });
-
-        let id = Id::new();
 
         let (sender, receiver) = oneshot::channel();
 

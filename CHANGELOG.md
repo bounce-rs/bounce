@@ -1,4 +1,10 @@
-## Release 0.7.1
+## Release 0.8.0
+
+### Breaking Changes
+
+- Do not suspend refresh queries.
+
+### Other Changes
 
 - Break loop by returning the inner value.
 
