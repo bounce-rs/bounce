@@ -136,7 +136,7 @@ fn refresher() -> Html {
 
     html! {
         <>
-            <button {disabled} onclick={on_fetch_clicked}>{"Fetch"}</button>
+            <button {disabled} onclick={on_fetch_clicked} id="query-refresh">{"Fetch"}</button>
         </>
     }
 }
@@ -264,13 +264,69 @@ mod tests {
         );
 
         let mut found = false;
-        for _i in 0..100 {
+        for _i in 0..1000 {
             sleep(Duration::from_millis(100)).await;
 
             if get_text_content_by_id("query-content-0")
                 .await
                 .starts_with("Random UUID: ")
             {
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("query-content-0").await,
+                    get_text_content_by_id("query-content-1").await
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "request didn't finish in time!");
+
+        let uuid_found = get_text_content_by_id("query-content-0").await;
+        click_by_id("query-refresh").await;
+
+        let mut found = false;
+        for _i in 0..1000 {
+            sleep(Duration::from_millis(10)).await;
+
+            if get_text_content_by_id("query-content-0")
+                .await
+                .starts_with("Refreshing...")
+            {
+                // make sure uuid hasn't changed.
+                assert_eq!(
+                    format!("Refreshing... Last {}", uuid_found),
+                    get_text_content_by_id("query-content-0").await
+                );
+
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("query-content-0").await,
+                    get_text_content_by_id("query-content-1").await
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "request didn't show as refetching!");
+
+        let mut found = false;
+        for _i in 0..1000 {
+            sleep(Duration::from_millis(100)).await;
+
+            if get_text_content_by_id("query-content-0")
+                .await
+                .starts_with("Random UUID: ")
+            {
+                // assert uuid changed.
+                assert_ne!(uuid_found, get_text_content_by_id("query-content-0").await);
+
                 // ensure only 1 request is sent.
                 assert_eq!(
                     get_text_content_by_id("query-content-0").await,
