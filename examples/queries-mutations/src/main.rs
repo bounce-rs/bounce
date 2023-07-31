@@ -88,10 +88,13 @@ struct ContentProps {
 fn content(props: &ContentProps) -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
-    let text = match uuid_state.result() {
-        Some(Ok(m)) => format!("Random UUID: {}", m.uuid),
-        Some(Err(_)) => unreachable!(),
-        None => "Loading UUID, Please wait...".to_string(),
+    let text = match (uuid_state.result(), uuid_state.status()) {
+        (Some(Ok(m)), QueryStatus::Refreshing) => {
+            format!("Refreshing... Last Random UUID: {}", m.uuid)
+        }
+        (Some(Ok(m)), _) => format!("Random UUID: {}", m.uuid),
+        (Some(Err(_)), _) => unreachable!(),
+        (None, _) => "Loading UUID, Please wait...".to_string(),
     };
 
     html! {
@@ -105,9 +108,10 @@ fn content(props: &ContentProps) -> Html {
 fn suspend_content(props: &ContentProps) -> HtmlResult {
     let uuid_state = use_query::<UuidQuery>(().into())?;
 
-    let text = match uuid_state.as_deref() {
-        Ok(m) => format!("Random UUID: {}", m.uuid),
-        Err(_) => unreachable!(),
+    let text = match (uuid_state.as_deref(), uuid_state.status()) {
+        (Ok(m), QueryStatus::Refreshing) => format!("Refreshing... Last Random UUID: {}", m.uuid),
+        (Ok(m), _) => format!("Random UUID: {}", m.uuid),
+        (Err(_), _) => unreachable!(),
     };
 
     Ok(html! {

@@ -11,6 +11,7 @@ use super::query_states::{
     QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
 };
 use super::traits::{Query, QueryResult};
+use super::QueryStatus;
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
@@ -23,6 +24,7 @@ where
 {
     pub(super) input: Rc<T::Input>,
     pub(super) state_id: Id,
+    pub(super) value: Option<QueryStateValue<T>>,
     pub(super) result: QueryResult<T>,
     pub(super) run_query: Rc<dyn Fn(RunQueryInput<T>)>,
     pub(super) dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
@@ -32,15 +34,28 @@ impl<T> UseQueryHandle<T>
 where
     T: Query + 'static,
 {
+    /// Returns the status of current query.
+    pub fn status(&self) -> QueryStatus {
+        match self.value {
+            Some(QueryStateValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
+            Some(QueryStateValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
+            Some(QueryStateValue::Outdated { result: Ok(_), .. })
+            | Some(QueryStateValue::Outdated { result: Err(_), .. }) => QueryStatus::Refreshing,
+            // This should never return loading, but we cannot prove this during compile time, so we include this variant.
+            Some(QueryStateValue::Loading { .. }) => QueryStatus::Loading,
+            None => QueryStatus::Idle,
+        }
+    }
+
     /// Refreshes the query.
     ///
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
+        let id = Id::new();
         (self.dispatch_state)(QueryStateAction::Refresh {
+            id,
             input: self.input.clone(),
         });
-
-        let id = Id::new();
 
         let (sender, receiver) = oneshot::channel();
 
@@ -62,6 +77,7 @@ where
     fn clone(&self) -> Self {
         Self {
             input: self.input.clone(),
+            value: self.value.clone(),
             result: self.result.clone(),
             state_id: self.state_id,
             run_query: self.run_query.clone(),
@@ -200,7 +216,7 @@ where
 
                 || {}
             },
-            (id, input, value_state),
+            (id, input, value_state.clone()),
         );
     }
 
@@ -208,6 +224,7 @@ where
         .as_ref()
         .as_ref()
         .map(|(id, value)| UseQueryHandle {
+            value: value_state.value.clone(),
             state_id: *id,
             input,
             dispatch_state,
