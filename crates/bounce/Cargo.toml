@@ -23,7 +23,7 @@ bounce-macros = { path = "../bounce-macros", version = "0.7.0" }
 futures = "0.3.28"
 
 async-trait = { version = "0.1.68", optional = true }
-gloo = { version = "0.8.1", features = ["futures"], optional = true }
+gloo = { version = "0.9.0", features = ["futures"], optional = true }
 html-escape = { version = "0.2.13", optional = true }
 serde = { version = "1.0.164", features = ["derive"] }
 tracing = "0.1"
@@ -49,7 +49,7 @@ helmet = ["gloo", "web-sys"]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"
-gloo = { version = "0.8.1", features = ["futures"] }
+gloo = { version = "0.9.0", features = ["futures"] }
 yew = { version = "0.20", features = ["csr", "ssr"] }
 thiserror = "1"
 

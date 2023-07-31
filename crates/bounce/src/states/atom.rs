@@ -143,7 +143,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("UseAtomHandle")
-            .field("inner", self)
+            .field("inner", self.inner.inner.as_ref())
             .finish()
     }
 }
