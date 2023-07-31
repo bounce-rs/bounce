@@ -21,4 +21,4 @@ features = [
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"
-gloo = { version = "0.8.1", features = ["futures"] }
+gloo = { version = "0.9.0", features = ["futures"] }
