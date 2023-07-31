@@ -37,7 +37,7 @@ impl Listener {
 
 impl fmt::Debug for Listener {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Listener").finish()
+        f.debug_struct("Listener").finish_non_exhaustive()
     }
 }
 
