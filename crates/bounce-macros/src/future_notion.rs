@@ -1,4 +1,4 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
@@ -7,15 +7,11 @@ use syn::{parse_quote, FnArg, Generics, Ident, ItemFn, ReturnType, Type, Visibil
 
 #[derive(Debug)]
 pub struct FutureNotionAttr {
-    name: Ident,
+    name: Option<Ident>,
 }
 
 impl Parse for FutureNotionAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.is_empty() {
-            return Err(input.error("a type identifier is required for future notions"));
-        }
-
         Ok(Self {
             name: input.parse()?,
         })
@@ -91,7 +87,7 @@ impl AsyncFnProps {
     }
 }
 
-pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
+pub(crate) fn macro_fn(attr: FutureNotionAttr, mut item: ItemFn) -> TokenStream {
     let async_fn_props = match AsyncFnProps::extract(&item) {
         Ok(m) => m,
         Err(e) => return e.into_compile_error(),
@@ -106,7 +102,18 @@ pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
         generics,
     } = async_fn_props;
 
-    let notion_name = attr.name;
+    let (notion_name, fn_name) = match attr.name {
+        Some(m) => (m, fn_name),
+        None => (fn_name, Ident::new("inner", Span::mixed_site())),
+    };
+
+    if notion_name == fn_name {
+        return syn::Error::new_spanned(
+            item.sig.ident,
+            "notions must not have the same name as the function",
+        )
+        .into_compile_error();
+    }
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let fn_generics = ty_generics.as_turbofish();
@@ -121,13 +128,14 @@ pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
         }
     };
 
+    item.sig.ident = fn_name;
+
     let phantom_generics = generics
         .type_params()
         .map(|ty_param| ty_param.ident.clone())
         .collect::<Punctuated<_, Comma>>();
 
     quote! {
-        #item
 
         #vis struct #notion_name #generics {
             _marker: ::std::marker::PhantomData<(#phantom_generics)>
@@ -142,6 +150,8 @@ pub(crate) fn macro_fn(attr: FutureNotionAttr, item: ItemFn) -> TokenStream {
                 states: &'a ::bounce::BounceStates,
                 input: &'a #input,
             ) -> ::bounce::__vendored::futures::future::LocalBoxFuture<'a, #output> {
+                #item
+
                 ::std::boxed::Box::pin(#fn_call)
             }
         }

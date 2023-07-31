@@ -91,8 +91,8 @@ where
     }
 }
 
-#[future_notion(RunQuery)]
-pub(super) async fn run_query<T>(
+#[future_notion]
+pub(super) async fn RunQuery<T>(
     states: &BounceStates,
     input: &RunQueryInput<T>,
 ) -> Option<QueryResult<T>>

@@ -6,6 +6,7 @@
 
 ### Other Changes
 
+- Allow Future Notion name to be omitted.
 - Break loop by returning the inner value.
 
 ## Release 0.7.0
