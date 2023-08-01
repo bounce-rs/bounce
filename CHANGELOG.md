@@ -6,6 +6,7 @@
 
 ### Other Changes
 
+- Fix Mutation Loading and Refreshing.
 - Allow Future Notion name to be omitted.
 - Break loop by returning the inner value.
 
