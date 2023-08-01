@@ -395,6 +395,8 @@ mod tests {
             .dispatch_event(&Event::new("input").unwrap())
             .unwrap();
 
+        click_by_id("mut-submit").await;
+
         let mut found = false;
         for _i in 0..1000 {
             sleep(Duration::from_millis(10)).await;
