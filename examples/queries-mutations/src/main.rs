@@ -47,6 +47,10 @@ impl Mutation for EchoMutation {
     type Error = Infallible;
 
     async fn run(_states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self> {
+        // We manually delay this for testing.
+        #[cfg(test)]
+        yew::platform::time::sleep(std::time::Duration::from_secs(1)).await;
+
         // errors should be handled properly in actual application.
         let resp = reqwest::Client::new()
             .post(ECHO_PATH)
@@ -176,10 +180,14 @@ fn echo() -> Html {
         })
     };
 
-    let resp = match echo_state.result() {
-        Some(Ok(m)) => format!("Server Response: {}", m.content),
-        Some(Err(_)) => unreachable!(),
-        None => "To send the content to server, please click 'Send'.".to_string(),
+    let resp = match (echo_state.result(), echo_state.status()) {
+        (_, QueryStatus::Loading) => "Loading...".to_string(),
+        (Some(Ok(m)), QueryStatus::Refreshing) => {
+            format!("Refreshing... Last Server Response: {}", m.content)
+        }
+        (Some(Ok(m)), _) => format!("Server Response: {}", m.content),
+        (Some(Err(_)), _) => unreachable!(),
+        (None, _) => "To send the content to server, please click 'Send'.".to_string(),
     };
 
     html! {
@@ -351,7 +359,7 @@ mod tests {
         click_by_id("mut-submit").await;
 
         let mut found = false;
-        for _i in 0..100 {
+        for _i in 0..1000 {
             sleep(Duration::from_millis(100)).await;
 
             if get_text_content_by_id("mut-resp")
@@ -362,6 +370,67 @@ mod tests {
                 assert_eq!(
                     get_text_content_by_id("mut-resp").await,
                     "Server Response: some content"
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "mutation didn't finish in time!");
+
+        document()
+            .query_selector("#mut-input")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<HtmlInputElement>()
+            .set_value("some content2");
+
+        document()
+            .query_selector("#mut-input")
+            .unwrap()
+            .unwrap()
+            .unchecked_into::<EventTarget>()
+            .dispatch_event(&Event::new("input").unwrap())
+            .unwrap();
+
+        click_by_id("mut-submit").await;
+
+        let mut found = false;
+        for _i in 0..1000 {
+            sleep(Duration::from_millis(10)).await;
+
+            if get_text_content_by_id("mut-resp")
+                .await
+                .starts_with("Refreshing...")
+            {
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("mut-resp").await,
+                    "Refreshing... Last Server Response: some content"
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+        assert!(found, "mutation didn't change to refresh in time!");
+
+        let mut found = false;
+        for _i in 0..1000 {
+            sleep(Duration::from_millis(100)).await;
+
+            if get_text_content_by_id("mut-resp")
+                .await
+                .starts_with("Server Response: ")
+            {
+                // ensure only 1 request is sent.
+                assert_eq!(
+                    get_text_content_by_id("mut-resp").await,
+                    "Server Response: some content2"
                 );
 
                 found = true;

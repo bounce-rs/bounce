@@ -22,6 +22,45 @@ pub(super) struct HandleId(Id);
 #[derive(Default, PartialEq, Debug, Clone, Eq, Hash, PartialOrd, Ord, Copy)]
 pub(super) struct MutationId(Id);
 
+#[derive(PartialEq, Debug)]
+pub(super) enum MutationStateValue<T>
+where
+    T: Mutation + 'static,
+{
+    Idle,
+    Loading {
+        id: MutationId,
+    },
+    Completed {
+        id: MutationId,
+        result: MutationResult<T>,
+    },
+    Outdated {
+        id: MutationId,
+        result: MutationResult<T>,
+    },
+}
+
+impl<T> Clone for MutationStateValue<T>
+where
+    T: Mutation + 'static,
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Idle => Self::Idle,
+            Self::Loading { id } => Self::Loading { id: *id },
+            Self::Completed { id, result } => Self::Completed {
+                id: *id,
+                result: result.clone(),
+            },
+            Self::Outdated { id, result } => Self::Outdated {
+                id: *id,
+                result: result.clone(),
+            },
+        }
+    }
+}
+
 pub(super) struct RunMutationInput<T>
 where
     T: Mutation,
@@ -63,7 +102,7 @@ where
     T: Mutation + 'static,
 {
     ctr: u64,
-    mutations: HashMap<HandleId, Option<(MutationId, MutationResult<T>)>>,
+    mutations: HashMap<HandleId, MutationStateValue<T>>,
 }
 
 impl<T> PartialEq for MutationState<T>
@@ -112,7 +151,7 @@ where
 
             match action {
                 Self::Action::Create(id) => {
-                    this.mutations.insert(id, None);
+                    this.mutations.insert(id, MutationStateValue::Idle);
                 }
 
                 Self::Action::Destroy(id) => {
@@ -145,20 +184,56 @@ where
                     Entry::Occupied(mut m) => {
                         let m = m.get_mut();
                         match m {
-                            Some(ref n) => {
+                            MutationStateValue::Loading { id }
+                            | MutationStateValue::Completed { id, .. }
+                            | MutationStateValue::Outdated { id, .. } => {
                                 // only replace if new id is higher.
-                                if n.0 <= input.mutation_id {
-                                    *m = Some((input.mutation_id, output.as_ref().clone()));
+                                if *id <= input.mutation_id {
+                                    *m = MutationStateValue::Completed {
+                                        id: input.mutation_id,
+                                        result: output.as_ref().clone(),
+                                    };
                                 }
                             }
-                            None => {
-                                *m = Some((input.mutation_id, output.as_ref().clone()));
+                            MutationStateValue::Idle => {
+                                *m = MutationStateValue::Completed {
+                                    id: input.mutation_id,
+                                    result: output.as_ref().clone(),
+                                };
                             }
                         }
                     }
                 }
             }
-            Deferred::Pending { .. } | Deferred::Outdated { .. } => {}
+            Deferred::Pending { input } => {
+                let this = Rc::make_mut(&mut self);
+                this.ctr += 1;
+
+                match this.mutations.entry(input.handle_id) {
+                    Entry::Vacant(_m) => {
+                        return self; // The handle has been destroyed so there's no need to track it any more.
+                    }
+                    Entry::Occupied(mut m) => {
+                        let m = m.get_mut();
+                        match m {
+                            MutationStateValue::Loading { .. } => {}
+                            MutationStateValue::Completed { id, result } => {
+                                *m = MutationStateValue::Outdated {
+                                    id: *id,
+                                    result: result.clone(),
+                                };
+                            }
+                            MutationStateValue::Outdated { .. } => {}
+                            MutationStateValue::Idle => {
+                                *m = MutationStateValue::Loading {
+                                    id: input.mutation_id,
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            Deferred::Outdated { .. } => {}
         }
 
         self
@@ -171,7 +246,7 @@ where
     T: Mutation + 'static,
 {
     pub id: Option<MutationId>,
-    pub value: Option<Option<MutationResult<T>>>,
+    pub value: Option<MutationStateValue<T>>,
 }
 
 impl<T> InputSelector for MutationSelector<T>
@@ -180,18 +255,19 @@ where
 {
     type Input = HandleId;
     fn select(states: &BounceStates, input: Rc<HandleId>) -> Rc<Self> {
-        let values = states
+        let value = states
             .get_slice_value::<MutationState<T>>()
             .mutations
             .get(&input)
-            .map(|m| m.as_ref().cloned());
+            .cloned();
 
-        let id = values.clone().flatten().map(|m| m.0);
+        let id = value.as_ref().and_then(|m| match m {
+            MutationStateValue::Loading { id }
+            | MutationStateValue::Completed { id, .. }
+            | MutationStateValue::Outdated { id, .. } => Some(*id),
+            MutationStateValue::Idle => None,
+        });
 
-        Self {
-            id,
-            value: values.map(|m| m.map(|m| m.1)),
-        }
-        .into()
+        Self { id, value }.into()
     }
 }

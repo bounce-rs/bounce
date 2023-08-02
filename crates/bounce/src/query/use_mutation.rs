@@ -12,8 +12,8 @@ use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
 
 use super::mutation_states::{
-    HandleId, MutationId, MutationSelector, MutationState, MutationStateAction, RunMutation,
-    RunMutationInput,
+    HandleId, MutationId, MutationSelector, MutationState, MutationStateAction, MutationStateValue,
+    RunMutation, RunMutationInput,
 };
 
 /// A handle returned by [`use_mutation`].
@@ -34,10 +34,11 @@ where
     /// Returns the status of current mutation.
     pub fn status(&self) -> QueryStatus {
         match self.state.value {
-            Some(Some(Ok(_))) => QueryStatus::Ok,
-            Some(Some(Err(_))) => QueryStatus::Err,
-            Some(None) => QueryStatus::Loading,
-            None => QueryStatus::Idle,
+            Some(MutationStateValue::Loading { .. }) => QueryStatus::Loading,
+            Some(MutationStateValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
+            Some(MutationStateValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
+            Some(MutationStateValue::Outdated { .. }) => QueryStatus::Refreshing,
+            Some(MutationStateValue::Idle) | None => QueryStatus::Idle,
         }
     }
 
@@ -47,7 +48,11 @@ where
     /// - `Some(Ok(m))` indicates that the last mutation is successful and the content is stored in `m`.
     /// - `Some(Err(e))` indicates that the last mutation has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<&MutationResult<T>> {
-        self.state.value.as_ref().and_then(|m| m.as_ref())
+        self.state.value.as_ref().and_then(|m| match m {
+            MutationStateValue::Completed { result, .. }
+            | MutationStateValue::Outdated { result, .. } => Some(result),
+            MutationStateValue::Loading { .. } | MutationStateValue::Idle => None,
+        })
     }
 
     /// Runs a mutation with input.
