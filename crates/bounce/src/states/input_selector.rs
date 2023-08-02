@@ -113,7 +113,7 @@ where
                 let should_notify = prev_val.as_ref() != Some(&next_val);
                 *value = Some(next_val.clone());
 
-                should_notify.then(|| next_val)
+                should_notify.then_some(next_val)
             };
 
             if let Some(next_val) = maybe_next_val {
