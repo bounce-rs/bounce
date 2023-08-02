@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- Raise MSRV to 1.64.
 - Do not suspend refresh queries.
 
 ### Other Changes
