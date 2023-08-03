@@ -21,7 +21,7 @@ pub enum MutationState<T>
 where
     T: Mutation + 'static,
 {
-    /// The mutation is not started yet.
+    /// The mutation has not started yet.
     Idle,
     /// The mutation is loading.
     Loading,
@@ -52,6 +52,24 @@ where
                 last_result: last_result.clone(),
             },
         }
+    }
+}
+
+impl<T> PartialEq<&MutationState<T>> for MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    fn eq(&self, other: &&MutationState<T>) -> bool {
+        self == *other
+    }
+}
+
+impl<T> PartialEq<MutationState<T>> for &'_ MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    fn eq(&self, other: &MutationState<T>) -> bool {
+        *self == other
     }
 }
 
@@ -143,7 +161,7 @@ where
 /// use std::rc::Rc;
 /// use std::convert::Infallible;
 /// use bounce::prelude::*;
-/// use bounce::query::{Mutation, MutationResult, use_mutation, QueryStatus};
+/// use bounce::query::{Mutation, MutationResult, use_mutation, MutationState};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
 /// use yew::platform::spawn_local;
@@ -190,7 +208,7 @@ where
 ///
 ///     match update_user.result() {
 ///         // The result is None if the mutation is currently loading or has yet to start.
-///         None => if update_user.status() == QueryStatus::Idle {
+///         None => if update_user.state() == MutationState::Idle {
 ///             html! {<div>{"Updating User..."}</div>}
 ///         } else {
 ///             html! {<button onclick={on_click_update_user}>{"Updating User"}</button>}

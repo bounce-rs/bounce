@@ -52,6 +52,24 @@ where
     }
 }
 
+impl<T> PartialEq<&QueryValueState<T>> for QueryValueState<T>
+where
+    T: Query + 'static,
+{
+    fn eq(&self, other: &&QueryValueState<T>) -> bool {
+        self == *other
+    }
+}
+
+impl<T> PartialEq<QueryValueState<T>> for &'_ QueryValueState<T>
+where
+    T: Query + 'static,
+{
+    fn eq(&self, other: &QueryValueState<T>) -> bool {
+        *self == other
+    }
+}
+
 /// A handle returned by [`use_query_value`].
 pub struct UseQueryValueHandle<T>
 where

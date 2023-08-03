@@ -135,7 +135,7 @@ fn suspend_content(props: &ContentProps) -> HtmlResult {
 fn refresher() -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
-    let disabled = uuid_state.state() == &QueryValueState::Loading;
+    let disabled = uuid_state.state() == QueryValueState::Loading;
 
     let on_fetch_clicked = Callback::from(move |_| {
         let uuid_state = uuid_state.clone();
@@ -156,7 +156,7 @@ fn echo() -> Html {
     let echo_state = use_mutation::<EchoMutation>();
     let value = use_state_eq(|| "".to_string());
 
-    let disabled = echo_state.state() == &MutationState::Loading;
+    let disabled = echo_state.state() == MutationState::Loading;
 
     let on_input = {
         let value = value.clone();
