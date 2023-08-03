@@ -10,7 +10,7 @@ use super::query_states::{
     QuerySelector, QuerySlice, QuerySliceAction, QuerySliceValue, RunQuery, RunQueryInput,
 };
 use super::traits::Query;
-use super::use_query::UseQueryHandle;
+use super::use_query::{QueryState, UseQueryHandle};
 use crate::root_state::BounceRootState;
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
@@ -159,8 +159,15 @@ where
     let value = use_memo(
         |v| match v.value {
             Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
-            Some(QuerySliceValue::Completed { id, result: ref m })
-            | Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
+            Some(QuerySliceValue::Completed { id, result: ref m }) => {
+                Ok((id, Rc::new(QueryState::Completed { result: m.clone() })))
+            }
+            Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((
+                id,
+                Rc::new(QueryState::Refreshing {
+                    last_result: m.clone(),
+                }),
+            )),
         },
         value_state.clone(),
     );
@@ -210,13 +217,12 @@ where
     }
 
     match value.as_ref().as_ref().cloned() {
-        Ok((state_id, result)) => Ok(UseQueryHandle {
+        Ok((state_id, state)) => Ok(UseQueryHandle {
             state_id,
             input,
-            value: value_state.value.clone(),
+            state,
             dispatch_state,
             run_query,
-            result,
         }),
         Err((s, _)) => Err(s.clone()),
     }

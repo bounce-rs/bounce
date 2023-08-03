@@ -9,12 +9,48 @@ use super::query_states::{
     QuerySelector, QuerySlice, QuerySliceAction, QuerySliceValue, RunQuery, RunQueryInput,
 };
 
-use super::status::QueryStatus;
 use super::traits::{Query, QueryResult};
 use crate::states::future_notion::use_future_notion_runner;
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
 use crate::utils::Id;
+
+/// Query Value State
+#[derive(Debug, PartialEq)]
+pub enum QueryValueState<T>
+where
+    T: Query + 'static,
+{
+    /// The query is loading.
+    Loading,
+    /// The query has completed.
+    Completed {
+        /// Result of the completed query.
+        result: QueryResult<T>,
+    },
+    /// A previous query has completed and a new query is currently loading.
+    Refreshing {
+        /// Result of last completed query.
+        last_result: QueryResult<T>,
+    },
+}
+
+impl<T> Clone for QueryValueState<T>
+where
+    T: Query + 'static,
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Loading => Self::Loading,
+            Self::Completed { result } => Self::Completed {
+                result: result.clone(),
+            },
+            Self::Refreshing { last_result } => Self::Refreshing {
+                last_result: last_result.clone(),
+            },
+        }
+    }
+}
 
 /// A handle returned by [`use_query_value`].
 pub struct UseQueryValueHandle<T>
@@ -22,7 +58,7 @@ where
     T: Query + 'static,
 {
     input: Rc<T::Input>,
-    value: Option<QuerySliceValue<T>>,
+    state: Rc<QueryValueState<T>>,
     run_query: Rc<dyn Fn(RunQueryInput<T>)>,
     dispatch_state: Rc<dyn Fn(QuerySliceAction<T>)>,
 }
@@ -31,15 +67,9 @@ impl<T> UseQueryValueHandle<T>
 where
     T: Query + 'static,
 {
-    /// Returns the status of current query.
-    pub fn status(&self) -> QueryStatus {
-        match self.value {
-            Some(QuerySliceValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
-            Some(QuerySliceValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
-            Some(QuerySliceValue::Outdated { .. }) => QueryStatus::Refreshing,
-            Some(QuerySliceValue::Loading { .. }) => QueryStatus::Loading,
-            None => QueryStatus::Idle,
-        }
+    /// Returns the state of current query.
+    pub fn state(&self) -> &QueryValueState<T> {
+        self.state.as_ref()
     }
 
     /// Returns the result of current query (if any).
@@ -48,9 +78,12 @@ where
     /// - `Some(Ok(m))` indicates that the query is successful and the content is stored in `m`.
     /// - `Some(Err(e))` indicates that the query has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<&QueryResult<T>> {
-        match self.value.as_ref() {
-            Some(QuerySliceValue::Completed { result, .. })
-            | Some(QuerySliceValue::Outdated { result, .. }) => Some(result),
+        match self.state() {
+            QueryValueState::Completed { result, .. }
+            | QueryValueState::Refreshing {
+                last_result: result,
+                ..
+            } => Some(result),
             _ => None,
         }
     }
@@ -85,7 +118,7 @@ where
     fn clone(&self) -> Self {
         Self {
             input: self.input.clone(),
-            value: self.value.clone(),
+            state: self.state.clone(),
             run_query: self.run_query.clone(),
             dispatch_state: self.dispatch_state.clone(),
         }
@@ -98,7 +131,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("UseQueryValueHandle")
-            .field("value", &self.value)
+            .field("value", &self.state)
             .finish()
     }
 }
@@ -190,10 +223,23 @@ where
         );
     }
 
+    let state = use_memo(
+        |value| match value.value {
+            Some(QuerySliceValue::Completed { ref result, .. }) => QueryValueState::Completed {
+                result: result.clone(),
+            },
+            Some(QuerySliceValue::Outdated { ref result, .. }) => QueryValueState::Refreshing {
+                last_result: result.clone(),
+            },
+            Some(QuerySliceValue::Loading { .. }) | None => QueryValueState::Loading,
+        },
+        value,
+    );
+
     UseQueryValueHandle {
         input,
         dispatch_state,
         run_query,
-        value: value.value.clone(),
+        state,
     }
 }
