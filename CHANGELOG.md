@@ -4,6 +4,7 @@
 
 - Raise MSRV to 1.64.
 - Do not suspend refresh queries.
+- Expose a State type for each Query / Mutation that also references to the value.
 
 ### Other Changes
 
