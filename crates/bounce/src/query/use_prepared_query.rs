@@ -7,7 +7,7 @@ use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 
 use super::query_states::{
-    QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
+    QuerySelector, QuerySlice, QuerySliceAction, QuerySliceValue, RunQuery, RunQueryInput,
 };
 use super::traits::Query;
 use super::use_query::UseQueryHandle;
@@ -88,7 +88,7 @@ where
 {
     let id = *use_memo(|_| Id::new(), ());
     let value_state = use_input_selector_value::<QuerySelector<T>>(input.clone());
-    let dispatch_state = use_slice_dispatch::<QueryState<T>>();
+    let dispatch_state = use_slice_dispatch::<QuerySlice<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
 
     let prepared_value = {
@@ -122,11 +122,11 @@ where
                         states.get_input_selector_value::<QuerySelector<T>>(input.clone());
 
                     match value_state.value {
-                        Some(QueryStateValue::Completed { result: ref m, .. })
-                        | Some(QueryStateValue::Outdated { result: ref m, .. }) => {
+                        Some(QuerySliceValue::Completed { result: ref m, .. })
+                        | Some(QuerySliceValue::Outdated { result: ref m, .. }) => {
                             return m.clone().map(|m| (*m).clone());
                         }
-                        None | Some(QueryStateValue::Loading { .. }) => {
+                        None | Some(QuerySliceValue::Loading { .. }) => {
                             let (sender, receiver) = oneshot::channel::<()>();
                             let sender = Rc::new(RefCell::new(Some(sender)));
 
@@ -158,9 +158,9 @@ where
 
     let value = use_memo(
         |v| match v.value {
-            Some(QueryStateValue::Loading { .. }) | None => Err(Suspension::new()),
-            Some(QueryStateValue::Completed { id, result: ref m })
-            | Some(QueryStateValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
+            Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
+            Some(QuerySliceValue::Completed { id, result: ref m })
+            | Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
         },
         value_state.clone(),
     );
@@ -172,7 +172,7 @@ where
 
         use_memo(
             move |_| match prepared_value {
-                Some(m) => dispatch_state(QueryStateAction::LoadPrepared {
+                Some(m) => dispatch_state(QuerySliceAction::LoadPrepared {
                     id,
                     input,
                     result: m,
@@ -194,7 +194,7 @@ where
 
         use_effect_with_deps(
             move |(id, input, value_state)| {
-                if matches!(value_state.value, Some(QueryStateValue::Outdated { .. })) {
+                if matches!(value_state.value, Some(QuerySliceValue::Outdated { .. })) {
                     run_query(RunQueryInput {
                         id: *id,
                         input: input.clone(),

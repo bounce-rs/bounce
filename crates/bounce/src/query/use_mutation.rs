@@ -12,7 +12,7 @@ use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
 
 use super::mutation_states::{
-    HandleId, MutationId, MutationSelector, MutationState, MutationStateAction, MutationStateValue,
+    HandleId, MutationId, MutationSelector, MutationSlice, MutationSliceAction, MutationSliceValue,
     RunMutation, RunMutationInput,
 };
 
@@ -34,11 +34,11 @@ where
     /// Returns the status of current mutation.
     pub fn status(&self) -> QueryStatus {
         match self.state.value {
-            Some(MutationStateValue::Loading { .. }) => QueryStatus::Loading,
-            Some(MutationStateValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
-            Some(MutationStateValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
-            Some(MutationStateValue::Outdated { .. }) => QueryStatus::Refreshing,
-            Some(MutationStateValue::Idle) | None => QueryStatus::Idle,
+            Some(MutationSliceValue::Loading { .. }) => QueryStatus::Loading,
+            Some(MutationSliceValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
+            Some(MutationSliceValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
+            Some(MutationSliceValue::Outdated { .. }) => QueryStatus::Refreshing,
+            Some(MutationSliceValue::Idle) | None => QueryStatus::Idle,
         }
     }
 
@@ -49,9 +49,9 @@ where
     /// - `Some(Err(e))` indicates that the last mutation has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<&MutationResult<T>> {
         self.state.value.as_ref().and_then(|m| match m {
-            MutationStateValue::Completed { result, .. }
-            | MutationStateValue::Outdated { result, .. } => Some(result),
-            MutationStateValue::Loading { .. } | MutationStateValue::Idle => None,
+            MutationSliceValue::Completed { result, .. }
+            | MutationSliceValue::Outdated { result, .. } => Some(result),
+            MutationSliceValue::Loading { .. } | MutationSliceValue::Idle => None,
         })
     }
 
@@ -173,7 +173,7 @@ where
     T: Mutation + 'static,
 {
     let id = *use_memo(|_| HandleId::default(), ());
-    let dispatch_state = use_slice_dispatch::<MutationState<T>>();
+    let dispatch_state = use_slice_dispatch::<MutationSlice<T>>();
     let run_mutation = use_future_notion_runner::<RunMutation<T>>();
     let state = use_input_selector_value::<MutationSelector<T>>(id.into());
 
@@ -181,10 +181,10 @@ where
         use_effect_with_deps(
             |id| {
                 let id = *id;
-                dispatch_state(MutationStateAction::Create(id));
+                dispatch_state(MutationSliceAction::Create(id));
 
                 move || {
-                    dispatch_state(MutationStateAction::Destroy(id));
+                    dispatch_state(MutationSliceAction::Destroy(id));
                 }
             },
             id,

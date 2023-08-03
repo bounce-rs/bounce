@@ -8,7 +8,7 @@ use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionResult};
 
 use super::query_states::{
-    QuerySelector, QueryState, QueryStateAction, QueryStateValue, RunQuery, RunQueryInput,
+    QuerySelector, QuerySlice, QuerySliceAction, QuerySliceValue, RunQuery, RunQueryInput,
 };
 use super::traits::{Query, QueryResult};
 use super::QueryStatus;
@@ -24,10 +24,10 @@ where
 {
     pub(super) input: Rc<T::Input>,
     pub(super) state_id: Id,
-    pub(super) value: Option<QueryStateValue<T>>,
+    pub(super) value: Option<QuerySliceValue<T>>,
     pub(super) result: QueryResult<T>,
     pub(super) run_query: Rc<dyn Fn(RunQueryInput<T>)>,
-    pub(super) dispatch_state: Rc<dyn Fn(QueryStateAction<T>)>,
+    pub(super) dispatch_state: Rc<dyn Fn(QuerySliceAction<T>)>,
 }
 
 impl<T> UseQueryHandle<T>
@@ -37,12 +37,11 @@ where
     /// Returns the status of current query.
     pub fn status(&self) -> QueryStatus {
         match self.value {
-            Some(QueryStateValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
-            Some(QueryStateValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
-            Some(QueryStateValue::Outdated { result: Ok(_), .. })
-            | Some(QueryStateValue::Outdated { result: Err(_), .. }) => QueryStatus::Refreshing,
+            Some(QuerySliceValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
+            Some(QuerySliceValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
+            Some(QuerySliceValue::Outdated { .. }) => QueryStatus::Refreshing,
             // This should never return loading, but we cannot prove this during compile time, so we include this variant.
-            Some(QueryStateValue::Loading { .. }) => QueryStatus::Loading,
+            Some(QuerySliceValue::Loading { .. }) => QueryStatus::Loading,
             None => QueryStatus::Idle,
         }
     }
@@ -52,7 +51,7 @@ where
     /// The query will be refreshed with the input provided to the hook.
     pub async fn refresh(&self) -> QueryResult<T> {
         let id = Id::new();
-        (self.dispatch_state)(QueryStateAction::Refresh {
+        (self.dispatch_state)(QuerySliceAction::Refresh {
             id,
             input: self.input.clone(),
         });
@@ -170,14 +169,14 @@ where
 {
     let id = *use_memo(|_| Id::new(), ());
     let value_state = use_input_selector_value::<QuerySelector<T>>(input.clone());
-    let dispatch_state = use_slice_dispatch::<QueryState<T>>();
+    let dispatch_state = use_slice_dispatch::<QuerySlice<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
 
     let value = use_memo(
         |v| match v.value {
-            Some(QueryStateValue::Loading { .. }) | None => Err(Suspension::new()),
-            Some(QueryStateValue::Completed { id, result: ref m })
-            | Some(QueryStateValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
+            Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
+            Some(QuerySliceValue::Completed { id, result: ref m })
+            | Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((id, m.clone())),
         },
         value_state.clone(),
     );
@@ -205,7 +204,7 @@ where
 
         use_effect_with_deps(
             move |(id, input, value_state)| {
-                if matches!(value_state.value, Some(QueryStateValue::Outdated { .. })) {
+                if matches!(value_state.value, Some(QuerySliceValue::Outdated { .. })) {
                     run_query(RunQueryInput {
                         id: *id,
                         input: input.clone(),
