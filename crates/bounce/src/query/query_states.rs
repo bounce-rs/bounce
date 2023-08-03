@@ -70,7 +70,7 @@ where
         let (id, input) = input.as_ref().clone();
 
         if let Some(m) = states
-            .get_slice_value::<QueryState<T>>()
+            .get_slice_value::<QuerySlice<T>>()
             .queries
             .get(&input)
         {
@@ -126,7 +126,7 @@ where
 }
 
 #[derive(PartialEq, Debug)]
-pub enum QueryStateValue<T>
+pub enum QuerySliceValue<T>
 where
     T: Query + 'static,
 {
@@ -135,7 +135,7 @@ where
     Outdated { id: Id, result: QueryResult<T> },
 }
 
-impl<T> QueryStateValue<T>
+impl<T> QuerySliceValue<T>
 where
     T: Query + 'static,
 {
@@ -148,7 +148,7 @@ where
     }
 }
 
-impl<T> Clone for QueryStateValue<T>
+impl<T> Clone for QuerySliceValue<T>
 where
     T: Query + 'static,
 {
@@ -167,7 +167,7 @@ where
     }
 }
 
-pub(super) enum QueryStateAction<T>
+pub(super) enum QuerySliceAction<T>
 where
     T: Query + 'static,
 {
@@ -184,19 +184,19 @@ where
 
 #[derive(Slice)]
 #[bounce(with_notion(Deferred<RunQuery<T>>))]
-pub(super) struct QueryState<T>
+pub(super) struct QuerySlice<T>
 where
     T: Query + 'static,
 {
     ctr: u64,
-    queries: HashMap<Rc<T::Input>, QueryStateValue<T>>,
+    queries: HashMap<Rc<T::Input>, QuerySliceValue<T>>,
 }
 
-impl<T> Reducible for QueryState<T>
+impl<T> Reducible for QuerySlice<T>
 where
     T: Query + 'static,
 {
-    type Action = QueryStateAction<T>;
+    type Action = QuerySliceAction<T>;
 
     fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
@@ -206,8 +206,8 @@ where
 
                 // Make the query as outdated.
                 if let Some(m) = this.queries.get_mut(&input) {
-                    if let QueryStateValue::Completed { result, .. } = m.clone() {
-                        *m = QueryStateValue::Outdated { id, result }
+                    if let QuerySliceValue::Completed { result, .. } = m.clone() {
+                        *m = QuerySliceValue::Outdated { id, result }
                     }
                 }
             }
@@ -218,7 +218,7 @@ where
                     this.ctr += 1;
 
                     if let Entry::Vacant(m) = this.queries.entry(input) {
-                        m.insert(QueryStateValue::Completed { id, result });
+                        m.insert(QuerySliceValue::Completed { id, result });
                     }
                 }
             }
@@ -228,7 +228,7 @@ where
     }
 }
 
-impl<T> Default for QueryState<T>
+impl<T> Default for QuerySlice<T>
 where
     T: Query + 'static,
 {
@@ -240,7 +240,7 @@ where
     }
 }
 
-impl<T> PartialEq for QueryState<T>
+impl<T> PartialEq for QuerySlice<T>
 where
     T: Query + 'static,
 {
@@ -249,7 +249,7 @@ where
     }
 }
 
-impl<T> Clone for QueryState<T>
+impl<T> Clone for QuerySlice<T>
 where
     T: Query + 'static,
 {
@@ -261,7 +261,7 @@ where
     }
 }
 
-impl<T> WithNotion<Deferred<RunQuery<T>>> for QueryState<T>
+impl<T> WithNotion<Deferred<RunQuery<T>>> for QuerySlice<T>
 where
     T: Query + 'static,
 {
@@ -279,13 +279,13 @@ where
                     // Only mark refresh requests as outdated as other requests are marked in different places.
                     if is_refresh {
                         // If previous state is completed, we mark current request as outdated.
-                        if let QueryStateValue::Completed { result, .. } = m {
+                        if let QuerySliceValue::Completed { result, .. } = m {
                             let this = Rc::make_mut(&mut self);
                             this.ctr += 1;
 
                             this.queries.insert(
                                 input,
-                                QueryStateValue::Outdated {
+                                QuerySliceValue::Outdated {
                                     id,
                                     result: result.clone(),
                                 },
@@ -299,7 +299,7 @@ where
                 let this = Rc::make_mut(&mut self);
                 this.ctr += 1;
 
-                this.queries.insert(input, QueryStateValue::Loading { id });
+                this.queries.insert(input, QuerySliceValue::Loading { id });
             }
             Deferred::Completed {
                 ref input,
@@ -312,7 +312,7 @@ where
 
                     this.queries.insert(
                         input,
-                        QueryStateValue::Completed {
+                        QuerySliceValue::Completed {
                             id,
                             result: output.clone(),
                         },
@@ -321,7 +321,7 @@ where
             }
             Deferred::Outdated { ref input } => {
                 let RunQueryInput { input, id, .. } = input.as_ref().clone();
-                if let Some(QueryStateValue::Completed {
+                if let Some(QuerySliceValue::Completed {
                     id: current_id,
                     result: current_result,
                 }) = self.queries.get(&input).cloned()
@@ -332,7 +332,7 @@ where
 
                         this.queries.insert(
                             input.clone(),
-                            QueryStateValue::Outdated {
+                            QuerySliceValue::Outdated {
                                 id,
                                 result: current_result,
                             },
@@ -351,7 +351,7 @@ pub(super) struct QuerySelector<T>
 where
     T: Query + 'static,
 {
-    pub value: Option<QueryStateValue<T>>,
+    pub value: Option<QuerySliceValue<T>>,
 }
 
 impl<T> InputSelector for QuerySelector<T>
@@ -362,7 +362,7 @@ where
 
     fn select(states: &BounceStates, input: Rc<T::Input>) -> Rc<Self> {
         let value = states
-            .get_slice_value::<QueryState<T>>()
+            .get_slice_value::<QuerySlice<T>>()
             .queries
             .get(&input)
             .cloned();

@@ -5,16 +5,73 @@ use std::rc::Rc;
 use yew::platform::pinned::oneshot;
 use yew::prelude::*;
 
-use super::status::QueryStatus;
 use super::traits::{Mutation, MutationResult};
 use crate::states::future_notion::{use_future_notion_runner, FutureNotion};
 use crate::states::input_selector::use_input_selector_value;
 use crate::states::slice::use_slice_dispatch;
 
 use super::mutation_states::{
-    HandleId, MutationId, MutationSelector, MutationState, MutationStateAction, MutationStateValue,
+    HandleId, MutationId, MutationSelector, MutationSlice, MutationSliceAction, MutationSliceValue,
     RunMutation, RunMutationInput,
 };
+
+/// Mutation State
+#[derive(Debug, PartialEq)]
+pub enum MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    /// The mutation has not started yet.
+    Idle,
+    /// The mutation is loading.
+    Loading,
+    /// The mutation has completed.
+    Completed {
+        /// Result of the completed mutation.
+        result: MutationResult<T>,
+    },
+    /// A previous mutation has completed and a new mutation is currently loading.
+    Refreshing {
+        /// Result of last completed mutation.
+        last_result: MutationResult<T>,
+    },
+}
+
+impl<T> Clone for MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Idle => Self::Idle,
+            Self::Loading => Self::Loading,
+            Self::Completed { result } => Self::Completed {
+                result: result.clone(),
+            },
+            Self::Refreshing { last_result } => Self::Refreshing {
+                last_result: last_result.clone(),
+            },
+        }
+    }
+}
+
+impl<T> PartialEq<&MutationState<T>> for MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    fn eq(&self, other: &&MutationState<T>) -> bool {
+        self == *other
+    }
+}
+
+impl<T> PartialEq<MutationState<T>> for &'_ MutationState<T>
+where
+    T: Mutation + 'static,
+{
+    fn eq(&self, other: &MutationState<T>) -> bool {
+        *self == other
+    }
+}
 
 /// A handle returned by [`use_mutation`].
 pub struct UseMutationHandle<T>
@@ -22,7 +79,7 @@ where
     T: Mutation + 'static,
 {
     id: HandleId,
-    state: Rc<MutationSelector<T>>,
+    state: Rc<MutationState<T>>,
     run_mutation: Rc<dyn Fn(<RunMutation<T> as FutureNotion>::Input)>,
     _marker: PhantomData<T>,
 }
@@ -31,15 +88,9 @@ impl<T> UseMutationHandle<T>
 where
     T: Mutation + 'static,
 {
-    /// Returns the status of current mutation.
-    pub fn status(&self) -> QueryStatus {
-        match self.state.value {
-            Some(MutationStateValue::Loading { .. }) => QueryStatus::Loading,
-            Some(MutationStateValue::Completed { result: Ok(_), .. }) => QueryStatus::Ok,
-            Some(MutationStateValue::Completed { result: Err(_), .. }) => QueryStatus::Err,
-            Some(MutationStateValue::Outdated { .. }) => QueryStatus::Refreshing,
-            Some(MutationStateValue::Idle) | None => QueryStatus::Idle,
-        }
+    /// Returns the state of current mutation.
+    pub fn state(&self) -> &MutationState<T> {
+        self.state.as_ref()
     }
 
     /// Returns the result of last finished mutation (if any).
@@ -48,11 +99,13 @@ where
     /// - `Some(Ok(m))` indicates that the last mutation is successful and the content is stored in `m`.
     /// - `Some(Err(e))` indicates that the last mutation has failed and the error is stored in `e`.
     pub fn result(&self) -> Option<&MutationResult<T>> {
-        self.state.value.as_ref().and_then(|m| match m {
-            MutationStateValue::Completed { result, .. }
-            | MutationStateValue::Outdated { result, .. } => Some(result),
-            MutationStateValue::Loading { .. } | MutationStateValue::Idle => None,
-        })
+        match self.state() {
+            MutationState::Idle | MutationState::Loading => None,
+            MutationState::Completed { result }
+            | MutationState::Refreshing {
+                last_result: result,
+            } => Some(result),
+        }
     }
 
     /// Runs a mutation with input.
@@ -78,7 +131,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("UseMutationHandle")
-            .field("state", &self.state.value)
+            .field("state", &self.state)
             .finish()
     }
 }
@@ -108,7 +161,7 @@ where
 /// use std::rc::Rc;
 /// use std::convert::Infallible;
 /// use bounce::prelude::*;
-/// use bounce::query::{Mutation, MutationResult, use_mutation, QueryStatus};
+/// use bounce::query::{Mutation, MutationResult, use_mutation, MutationState};
 /// use yew::prelude::*;
 /// use async_trait::async_trait;
 /// use yew::platform::spawn_local;
@@ -155,7 +208,7 @@ where
 ///
 ///     match update_user.result() {
 ///         // The result is None if the mutation is currently loading or has yet to start.
-///         None => if update_user.status() == QueryStatus::Idle {
+///         None => if update_user.state() == MutationState::Idle {
 ///             html! {<div>{"Updating User..."}</div>}
 ///         } else {
 ///             html! {<button onclick={on_click_update_user}>{"Updating User"}</button>}
@@ -173,7 +226,7 @@ where
     T: Mutation + 'static,
 {
     let id = *use_memo(|_| HandleId::default(), ());
-    let dispatch_state = use_slice_dispatch::<MutationState<T>>();
+    let dispatch_state = use_slice_dispatch::<MutationSlice<T>>();
     let run_mutation = use_future_notion_runner::<RunMutation<T>>();
     let state = use_input_selector_value::<MutationSelector<T>>(id.into());
 
@@ -181,15 +234,29 @@ where
         use_effect_with_deps(
             |id| {
                 let id = *id;
-                dispatch_state(MutationStateAction::Create(id));
+                dispatch_state(MutationSliceAction::Create(id));
 
                 move || {
-                    dispatch_state(MutationStateAction::Destroy(id));
+                    dispatch_state(MutationSliceAction::Destroy(id));
                 }
             },
             id,
         );
     }
+
+    let state = use_memo(
+        |state| match state.value.as_ref() {
+            Some(MutationSliceValue::Idle) | None => MutationState::Idle,
+            Some(MutationSliceValue::Loading { .. }) => MutationState::Loading,
+            Some(MutationSliceValue::Completed { result, .. }) => MutationState::Completed {
+                result: result.clone(),
+            },
+            Some(MutationSliceValue::Outdated { result, .. }) => MutationState::Refreshing {
+                last_result: result.clone(),
+            },
+        },
+        state,
+    );
 
     UseMutationHandle {
         id,

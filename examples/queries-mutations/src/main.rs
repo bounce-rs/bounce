@@ -3,8 +3,8 @@ use std::rc::Rc;
 use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{
-    use_mutation, use_query, use_query_value, Mutation, MutationResult, Query, QueryResult,
-    QueryStatus,
+    use_mutation, use_query, use_query_value, Mutation, MutationResult, MutationState, Query,
+    QueryResult, QueryState, QueryValueState,
 };
 use bounce::BounceRoot;
 use log::Level;
@@ -96,13 +96,13 @@ struct ContentProps {
 fn content(props: &ContentProps) -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
-    let text = match (uuid_state.result(), uuid_state.status()) {
-        (Some(Ok(m)), QueryStatus::Refreshing) => {
+    let text = match uuid_state.state() {
+        QueryValueState::Refreshing { last_result: Ok(m) } => {
             format!("Refreshing... Last Random UUID: {}", m.uuid)
         }
-        (Some(Ok(m)), _) => format!("Random UUID: {}", m.uuid),
-        (Some(Err(_)), _) => unreachable!(),
-        (None, _) => "Loading UUID, Please wait...".to_string(),
+        QueryValueState::Completed { result: Ok(m) } => format!("Random UUID: {}", m.uuid),
+        QueryValueState::Loading => "Loading UUID, Please wait...".to_string(),
+        _ => unreachable!(),
     };
 
     html! {
@@ -116,10 +116,12 @@ fn content(props: &ContentProps) -> Html {
 fn suspend_content(props: &ContentProps) -> HtmlResult {
     let uuid_state = use_query::<UuidQuery>(().into())?;
 
-    let text = match (uuid_state.as_deref(), uuid_state.status()) {
-        (Ok(m), QueryStatus::Refreshing) => format!("Refreshing... Last Random UUID: {}", m.uuid),
-        (Ok(m), _) => format!("Random UUID: {}", m.uuid),
-        (Err(_), _) => unreachable!(),
+    let text = match uuid_state.state() {
+        QueryState::Refreshing { last_result: Ok(m) } => {
+            format!("Refreshing... Last Random UUID: {}", m.uuid)
+        }
+        QueryState::Completed { result: Ok(m) } => format!("Random UUID: {}", m.uuid),
+        _ => unreachable!(),
     };
 
     Ok(html! {
@@ -133,7 +135,7 @@ fn suspend_content(props: &ContentProps) -> HtmlResult {
 fn refresher() -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
-    let disabled = uuid_state.status() == QueryStatus::Loading;
+    let disabled = uuid_state.state() == QueryValueState::Loading;
 
     let on_fetch_clicked = Callback::from(move |_| {
         let uuid_state = uuid_state.clone();
@@ -154,7 +156,7 @@ fn echo() -> Html {
     let echo_state = use_mutation::<EchoMutation>();
     let value = use_state_eq(|| "".to_string());
 
-    let disabled = echo_state.status() == QueryStatus::Loading;
+    let disabled = echo_state.state() == MutationState::Loading;
 
     let on_input = {
         let value = value.clone();
@@ -180,14 +182,14 @@ fn echo() -> Html {
         })
     };
 
-    let resp = match (echo_state.result(), echo_state.status()) {
-        (_, QueryStatus::Loading) => "Loading...".to_string(),
-        (Some(Ok(m)), QueryStatus::Refreshing) => {
+    let resp = match echo_state.state() {
+        MutationState::Loading => "Loading...".to_string(),
+        MutationState::Refreshing { last_result: Ok(m) } => {
             format!("Refreshing... Last Server Response: {}", m.content)
         }
-        (Some(Ok(m)), _) => format!("Server Response: {}", m.content),
-        (Some(Err(_)), _) => unreachable!(),
-        (None, _) => "To send the content to server, please click 'Send'.".to_string(),
+        MutationState::Completed { result: Ok(m) } => format!("Server Response: {}", m.content),
+        MutationState::Idle => "To send the content to server, please click 'Send'.".to_string(),
+        _ => unreachable!(),
     };
 
     html! {

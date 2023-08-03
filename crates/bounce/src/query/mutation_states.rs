@@ -23,7 +23,7 @@ pub(super) struct HandleId(Id);
 pub(super) struct MutationId(Id);
 
 #[derive(PartialEq, Debug)]
-pub(super) enum MutationStateValue<T>
+pub(super) enum MutationSliceValue<T>
 where
     T: Mutation + 'static,
 {
@@ -41,7 +41,7 @@ where
     },
 }
 
-impl<T> Clone for MutationStateValue<T>
+impl<T> Clone for MutationSliceValue<T>
 where
     T: Mutation + 'static,
 {
@@ -88,7 +88,7 @@ where
     result
 }
 
-pub(super) enum MutationStateAction {
+pub(super) enum MutationSliceAction {
     /// Start tracking a handle.
     Create(HandleId),
     /// Stop tracking a handle.
@@ -97,15 +97,15 @@ pub(super) enum MutationStateAction {
 
 #[derive(Slice, Debug)]
 #[bounce(with_notion(Deferred<RunMutation<T>>))]
-pub(super) struct MutationState<T>
+pub(super) struct MutationSlice<T>
 where
     T: Mutation + 'static,
 {
     ctr: u64,
-    mutations: HashMap<HandleId, MutationStateValue<T>>,
+    mutations: HashMap<HandleId, MutationSliceValue<T>>,
 }
 
-impl<T> PartialEq for MutationState<T>
+impl<T> PartialEq for MutationSlice<T>
 where
     T: Mutation + 'static,
 {
@@ -114,7 +114,7 @@ where
     }
 }
 
-impl<T> Default for MutationState<T>
+impl<T> Default for MutationSlice<T>
 where
     T: Mutation + 'static,
 {
@@ -126,7 +126,7 @@ where
     }
 }
 
-impl<T> Clone for MutationState<T>
+impl<T> Clone for MutationSlice<T>
 where
     T: Mutation + 'static,
 {
@@ -138,11 +138,11 @@ where
     }
 }
 
-impl<T> Reducible for MutationState<T>
+impl<T> Reducible for MutationSlice<T>
 where
     T: Mutation + 'static,
 {
-    type Action = MutationStateAction;
+    type Action = MutationSliceAction;
 
     fn reduce(mut self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         {
@@ -151,7 +151,7 @@ where
 
             match action {
                 Self::Action::Create(id) => {
-                    this.mutations.insert(id, MutationStateValue::Idle);
+                    this.mutations.insert(id, MutationSliceValue::Idle);
                 }
 
                 Self::Action::Destroy(id) => {
@@ -164,7 +164,7 @@ where
     }
 }
 
-impl<T> WithNotion<Deferred<RunMutation<T>>> for MutationState<T>
+impl<T> WithNotion<Deferred<RunMutation<T>>> for MutationSlice<T>
 where
     T: Mutation + 'static,
 {
@@ -184,19 +184,19 @@ where
                     Entry::Occupied(mut m) => {
                         let m = m.get_mut();
                         match m {
-                            MutationStateValue::Loading { id }
-                            | MutationStateValue::Completed { id, .. }
-                            | MutationStateValue::Outdated { id, .. } => {
+                            MutationSliceValue::Loading { id }
+                            | MutationSliceValue::Completed { id, .. }
+                            | MutationSliceValue::Outdated { id, .. } => {
                                 // only replace if new id is higher.
                                 if *id <= input.mutation_id {
-                                    *m = MutationStateValue::Completed {
+                                    *m = MutationSliceValue::Completed {
                                         id: input.mutation_id,
                                         result: output.as_ref().clone(),
                                     };
                                 }
                             }
-                            MutationStateValue::Idle => {
-                                *m = MutationStateValue::Completed {
+                            MutationSliceValue::Idle => {
+                                *m = MutationSliceValue::Completed {
                                     id: input.mutation_id,
                                     result: output.as_ref().clone(),
                                 };
@@ -216,16 +216,16 @@ where
                     Entry::Occupied(mut m) => {
                         let m = m.get_mut();
                         match m {
-                            MutationStateValue::Loading { .. } => {}
-                            MutationStateValue::Completed { id, result } => {
-                                *m = MutationStateValue::Outdated {
+                            MutationSliceValue::Loading { .. } => {}
+                            MutationSliceValue::Completed { id, result } => {
+                                *m = MutationSliceValue::Outdated {
                                     id: *id,
                                     result: result.clone(),
                                 };
                             }
-                            MutationStateValue::Outdated { .. } => {}
-                            MutationStateValue::Idle => {
-                                *m = MutationStateValue::Loading {
+                            MutationSliceValue::Outdated { .. } => {}
+                            MutationSliceValue::Idle => {
+                                *m = MutationSliceValue::Loading {
                                     id: input.mutation_id,
                                 };
                             }
@@ -246,7 +246,7 @@ where
     T: Mutation + 'static,
 {
     pub id: Option<MutationId>,
-    pub value: Option<MutationStateValue<T>>,
+    pub value: Option<MutationSliceValue<T>>,
 }
 
 impl<T> InputSelector for MutationSelector<T>
@@ -256,16 +256,16 @@ where
     type Input = HandleId;
     fn select(states: &BounceStates, input: Rc<HandleId>) -> Rc<Self> {
         let value = states
-            .get_slice_value::<MutationState<T>>()
+            .get_slice_value::<MutationSlice<T>>()
             .mutations
             .get(&input)
             .cloned();
 
         let id = value.as_ref().and_then(|m| match m {
-            MutationStateValue::Loading { id }
-            | MutationStateValue::Completed { id, .. }
-            | MutationStateValue::Outdated { id, .. } => Some(*id),
-            MutationStateValue::Idle => None,
+            MutationSliceValue::Loading { id }
+            | MutationSliceValue::Completed { id, .. }
+            | MutationSliceValue::Outdated { id, .. } => Some(*id),
+            MutationSliceValue::Idle => None,
         });
 
         Self { id, value }.into()
