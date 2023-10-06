@@ -212,49 +212,44 @@ pub fn use_query<T>(input: Rc<T::Input>) -> SuspensionResult<UseQueryHandle<T>>
 where
     T: Query + 'static,
 {
-    let id = *use_memo(|_| Id::new(), ());
+    let id = *use_memo((), |_| Id::new());
     let value_state = use_input_selector_value::<QuerySelector<T>>(input.clone());
     let dispatch_state = use_slice_dispatch::<QuerySlice<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
 
-    let value = use_memo(
-        |v| match v.value {
-            Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
-            Some(QuerySliceValue::Completed { id, result: ref m }) => {
-                Ok((id, Rc::new(QueryState::Completed { result: m.clone() })))
-            }
-            Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((
-                id,
-                Rc::new(QueryState::Refreshing {
-                    last_result: m.clone(),
-                }),
-            )),
-        },
-        value_state.clone(),
-    );
+    let value = use_memo(value_state.clone(), |v| match v.value {
+        Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
+        Some(QuerySliceValue::Completed { id, result: ref m }) => {
+            Ok((id, Rc::new(QueryState::Completed { result: m.clone() })))
+        }
+        Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((
+            id,
+            Rc::new(QueryState::Refreshing {
+                last_result: m.clone(),
+            }),
+        )),
+    });
 
     {
         let input = input.clone();
         let run_query = run_query.clone();
 
-        use_memo(
-            move |_| {
-                run_query(RunQueryInput {
-                    id,
-                    input: input.clone(),
-                    sender: Rc::default(),
-                    is_refresh: false,
-                });
-            },
-            (),
-        );
+        use_memo((), move |_| {
+            run_query(RunQueryInput {
+                id,
+                input: input.clone(),
+                sender: Rc::default(),
+                is_refresh: false,
+            });
+        });
     }
 
     {
         let input = input.clone();
         let run_query = run_query.clone();
 
-        use_effect_with_deps(
+        use_effect_with(
+            (id, input, value_state.clone()),
             move |(id, input, value_state)| {
                 if matches!(value_state.value, Some(QuerySliceValue::Outdated { .. })) {
                     run_query(RunQueryInput {
@@ -267,7 +262,6 @@ where
 
                 || {}
             },
-            (id, input, value_state.clone()),
         );
     }
 

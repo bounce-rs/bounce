@@ -28,14 +28,11 @@ pub fn title_applier() -> Html {
         .map(|m| m.value.to_owned())
         .unwrap_or_else(|| "unknown title".into());
 
-    use_effect_with_deps(
-        |m| {
-            document().set_title(m);
+    use_effect_with(title, |m| {
+        document().set_title(m);
 
-            || {}
-        },
-        title,
-    );
+        || {}
+    });
 
     Html::default()
 }

@@ -216,7 +216,7 @@ pub fn use_query_value<T>(input: Rc<T::Input>) -> UseQueryValueHandle<T>
 where
     T: Query + 'static,
 {
-    let id = *use_memo(|_| Id::new(), ());
+    let id = *use_memo((), |_| Id::new());
     let value = use_input_selector_value::<QuerySelector<T>>(input.clone());
     let dispatch_state = use_slice_dispatch::<QuerySlice<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
@@ -224,7 +224,8 @@ where
     {
         let input = input.clone();
         let run_query = run_query.clone();
-        use_effect_with_deps(
+        use_effect_with(
+            (id, input, value.value.clone()),
             move |(id, input, value)| {
                 if value.is_none() || matches!(value, Some(QuerySliceValue::Outdated { .. })) {
                     run_query(RunQueryInput {
@@ -237,22 +238,18 @@ where
 
                 || {}
             },
-            (id, input, value.value.clone()),
         );
     }
 
-    let state = use_memo(
-        |value| match value.value {
-            Some(QuerySliceValue::Completed { ref result, .. }) => QueryValueState::Completed {
-                result: result.clone(),
-            },
-            Some(QuerySliceValue::Outdated { ref result, .. }) => QueryValueState::Refreshing {
-                last_result: result.clone(),
-            },
-            Some(QuerySliceValue::Loading { .. }) | None => QueryValueState::Loading,
+    let state = use_memo(value, |value| match value.value {
+        Some(QuerySliceValue::Completed { ref result, .. }) => QueryValueState::Completed {
+            result: result.clone(),
         },
-        value,
-    );
+        Some(QuerySliceValue::Outdated { ref result, .. }) => QueryValueState::Refreshing {
+            last_result: result.clone(),
+        },
+        Some(QuerySliceValue::Loading { .. }) | None => QueryValueState::Loading,
+    });
 
     UseQueryValueHandle {
         input,

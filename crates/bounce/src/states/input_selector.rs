@@ -276,22 +276,19 @@ where
     {
         let val = val.clone();
         let root = root;
-        use_memo(
-            move |(root, input)| {
-                let state = root
-                    .get_state::<InputSelectorsState<T>>()
-                    .get_state(input.clone());
+        use_memo((root, input), move |(root, input)| {
+            let state = root
+                .get_state::<InputSelectorsState<T>>()
+                .get_state(input.clone());
 
-                // we need to set the value here again in case the value has changed between the
-                // initial render and the listener is registered.
-                val.set(state.get(root.states()));
+            // we need to set the value here again in case the value has changed between the
+            // initial render and the listener is registered.
+            val.set(state.get(root.states()));
 
-                state.listen(Rc::new(Callback::from(move |m| {
-                    val.set(m);
-                })))
-            },
-            (root, input),
-        );
+            state.listen(Rc::new(Callback::from(move |m| {
+                val.set(m);
+            })))
+        });
     }
     (*val).clone()
 }

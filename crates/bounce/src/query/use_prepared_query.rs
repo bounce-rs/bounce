@@ -86,7 +86,7 @@ where
     T::Input: Clone + Serialize + for<'de> Deserialize<'de>,
     T::Error: Clone + Serialize + for<'de> Deserialize<'de>,
 {
-    let id = *use_memo(|_| Id::new(), ());
+    let id = *use_memo((), |_| Id::new());
     let value_state = use_input_selector_value::<QuerySelector<T>>(input.clone());
     let dispatch_state = use_slice_dispatch::<QuerySlice<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
@@ -95,8 +95,11 @@ where
         let _run_query = run_query.clone();
         let _root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
-        let prepared_value = use_prepared_state!(
-            async move |input| -> std::result::Result<T, T::Error> {
+        let prepared_value =
+            use_prepared_state!((*input).clone(), async move |input| -> std::result::Result<
+                T,
+                T::Error,
+            > {
                 use std::cell::RefCell;
                 use std::time::Duration;
 
@@ -145,61 +148,53 @@ where
                         }
                     }
                 }
-            },
-            (*input).clone()
-        )?;
+            })?;
 
-        (*use_memo(
-            |p| p.clone().map(|m| (*m).clone().map(Rc::new)),
-            prepared_value,
-        ))
+        (*use_memo(prepared_value, |p| {
+            p.clone().map(|m| (*m).clone().map(Rc::new))
+        }))
         .clone()
     };
 
-    let value = use_memo(
-        |v| match v.value {
-            Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
-            Some(QuerySliceValue::Completed { id, result: ref m }) => {
-                Ok((id, Rc::new(QueryState::Completed { result: m.clone() })))
-            }
-            Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((
-                id,
-                Rc::new(QueryState::Refreshing {
-                    last_result: m.clone(),
-                }),
-            )),
-        },
-        value_state.clone(),
-    );
+    let value = use_memo(value_state.clone(), |v| match v.value {
+        Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
+        Some(QuerySliceValue::Completed { id, result: ref m }) => {
+            Ok((id, Rc::new(QueryState::Completed { result: m.clone() })))
+        }
+        Some(QuerySliceValue::Outdated { id, result: ref m }) => Ok((
+            id,
+            Rc::new(QueryState::Refreshing {
+                last_result: m.clone(),
+            }),
+        )),
+    });
 
     {
         let input = input.clone();
         let run_query = run_query.clone();
         let dispatch_state = dispatch_state.clone();
 
-        use_memo(
-            move |_| match prepared_value {
-                Some(m) => dispatch_state(QuerySliceAction::LoadPrepared {
-                    id,
-                    input,
-                    result: m,
-                }),
-                None => run_query(RunQueryInput {
-                    id,
-                    input: input.clone(),
-                    sender: Rc::default(),
-                    is_refresh: false,
-                }),
-            },
-            (),
-        );
+        use_memo((), move |_| match prepared_value {
+            Some(m) => dispatch_state(QuerySliceAction::LoadPrepared {
+                id,
+                input,
+                result: m,
+            }),
+            None => run_query(RunQueryInput {
+                id,
+                input: input.clone(),
+                sender: Rc::default(),
+                is_refresh: false,
+            }),
+        });
     }
 
     {
         let input = input.clone();
         let run_query = run_query.clone();
 
-        use_effect_with_deps(
+        use_effect_with(
+            (id, input, value_state.clone()),
             move |(id, input, value_state)| {
                 if matches!(value_state.value, Some(QuerySliceValue::Outdated { .. })) {
                     run_query(RunQueryInput {
@@ -212,7 +207,6 @@ where
 
                 || {}
             },
-            (id, input, value_state.clone()),
         );
     }
 

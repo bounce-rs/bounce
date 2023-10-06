@@ -50,15 +50,12 @@ async fn test_notion_generic() {
         {
             let a = a.clone();
             let b = b.clone();
-            use_effect_with_deps(
-                move |_| {
-                    a.set(State { inner: 1 });
-                    b.set(State { inner: 2 });
+            use_effect_with((), move |_| {
+                a.set(State { inner: 1 });
+                b.set(State { inner: 2 });
 
-                    || {}
-                },
-                (),
-            );
+                || {}
+            });
         }
 
         html! {

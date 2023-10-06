@@ -59,18 +59,15 @@ async fn test_query_requery_upon_state_change() {
         let my_query = use_query_value::<MyQuery>(().into());
         let set_my_state = use_atom_setter();
 
-        use_effect_with_deps(
-            move |_| {
-                spawn_local(async move {
-                    sleep(Duration::from_millis(50)).await;
+        use_effect_with((), move |_| {
+            spawn_local(async move {
+                sleep(Duration::from_millis(50)).await;
 
-                    set_my_state(MyState { inner: 1 });
-                });
+                set_my_state(MyState { inner: 1 });
+            });
 
-                || {}
-            },
-            (),
-        );
+            || {}
+        });
 
         match my_query.result() {
             None => {
