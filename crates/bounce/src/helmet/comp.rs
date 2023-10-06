@@ -42,7 +42,11 @@ fn collect_str_in_children(tag: &VNode) -> String {
 }
 
 fn collect_text_content(tag: &VTag) -> String {
-    collect_str_in_children(&tag.children().clone().into())
+    if let Some(children) = tag.children() {
+        collect_str_in_children(children)
+    } else {
+        String::default()
+    }
 }
 
 fn collect_attributes(tag: &VTag) -> BTreeMap<Arc<str>, Arc<str>> {
@@ -71,8 +75,11 @@ fn assert_empty_node(node: &VNode) {
         VNode::VRaw(_) => throw_str("expected nothing, found raw html."),
     }
 }
+
 fn assert_empty_children(tag: &VTag) {
-    assert_empty_node(&tag.children().clone().into())
+    if let Some(children) = tag.children() {
+        assert_empty_node(children);
+    }
 }
 
 #[derive(Properties, PartialEq, Clone)]
