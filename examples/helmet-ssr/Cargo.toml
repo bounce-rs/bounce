@@ -14,7 +14,7 @@ required-features = ["ssr"]
 
 [dependencies]
 bounce = { path = "../../crates/bounce", features = ["helmet"] }
-yew = { version = "0.20" }
+yew = { version = "0.21" }
 log = "0.4.19"
 console_log = { version = "1.0.0", features = ["color"] }
 wasm-bindgen = "0.2.87"

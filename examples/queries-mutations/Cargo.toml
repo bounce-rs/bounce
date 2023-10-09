@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 bounce = { path = "../../crates/bounce", features = ["query"] }
-yew = { version = "0.20", features = ["csr"] }
+yew = { version = "0.21", features = ["csr"] }
 log = "0.4.19"
 console_log = { version = "1.0.0", features = ["color"] }
 reqwest = { version = "0.11.18", features = ["json"] }
