@@ -65,16 +65,13 @@ mod guard {
         let guard = use_slice::<HelmetBridgeGuard>();
         let root = use_context::<BounceRootState>().expect_throw("No bounce root found.");
 
-        use_effect_with_deps(
-            move |_| {
-                guard.dispatch(HelmetBridgeGuardAction::Increment);
+        use_effect_with(root, move |_| {
+            guard.dispatch(HelmetBridgeGuardAction::Increment);
 
-                move || {
-                    guard.dispatch(HelmetBridgeGuardAction::Decrement);
-                }
-            },
-            root,
-        );
+            move || {
+                guard.dispatch(HelmetBridgeGuardAction::Decrement);
+            }
+        });
     }
 }
 
@@ -244,24 +241,26 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     }
 
     // Remove pre-rendered tags.
-    use_effect_with_deps(
-        |_| {
-            let pre_rendered = head()
-                .query_selector_all("[data-bounce-helmet=pre-render]")
-                .expect_throw("failed to read pre rendered tags");
+    use_effect_with((), |_| {
+        let pre_rendered = head()
+            .query_selector_all("[data-bounce-helmet=pre-render]")
+            .expect_throw("failed to read pre rendered tags");
 
-            for i in 0..pre_rendered.length() {
-                if let Some(m) = pre_rendered.get(i) {
-                    if let Some(parent) = m.parent_node() {
-                        let _ = parent.remove_child(&m);
-                    }
+        for i in 0..pre_rendered.length() {
+            if let Some(m) = pre_rendered.get(i) {
+                if let Some(parent) = m.parent_node() {
+                    let _ = parent.remove_child(&m);
                 }
             }
-        },
-        (),
-    );
+        }
+    });
 
-    use_effect_with_deps(
+    use_effect_with(
+        (
+            helmet_states,
+            props.format_title.clone(),
+            props.default_title.clone(),
+        ),
         move |(helmet_states, format_title, default_title)| {
             // Calculate tags to render.
             let to_render =
@@ -272,11 +271,6 @@ pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
 
             || {}
         },
-        (
-            helmet_states,
-            props.format_title.clone(),
-            props.default_title.clone(),
-        ),
     );
 
     Html::default()

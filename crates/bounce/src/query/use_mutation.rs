@@ -225,38 +225,32 @@ pub fn use_mutation<T>() -> UseMutationHandle<T>
 where
     T: Mutation + 'static,
 {
-    let id = *use_memo(|_| HandleId::default(), ());
+    let id = *use_memo((), |_| HandleId::default());
     let dispatch_state = use_slice_dispatch::<MutationSlice<T>>();
     let run_mutation = use_future_notion_runner::<RunMutation<T>>();
     let state = use_input_selector_value::<MutationSelector<T>>(id.into());
 
     {
-        use_effect_with_deps(
-            |id| {
-                let id = *id;
-                dispatch_state(MutationSliceAction::Create(id));
+        use_effect_with(id, |id| {
+            let id = *id;
+            dispatch_state(MutationSliceAction::Create(id));
 
-                move || {
-                    dispatch_state(MutationSliceAction::Destroy(id));
-                }
-            },
-            id,
-        );
+            move || {
+                dispatch_state(MutationSliceAction::Destroy(id));
+            }
+        });
     }
 
-    let state = use_memo(
-        |state| match state.value.as_ref() {
-            Some(MutationSliceValue::Idle) | None => MutationState::Idle,
-            Some(MutationSliceValue::Loading { .. }) => MutationState::Loading,
-            Some(MutationSliceValue::Completed { result, .. }) => MutationState::Completed {
-                result: result.clone(),
-            },
-            Some(MutationSliceValue::Outdated { result, .. }) => MutationState::Refreshing {
-                last_result: result.clone(),
-            },
+    let state = use_memo(state, |state| match state.value.as_ref() {
+        Some(MutationSliceValue::Idle) | None => MutationState::Idle,
+        Some(MutationSliceValue::Loading { .. }) => MutationState::Loading,
+        Some(MutationSliceValue::Completed { result, .. }) => MutationState::Completed {
+            result: result.clone(),
         },
-        state,
-    );
+        Some(MutationSliceValue::Outdated { result, .. }) => MutationState::Refreshing {
+            last_result: result.clone(),
+        },
+    });
 
     UseMutationHandle {
         id,

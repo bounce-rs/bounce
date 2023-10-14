@@ -56,45 +56,39 @@ pub fn bounce_root(props: &BounceRootProps) -> Html {
     #[allow(clippy::redundant_clone)]
     {
         let root_state = root_state.clone();
-        use_effect_with_deps(
-            move |_| {
-                // We clear all states manually.
-                move || {
-                    root_state.clear();
-                }
-            },
-            (),
-        );
+        use_effect_with((), move |_| {
+            // We clear all states manually.
+            move || {
+                root_state.clear();
+            }
+        });
     }
 
     #[allow(clippy::unused_unit, clippy::redundant_clone)]
     {
         let _root_state = root_state.clone();
-        let _ = use_transitive_state!(
-            move |_| -> () {
-                #[cfg(feature = "ssr")]
-                #[cfg(feature = "helmet")]
-                {
-                    // Workaround to send helmet states back to static writer
-                    use crate::helmet::StaticWriterState;
+        let _ = use_transitive_state!((), move |_| -> () {
+            #[cfg(feature = "ssr")]
+            #[cfg(feature = "helmet")]
+            {
+                // Workaround to send helmet states back to static writer
+                use crate::helmet::StaticWriterState;
 
-                    let states = _root_state.states();
-                    let writer_state = states.get_atom_value::<StaticWriterState>();
+                let states = _root_state.states();
+                let writer_state = states.get_atom_value::<StaticWriterState>();
 
-                    if let Some(ref w) = writer_state.writer {
-                        w.send_helmet(
-                            states,
-                            writer_state.format_title.clone(),
-                            writer_state.default_title.clone(),
-                        );
-                    }
+                if let Some(ref w) = writer_state.writer {
+                    w.send_helmet(
+                        states,
+                        writer_state.format_title.clone(),
+                        writer_state.default_title.clone(),
+                    );
                 }
+            }
 
-                // We drop the root state on SSR as well.
-                _root_state.clear();
-            },
-            ()
-        );
+            // We drop the root state on SSR as well.
+            _root_state.clear();
+        });
     }
 
     html! {

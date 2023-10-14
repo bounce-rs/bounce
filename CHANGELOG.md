@@ -1,3 +1,13 @@
+## Release 0.9.0
+
+### Breaking Changes
+
+- Compatible with Yew 0.21. Due to the breaking API changes in Yew 0.21 not backwards compatible with Yew 0.20.
+
+### Other Changes
+
+- Updated the Gloo dependency to 0.10
+
 ## Release 0.8.0
 
 ### Breaking Changes

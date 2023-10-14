@@ -280,20 +280,17 @@ where
     {
         let val = val.clone();
         let root = root.clone();
-        use_memo(
-            move |root| {
-                let state = root.get_state::<SliceState<T>>();
+        use_memo(root, move |root| {
+            let state = root.get_state::<SliceState<T>>();
 
-                // we need to set the value here again in case the value has changed between the
-                // initial render and the listener is registered.
-                val.set(state.get());
+            // we need to set the value here again in case the value has changed between the
+            // initial render and the listener is registered.
+            val.set(state.get());
 
-                state.listen(Rc::new(Callback::from(move |m| {
-                    val.set(m);
-                })))
-            },
-            root,
-        );
+            state.listen(Rc::new(Callback::from(move |m| {
+                val.set(m);
+            })))
+        });
     }
 
     let val = (*val).clone();

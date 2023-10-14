@@ -169,35 +169,26 @@ where
 
     {
         let artifact_dispatch = artifact_dispatch.clone();
-        use_effect_with_deps(
-            move |(val, _)| {
-                artifact_dispatch(ArtifactAction::Insert(id, val.clone()));
-                || {}
-            },
-            (props.value.clone(), root.clone()),
-        );
+        use_effect_with((props.value.clone(), root.clone()), move |(val, _)| {
+            artifact_dispatch(ArtifactAction::Insert(id, val.clone()));
+            || {}
+        });
     }
 
     #[allow(clippy::unused_unit)]
     {
         let _artifact_dispatch = artifact_dispatch.clone();
         let _val = props.value.clone();
-        let _ = use_prepared_state!(
-            move |_| -> () {
-                _artifact_dispatch(ArtifactAction::Insert(id, _val));
-            },
-            ()
-        );
+        let _ = use_prepared_state!((), move |_| -> () {
+            _artifact_dispatch(ArtifactAction::Insert(id, _val));
+        });
     }
 
-    use_effect_with_deps(
-        move |_| {
-            move || {
-                artifact_dispatch(ArtifactAction::Remove(id));
-            }
-        },
-        root,
-    );
+    use_effect_with(root, move |_| {
+        move || {
+            artifact_dispatch(ArtifactAction::Remove(id));
+        }
+    });
 
     Html::default()
 }
