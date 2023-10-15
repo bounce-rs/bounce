@@ -1,6 +1,6 @@
 [package]
 name = "bounce-macros"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
 repository = "https://github.com/bounce-rs/bounce"
 authors = ["Kaede Hoshiakwa <futursolo@icloud.com>"]
