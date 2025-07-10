@@ -55,7 +55,7 @@ jobs:
         run: |
           for d in "examples/"*
           do
-            trunk build --release $d/index.html
+            trunk build --release true $d/index.html
           done
 
   test:
