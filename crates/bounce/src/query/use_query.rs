@@ -217,6 +217,20 @@ where
     let dispatch_state = use_slice_dispatch::<QuerySlice<T>>();
     let run_query = use_future_notion_runner::<RunQuery<T>>();
 
+    {
+        let input = input.clone();
+        let run_query = run_query.clone();
+        
+        if value_state.value.is_none() {
+            run_query(RunQueryInput {
+                id,
+                input: input.clone(),
+                sender: Rc::default(),
+                is_refresh: false,
+            });
+        }
+    }
+
     let value = use_memo(value_state.clone(), |v| match v.value {
         Some(QuerySliceValue::Loading { .. }) | None => Err(Suspension::new()),
         Some(QuerySliceValue::Completed { id, result: ref m }) => {
@@ -234,23 +248,10 @@ where
         let input = input.clone();
         let run_query = run_query.clone();
 
-        use_memo((), move |_| {
-            run_query(RunQueryInput {
-                id,
-                input: input.clone(),
-                sender: Rc::default(),
-                is_refresh: false,
-            });
-        });
-    }
-
-    {
-        let input = input.clone();
-        let run_query = run_query.clone();
-
         use_effect_with(
             (id, input, value_state.clone()),
             move |(id, input, value_state)| {
+                // Only handle Outdated state in effect (None is handled synchronously above)
                 if matches!(value_state.value, Some(QuerySliceValue::Outdated { .. })) {
                     run_query(RunQueryInput {
                         id: *id,

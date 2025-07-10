@@ -1,3 +1,8 @@
+
+### Other Changes
+
+fixed use_query and use_prepared_query stalling when the input changes.
+
 ## Release 0.9.0
 
 ### Breaking Changes
