@@ -220,7 +220,7 @@ where
     {
         let input = input.clone();
         let run_query = run_query.clone();
-        
+
         if value_state.value.is_none() {
             run_query(RunQueryInput {
                 id,
