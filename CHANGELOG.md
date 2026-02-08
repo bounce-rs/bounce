@@ -1,3 +1,9 @@
+## Release 0.10.0
+
+### Breaking Changes
+
+- Compatible with Yew 0.22. Due to the breaking API changes in Yew 0.22 not backwards compatible with Yew 0.21.
+
 ## Release 0.9.0
 
 ### Breaking Changes
