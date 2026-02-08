@@ -54,7 +54,7 @@ async fn test_query_requery_upon_state_change() {
         }
     }
 
-    #[function_component(Comp)]
+    #[component(Comp)]
     fn comp() -> Html {
         let my_query = use_query_value::<MyQuery>(().into());
         let set_my_state = use_atom_setter();
@@ -80,7 +80,7 @@ async fn test_query_requery_upon_state_change() {
         }
     }
 
-    #[function_component(App)]
+    #[component(App)]
     fn app() -> Html {
         html! {
             <BounceRoot>

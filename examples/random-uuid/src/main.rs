@@ -47,7 +47,7 @@ impl WithNotion<Deferred<FetchUuid>> for UuidState {
     }
 }
 
-#[function_component(Reader)]
+#[component(Reader)]
 fn reader() -> Html {
     let uuid_state = use_atom_value::<UuidState>();
 
@@ -62,7 +62,7 @@ fn reader() -> Html {
     html! { <div>{text}</div> }
 }
 
-#[function_component(Loader)]
+#[component(Loader)]
 fn loader() -> Html {
     let uuid_state = use_atom::<UuidState>();
     let run_fetch_uuid = use_future_notion_runner::<FetchUuid>();
@@ -74,7 +74,7 @@ fn loader() -> Html {
     html! { <button {disabled} onclick={on_fetch_clicked}>{"Fetch"}</button> }
 }
 
-#[function_component(App)]
+#[component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>

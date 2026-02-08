@@ -31,14 +31,14 @@ impl fmt::Display for Username {
     }
 }
 
-#[function_component(Reader)]
+#[component(Reader)]
 fn reader() -> Html {
     let username = use_atom_value::<Username>();
 
     html! { <div id="reader">{"Hello, "}{username}</div> }
 }
 
-#[function_component(Setter)]
+#[component(Setter)]
 fn setter() -> Html {
     let username = use_atom::<Username>();
 
@@ -59,7 +59,7 @@ fn setter() -> Html {
     }
 }
 
-#[function_component(Resetter)]
+#[component(Resetter)]
 fn resetter() -> Html {
     let set_username = use_atom_setter::<Username>();
 
@@ -68,7 +68,7 @@ fn resetter() -> Html {
     html! { <button id="btn-reset" onclick={on_reset_clicked}>{"Reset"}</button> }
 }
 
-#[function_component(App)]
+#[component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>

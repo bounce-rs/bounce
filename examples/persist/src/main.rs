@@ -40,14 +40,14 @@ impl Observed for Username {
     }
 }
 
-#[function_component(Reader)]
+#[component(Reader)]
 fn reader() -> Html {
     let username = use_atom_value::<Username>();
 
     html! { <div id="reader">{"Hello, "}{username}</div> }
 }
 
-#[function_component(Setter)]
+#[component(Setter)]
 fn setter() -> Html {
     let username = use_atom::<Username>();
 
@@ -68,7 +68,7 @@ fn setter() -> Html {
     }
 }
 
-#[function_component(App)]
+#[component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>

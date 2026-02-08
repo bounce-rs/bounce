@@ -42,7 +42,7 @@ async fn test_notion_generic() {
         }
     }
 
-    #[function_component(Comp)]
+    #[component(Comp)]
     fn comp() -> Html {
         let a = use_atom::<State<u32>>();
         let b = use_atom::<State<u64>>();
@@ -66,7 +66,7 @@ async fn test_notion_generic() {
         }
     }
 
-    #[function_component(Root)]
+    #[component(Root)]
     fn root() -> Html {
         html! {
             <BounceRoot>

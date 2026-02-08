@@ -210,7 +210,7 @@ fn render_tags(
 /// }
 /// # }
 /// ```
-#[function_component(HelmetBridge)]
+#[component(HelmetBridge)]
 pub fn helmet_bridge(props: &HelmetBridgeProps) -> Html {
     #[cfg(debug_assertions)]
     {
