@@ -24,18 +24,13 @@ async fn fetch_uuid(_input: &()) -> String {
     uuid_resp.uuid
 }
 
-#[derive(PartialEq, Atom, Eq)]
+#[derive(PartialEq, Atom, Eq, Default)]
 #[bounce(with_notion(Deferred<FetchUuid>))]
 enum UuidState {
+    #[default]
     NotStarted,
     Pending,
     Complete(String),
-}
-
-impl Default for UuidState {
-    fn default() -> UuidState {
-        Self::NotStarted
-    }
 }
 
 impl WithNotion<Deferred<FetchUuid>> for UuidState {

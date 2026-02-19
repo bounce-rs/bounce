@@ -4,12 +4,12 @@ use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{use_prepared_query, Query, QueryResult};
 use bounce::BounceRoot;
+use bounce::__vendored::yew::component;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 use yew::platform::spawn_local;
 use yew::prelude::*;
-use bounce::__vendored::yew::component;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Eq, Clone)]
 struct UuidQuery {
