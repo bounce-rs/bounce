@@ -19,7 +19,7 @@ pub enum Route {
     Home,
 }
 
-#[function_component(A)]
+#[component(A)]
 fn a() -> Html {
     html! {
         <>
@@ -33,14 +33,14 @@ fn a() -> Html {
     }
 }
 
-#[function_component(B)]
+#[component(B)]
 fn b() -> Html {
     html! {
         <div>{"This is page B. This page does not have a specific title, so default title will be used instead."}</div>
     }
 }
 
-#[function_component(Home)]
+#[component(Home)]
 fn home() -> Html {
     html! {
         <>
@@ -53,7 +53,7 @@ fn home() -> Html {
     }
 }
 
-#[function_component(Links)]
+#[component(Links)]
 fn links() -> Html {
     html! {
         <>
@@ -76,7 +76,7 @@ fn format_title(s: AttrValue) -> AttrValue {
     format!("{s} - Example").into()
 }
 
-#[function_component(App)]
+#[component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>

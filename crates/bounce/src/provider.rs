@@ -40,7 +40,7 @@ pub struct BounceRootProps {
 /// }
 ///
 /// ```
-#[function_component(BounceRoot)]
+#[component(BounceRoot)]
 pub fn bounce_root(props: &BounceRootProps) -> Html {
     let BounceRootProps {
         children,

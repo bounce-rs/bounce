@@ -24,18 +24,13 @@ async fn fetch_uuid(_input: &()) -> String {
     uuid_resp.uuid
 }
 
-#[derive(PartialEq, Atom, Eq)]
+#[derive(PartialEq, Atom, Eq, Default)]
 #[bounce(with_notion(Deferred<FetchUuid>))]
 enum UuidState {
+    #[default]
     NotStarted,
     Pending,
     Complete(String),
-}
-
-impl Default for UuidState {
-    fn default() -> UuidState {
-        Self::NotStarted
-    }
 }
 
 impl WithNotion<Deferred<FetchUuid>> for UuidState {
@@ -47,7 +42,7 @@ impl WithNotion<Deferred<FetchUuid>> for UuidState {
     }
 }
 
-#[function_component(Reader)]
+#[component(Reader)]
 fn reader() -> Html {
     let uuid_state = use_atom_value::<UuidState>();
 
@@ -62,7 +57,7 @@ fn reader() -> Html {
     html! { <div>{text}</div> }
 }
 
-#[function_component(Loader)]
+#[component(Loader)]
 fn loader() -> Html {
     let uuid_state = use_atom::<UuidState>();
     let run_fetch_uuid = use_future_notion_runner::<FetchUuid>();
@@ -74,7 +69,7 @@ fn loader() -> Html {
     html! { <button {disabled} onclick={on_fetch_clicked}>{"Fetch"}</button> }
 }
 
-#[function_component(App)]
+#[component(App)]
 fn app() -> Html {
     html! {
         <BounceRoot>
