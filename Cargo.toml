@@ -15,9 +15,8 @@ members = [
     "examples/helmet-title",
     "examples/helmet-ssr",
     "examples/persist",
-
-    "e2e",
 ]
+exclude = ["e2e"]
 resolver = "2"
 
 [profile.release]
