@@ -88,7 +88,7 @@ pub use states::slice::Slice;
 
 /// A future-based notion that notifies states when it begins and finishes.
 ///
-/// A future notion accepts a signle argument as input and returns an output.
+/// A future notion accepts a single argument as input and returns an output.
 ///
 /// It can optionally accept a `states` parameter which has a type of [`BounceStates`] that can be
 /// used to access bounce states when being run.
