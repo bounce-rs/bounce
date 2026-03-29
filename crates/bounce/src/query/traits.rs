@@ -54,7 +54,10 @@ pub trait Query: PartialEq {
     /// Runs a query.
     ///
     /// This method will only be called when the result is not already cached.
-    fn query(states: &BounceStates, input: Rc<Self::Input>) -> impl std::future::Future<Output = QueryResult<Self>>;
+    fn query(
+        states: &BounceStates,
+        input: Rc<Self::Input>,
+    ) -> impl std::future::Future<Output = QueryResult<Self>>;
 }
 
 /// A Result returned by mutations.
@@ -102,5 +105,8 @@ pub trait Mutation: PartialEq {
     type Error: 'static + std::error::Error + PartialEq + Clone;
 
     /// Runs a mutation.
-    fn run(states: &BounceStates, input: Rc<Self::Input>) -> impl std::future::Future<Output = MutationResult<Self>>;
+    fn run(
+        states: &BounceStates,
+        input: Rc<Self::Input>,
+    ) -> impl std::future::Future<Output = MutationResult<Self>>;
 }

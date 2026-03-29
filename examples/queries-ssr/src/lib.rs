@@ -1,9 +1,9 @@
 use std::rc::Rc;
 
+use bounce::__vendored::yew::component;
 use bounce::prelude::*;
 use bounce::query::{use_prepared_query, Query, QueryResult};
 use bounce::BounceRoot;
-use bounce::__vendored::yew::component;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
