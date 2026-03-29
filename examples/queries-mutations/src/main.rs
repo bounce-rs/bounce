@@ -1,6 +1,5 @@
 use std::rc::Rc;
 
-use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{
     use_mutation, use_query, use_query_value, Mutation, MutationResult, MutationState, Query,
@@ -41,7 +40,6 @@ struct EchoResponse {
     json: EchoMutation,
 }
 
-#[async_trait(?Send)]
 impl Mutation for EchoMutation {
     type Input = EchoInput;
     type Error = Infallible;
@@ -69,7 +67,6 @@ struct UuidQuery {
     uuid: Uuid,
 }
 
-#[async_trait(?Send)]
 impl Query for UuidQuery {
     type Input = ();
     type Error = Infallible;

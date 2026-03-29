@@ -163,7 +163,6 @@ where
 /// use bounce::prelude::*;
 /// use bounce::query::{Mutation, MutationResult, use_mutation, MutationState};
 /// use yew::prelude::*;
-/// use async_trait::async_trait;
 /// use yew::platform::spawn_local;
 ///
 /// #[derive(Debug, PartialEq)]
@@ -176,7 +175,6 @@ where
 /// struct UpdateUserMutation {
 /// }
 ///
-/// #[async_trait(?Send)]
 /// impl Mutation for UpdateUserMutation {
 ///     type Input = User;
 ///     type Error = Infallible;

@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use std::hash::Hash;
 use std::rc::Rc;
 
@@ -9,11 +8,6 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 
 /// A trait to be implemented on queries.
 ///
-/// # Note
-///
-/// This trait is implemented with [async_trait](macro@async_trait), you should apply an `#[async_trait(?Send)]`
-/// attribute to your implementation of this trait.
-///
 /// # Example
 ///
 /// ```
@@ -22,7 +16,6 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 /// use bounce::prelude::*;
 /// use bounce::query::{Query, QueryResult};
 /// use yew::prelude::*;
-/// use async_trait::async_trait;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct User {
@@ -35,7 +28,6 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 ///     value: User
 /// }
 ///
-/// #[async_trait(?Send)]
 /// impl Query for UserQuery {
 ///     type Input = u64;
 ///     type Error = Infallible;
@@ -49,7 +41,6 @@ pub type QueryResult<T> = std::result::Result<Rc<T>, <T as Query>::Error>;
 /// ```
 ///
 /// See: [`use_query`](super::use_query()) and [`use_query_value`](super::use_query_value())
-#[async_trait(?Send)]
 pub trait Query: PartialEq {
     /// The Input type of a query.
     ///
@@ -63,27 +54,16 @@ pub trait Query: PartialEq {
     /// Runs a query.
     ///
     /// This method will only be called when the result is not already cached.
-    ///
-    /// # Note
-    ///
-    /// When implementing this method with async_trait, you can use the following function
-    /// signature:
-    ///
-    /// ```ignore
-    /// async fn query(states: &BounceStates, input: Rc<Self::Input>) -> QueryResult<Self>
-    /// ```
-    async fn query(states: &BounceStates, input: Rc<Self::Input>) -> QueryResult<Self>;
+    fn query(
+        states: &BounceStates,
+        input: Rc<Self::Input>,
+    ) -> impl std::future::Future<Output = QueryResult<Self>>;
 }
 
 /// A Result returned by mutations.
 pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
 
 /// A trait to be implemented on mutations.
-///
-/// # Note
-///
-/// This trait is implemented with [async_trait](macro@async_trait), you should apply an `#[async_trait(?Send)]`
-/// attribute to your implementation of this trait.
 ///
 /// # Example
 ///
@@ -93,7 +73,6 @@ pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
 /// use bounce::prelude::*;
 /// use bounce::query::{Mutation, MutationResult};
 /// use yew::prelude::*;
-/// use async_trait::async_trait;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct User {
@@ -105,7 +84,6 @@ pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
 /// struct UpdateUserMutation {
 /// }
 ///
-/// #[async_trait(?Send)]
 /// impl Mutation for UpdateUserMutation {
 ///     type Input = User;
 ///     type Error = Infallible;
@@ -119,7 +97,6 @@ pub type MutationResult<T> = std::result::Result<Rc<T>, <T as Mutation>::Error>;
 /// ```
 ///
 /// See: [`use_mutation`](super::use_mutation())
-#[async_trait(?Send)]
 pub trait Mutation: PartialEq {
     /// The Input type.
     type Input: 'static;
@@ -128,14 +105,8 @@ pub trait Mutation: PartialEq {
     type Error: 'static + std::error::Error + PartialEq + Clone;
 
     /// Runs a mutation.
-    ///
-    /// # Note
-    ///
-    /// When implementing this method with async_trait, you can use the following function
-    /// signature:
-    ///
-    /// ```ignore
-    /// async fn run(states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self>
-    /// ```
-    async fn run(states: &BounceStates, input: Rc<Self::Input>) -> MutationResult<Self>;
+    fn run(
+        states: &BounceStates,
+        input: Rc<Self::Input>,
+    ) -> impl std::future::Future<Output = MutationResult<Self>>;
 }

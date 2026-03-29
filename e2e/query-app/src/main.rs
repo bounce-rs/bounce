@@ -1,7 +1,6 @@
 use std::convert::Infallible;
 use std::rc::Rc;
 
-use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{use_prepared_query, use_query, Query, QueryResult};
 use bounce::BounceRoot;
@@ -12,7 +11,6 @@ use yew::prelude::*;
 #[derive(Debug, PartialEq)]
 struct TestQuery(String);
 
-#[async_trait(?Send)]
 impl Query for TestQuery {
     type Input = u32;
     type Error = Infallible;
@@ -39,7 +37,6 @@ impl std::fmt::Display for PreparedQueryError {
 
 impl std::error::Error for PreparedQueryError {}
 
-#[async_trait(?Send)]
 impl Query for PreparedTestQuery {
     type Input = u32;
     type Error = PreparedQueryError;
