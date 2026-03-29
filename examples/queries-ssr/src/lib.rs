@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{use_prepared_query, Query, QueryResult};
 use bounce::BounceRoot;
+use bounce::__vendored::yew::component;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
@@ -39,7 +40,7 @@ struct ContentProps {
     ord: usize,
 }
 
-#[function_component(SuspendContent)]
+#[component(SuspendContent)]
 fn suspend_content(props: &ContentProps) -> HtmlResult {
     let uuid_state = use_prepared_query::<UuidQuery>(().into())?;
 
@@ -55,7 +56,7 @@ fn suspend_content(props: &ContentProps) -> HtmlResult {
     })
 }
 
-#[function_component(Refresher)]
+#[component(Refresher)]
 fn refresher() -> HtmlResult {
     let uuid_state = use_prepared_query::<UuidQuery>(().into())?;
 
@@ -73,7 +74,7 @@ fn refresher() -> HtmlResult {
     })
 }
 
-#[function_component(App)]
+#[component(App)]
 pub fn app() -> Html {
     let fallback = html! {
         <>

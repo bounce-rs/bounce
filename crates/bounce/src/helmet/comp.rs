@@ -89,7 +89,7 @@ struct ScriptHelmetProps {
 }
 
 // A special component to render the script tag with a unique id.
-#[function_component(ScriptHelmet)]
+#[component(ScriptHelmet)]
 fn script_helmet(props: &ScriptHelmetProps) -> Html {
     let id = *use_state(Id::new);
     let ScriptHelmetProps { attrs, content } = props.clone();
@@ -128,7 +128,7 @@ fn script_helmet(props: &ScriptHelmetProps) -> Html {
 /// }
 /// # }
 /// ```
-#[function_component(Helmet)]
+#[component(Helmet)]
 pub fn helmet(props: &HelmetProps) -> Html {
     let mut script_helmets = Vec::new();
 

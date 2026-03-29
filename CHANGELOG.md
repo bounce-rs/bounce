@@ -1,7 +1,12 @@
+## Release 0.10.0
+
+### Breaking Changes
+
+- Compatible with Yew 0.22. Due to the breaking API changes in Yew 0.22 not backwards compatible with Yew 0.21.
 
 ### Other Changes
 
-fixed use_query and use_prepared_query stalling when the input changes.
+- Fixed use_query and use_prepared_query stalling when the input changes.
 
 ## Release 0.9.0
 

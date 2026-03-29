@@ -27,7 +27,7 @@ struct State {
     inner: u32,
 }
 
-#[function_component(Comp)]
+#[component(Comp)]
 fn comp() -> Html {
     let a = use_atom_value::<State>();
 
@@ -40,7 +40,7 @@ fn comp() -> Html {
 
 #[test]
 async fn test_without_init_states() {
-    #[function_component(Root)]
+    #[component(Root)]
     fn root() -> Html {
         html! {
             <BounceRoot>
@@ -58,7 +58,7 @@ async fn test_without_init_states() {
 
 #[test]
 async fn test_with_init_states() {
-    #[function_component(Root)]
+    #[component(Root)]
     fn root() -> Html {
         fn get_init_states(_: ()) -> AnyMap {
             let mut map = AnyMap::new();

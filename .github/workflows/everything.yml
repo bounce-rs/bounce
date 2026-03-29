@@ -55,7 +55,10 @@ jobs:
         run: |
           for d in "examples/"*
           do
-            trunk build --release true $d/index.html
+            echo $d
+            cd $d
+            trunk build --release true || exit 1
+            cd -
           done
 
   test:
