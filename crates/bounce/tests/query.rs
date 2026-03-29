@@ -8,7 +8,6 @@ use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
-use async_trait::async_trait;
 use bounce::prelude::*;
 use bounce::query::{use_query_value, Query, QueryResult};
 use bounce::BounceRoot;
@@ -40,7 +39,6 @@ async fn test_query_requery_upon_state_change() {
         inner: usize,
     }
 
-    #[async_trait(?Send)]
     impl Query for MyQuery {
         type Input = ();
         type Error = Infallible;

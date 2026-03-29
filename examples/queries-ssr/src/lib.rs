@@ -1,10 +1,9 @@
 use std::rc::Rc;
 
-use async_trait::async_trait;
+use bounce::__vendored::yew::component;
 use bounce::prelude::*;
 use bounce::query::{use_prepared_query, Query, QueryResult};
 use bounce::BounceRoot;
-use bounce::__vendored::yew::component;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
@@ -21,7 +20,6 @@ struct UuidQuery {
 #[error("this will never happen.")]
 struct Never {}
 
-#[async_trait(?Send)]
 impl Query for UuidQuery {
     type Input = ();
     type Error = Never;

@@ -10,7 +10,7 @@ categories = ["wasm", "web-programming"]
 readme = "../../README.md"
 homepage = "https://github.com/bounce-rs/bounce"
 license = "MIT OR Apache-2.0"
-rust-version = "1.64.0"
+rust-version = "1.84.0"
 
 [dependencies]
 anymap2 = "0.13.0"
@@ -20,7 +20,6 @@ yew = "0.22"
 bounce-macros = { path = "../bounce-macros", version = "0.9.0" }
 futures = "0.3.28"
 
-async-trait = { version = "0.1.68", optional = true }
 gloo = { version = "0.11.0", features = ["futures"], optional = true }
 html-escape = { version = "0.2.13", optional = true }
 serde = { version = "1.0.164", features = ["derive"] }
@@ -42,7 +41,7 @@ features = [
 
 [features]
 ssr = ["html-escape"]
-query = ["async-trait"]
+query = []
 helmet = ["gloo", "web-sys"]
 
 [dev-dependencies]

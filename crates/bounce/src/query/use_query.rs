@@ -170,7 +170,6 @@ where
 /// use bounce::prelude::*;
 /// use bounce::query::{Query, QueryResult, use_query};
 /// use yew::prelude::*;
-/// use async_trait::async_trait;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct User {
@@ -183,7 +182,6 @@ where
 ///     value: User
 /// }
 ///
-/// #[async_trait(?Send)]
 /// impl Query for UserQuery {
 ///     type Input = u64;
 ///     type Error = Infallible;
