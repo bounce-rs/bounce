@@ -63,7 +63,7 @@ struct QueryDisplayProps {
     input: u32,
 }
 
-#[function_component]
+#[component]
 fn QueryDisplay(props: &QueryDisplayProps) -> HtmlResult {
     let result = use_query::<TestQuery>(props.input.into())?;
     Ok(html! {
@@ -73,7 +73,7 @@ fn QueryDisplay(props: &QueryDisplayProps) -> HtmlResult {
     })
 }
 
-#[function_component]
+#[component]
 fn PreparedDisplay(props: &QueryDisplayProps) -> HtmlResult {
     let result = use_prepared_query::<PreparedTestQuery>(props.input.into())?;
     Ok(html! {
@@ -83,7 +83,7 @@ fn PreparedDisplay(props: &QueryDisplayProps) -> HtmlResult {
     })
 }
 
-#[function_component]
+#[component]
 fn QuerySection() -> Html {
     let counter = use_state(|| 0u32);
 
@@ -103,7 +103,7 @@ fn QuerySection() -> Html {
     }
 }
 
-#[function_component]
+#[component]
 fn PreparedSection() -> Html {
     let counter = use_state(|| 0u32);
 
@@ -123,7 +123,7 @@ fn PreparedSection() -> Html {
     }
 }
 
-#[function_component]
+#[component]
 fn App() -> Html {
     let mode = use_state(|| "query".to_string());
 

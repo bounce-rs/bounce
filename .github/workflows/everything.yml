@@ -114,6 +114,10 @@ jobs:
 
       - name: Restore Rust Cache
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            e2e
 
       - name: Setup trunk
         uses: jetli/trunk-action@v0.4.0
