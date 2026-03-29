@@ -134,7 +134,7 @@ jobs:
         run: python3 -m http.server 8000 -d e2e/query-app/dist &
 
       - name: Run E2E tests
-        run: cargo test -p bounce-e2e
+        run: cargo test -p bounce-e2e -- --test-threads=1
 
   publish:
     name: Publish to crates.io
