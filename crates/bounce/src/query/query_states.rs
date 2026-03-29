@@ -213,7 +213,7 @@ where
             }
 
             Self::Action::LoadPrepared { id, input, result } => {
-                if self.queries.get(&input).is_none() {
+                if !self.queries.contains_key(&input) {
                     let this = Rc::make_mut(&mut self);
                     this.ctr += 1;
 

@@ -154,7 +154,7 @@ where
 ///
 /// let rendered = html! {<Artifact<Title> value={artifact} />};
 /// ```
-#[function_component(Artifact)]
+#[component(Artifact)]
 pub fn artifact<T>(props: &ArtifactProps<T>) -> Html
 where
     T: PartialEq + 'static,

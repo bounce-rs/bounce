@@ -1,7 +1,10 @@
+## Release 0.10.0
+
 ### Breaking Changes
 
-- Removed async_trait requirement from query and mutation traits 
-- Raise MSRV to 1.75.
+- Compatible with Yew 0.22. Due to the breaking API changes in Yew 0.22 not backwards compatible with Yew 0.21.
+- Removed async_trait requirement from query and mutation traits
+- Raise MSRV to 1.84.
 
 ## Release 0.9.0
 

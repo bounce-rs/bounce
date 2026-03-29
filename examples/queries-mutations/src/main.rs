@@ -89,7 +89,7 @@ struct ContentProps {
     ord: usize,
 }
 
-#[function_component(Content)]
+#[component(Content)]
 fn content(props: &ContentProps) -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
@@ -109,7 +109,7 @@ fn content(props: &ContentProps) -> Html {
     }
 }
 
-#[function_component(SuspendContent)]
+#[component(SuspendContent)]
 fn suspend_content(props: &ContentProps) -> HtmlResult {
     let uuid_state = use_query::<UuidQuery>(().into())?;
 
@@ -128,7 +128,7 @@ fn suspend_content(props: &ContentProps) -> HtmlResult {
     })
 }
 
-#[function_component(Refresher)]
+#[component(Refresher)]
 fn refresher() -> Html {
     let uuid_state = use_query_value::<UuidQuery>(().into());
 
@@ -148,7 +148,7 @@ fn refresher() -> Html {
     }
 }
 
-#[function_component(Echo)]
+#[component(Echo)]
 fn echo() -> Html {
     let echo_state = use_mutation::<EchoMutation>();
     let value = use_state_eq(|| "".to_string());
@@ -198,7 +198,7 @@ fn echo() -> Html {
     }
 }
 
-#[function_component(App)]
+#[component(App)]
 fn app() -> Html {
     let fallback = html! {
         <>
