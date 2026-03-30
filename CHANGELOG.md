@@ -6,6 +6,10 @@
 - Removed async_trait requirement from query and mutation traits
 - Raise MSRV to 1.84.
 
+### Other Changes
+
+- Fixed use_query and use_prepared_query stalling when the input changes.
+
 ## Release 0.9.0
 
 ### Breaking Changes

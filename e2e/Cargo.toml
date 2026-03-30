@@ -1,0 +1,12 @@
+[workspace]
+
+[package]
+name = "bounce-e2e"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+fantoccini = "0.22"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
